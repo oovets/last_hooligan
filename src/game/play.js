@@ -18,6 +18,9 @@ import { getFirm, applyTrip, resultFromWorld } from './firmdata.js';
 import { updateFirmInput, drawFirmWorld, drawFirmScreen, drawFirmPanel, COMMAND_SLOW } from '../ui/firmhud.js';
 
 export class PlayScene {
+  // 2D renderer: the world is pixel art, drawn at the 2x resolution (main.js). 3D renderer: the 2D canvas only carries
+  // overlays and the HUD, so it runs at full device resolution (HD text and panels; pixel sprites stay unsmoothed)
+  get pixel() { return !r3d.renderer; }
   constructor(levelIndex) {
     this.levelIndex = levelIndex;
     this.level = LEVELS[levelIndex];
@@ -150,6 +153,7 @@ export class PlayScene {
 
   draw(ctx) {
     if (r3d.renderer) {
+      ctx.imageSmoothingEnabled = false;
       r3d.renderer.render(this.world);
       ctx.clearRect(0, 0, VIEW_W, VIEW_H);
       this.world.drawOverlay3D(ctx);

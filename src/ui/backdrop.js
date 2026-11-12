@@ -1,392 +1,653 @@
-// Animated title/menu backdrop: Nordhamn by night, seen from the home terrace.
-// Static layers (sky, skyline, far stand, pitch) are pre-rendered once; the crowd, floodlight glare,
-// flares, smoke, flags and the lads in front are animated.
+// Animated title/menu backdrop: Nordhamn by night, seen from the home terrace — painted with vector shapes,
+// gradients and light at the canvas's full resolution (HD menus) or at 2x (pixel frames).
+//
+// Static layers (sky, skyline, far stand, pitch, fence, floodlight towers) and sprites (crowd tiers, terrace fans,
+// glows, beams, smoke) are pre-rendered once per output resolution. Per frame: twinkling stars, the bouncing crowd
+// with a scarf wave and camera flashes, the scrolling LED boards, floodlight beams and glare, waving flags, flares
+// with smoke and sparks, the terrace crowd and — with { lads: true } — the firm in front (rigged 3D characters when
+// the 3D renderer is loaded, the 2D dolls otherwise).
 import { VIEW_W, VIEW_H } from '../engine/constants.js';
-import { makeCanvas } from '../engine/gfx.js';
-import { drawText } from '../engine/font.js';
+import { FONT, sizeForCap } from '../engine/font.js';
 import { makeRng } from '../engine/rng.js';
 import { drawDoll } from '../game/doll.js';
 import { sampleAnim } from '../game/poses.js';
 import { buildLook } from '../content/wardrobe.js';
 import { casualLook } from '../content/enemies.js';
 import { save } from '../save.js';
+import { r3d } from '../render3d/index.js';
 
 const RED = '#c8102e', WHITE = '#f4f1e8';
-const HORIZON = 132;      // top of the far stand roof
-const STAND_TOP = 140, STAND_BOT = 198, BOARDS = 200, PITCH_TOP = 211, PITCH_BOT = 292;
+const HORIZON = 128;                     // top of the far stand roof
+const STAND_TOP = 136, STAND_BOT = 198, BOARDS = 199, PITCH_TOP = 211, PITCH_BOT = 296;
+const TOWERS = [[64, 1], [VIEW_W - 64, -1]];
+const ADS = [['HAMNÖL LAGER', '#c8102e', '#ffffff'], ['NORDHAMN FERRIES', '#123a78', '#ffffff'], ['SILLEN FISH BAR', '#f4f1e8', '#141414'],
+  ['DOCKSIDE MOTORS', '#1c1c22', '#ffd23a'], ['KAFFE KRONA', '#5a2a10', '#f4e0b0'], ['ANCHOR BOOKMAKERS', '#c8102e', '#f4f1e8']];
 
-function buildStatic() {
-  const c = makeCanvas(VIEW_W, VIEW_H);
+const devScale = ctx => (ctx.getTransform ? ctx.getTransform().a : 2) || 2;
+function layer(S, w, h) {
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.ceil(w * S)); c.height = Math.max(1, Math.ceil(h * S));
   const g = c.getContext('2d');
-  const rng = makeRng(1986);
-  // sky
+  g.scale(S, S);
+  return { c, g, w, h };
+}
+const blit = (ctx, L, x, y) => ctx.drawImage(L.c, x, y, L.w, L.h);
+function softEllipse(g, cx, cy, rx, ry, inner, outer) {
+  g.save(); g.translate(cx, cy); g.scale(1, ry / rx);
+  const rg = g.createRadialGradient(0, 0, 0, 0, 0, rx);
+  rg.addColorStop(0, inner); rg.addColorStop(1, outer);
+  g.fillStyle = rg; g.beginPath(); g.arc(0, 0, rx, 0, Math.PI * 2); g.fill();
+  g.restore();
+}
+
+// ---------------------------------------------------------------- static layer
+function paintSky(g, S, rng) {
   const sky = g.createLinearGradient(0, 0, 0, PITCH_TOP);
-  sky.addColorStop(0, '#03020a'); sky.addColorStop(0.45, '#120826'); sky.addColorStop(0.8, '#2e0c30'); sky.addColorStop(1, '#4a1030');
+  sky.addColorStop(0, '#03020a'); sky.addColorStop(0.3, '#0a0820'); sky.addColorStop(0.55, '#1a0d2e'); sky.addColorStop(0.78, '#3a1232'); sky.addColorStop(1, '#5e1a34');
   g.fillStyle = sky; g.fillRect(0, 0, VIEW_W, PITCH_TOP);
-  // dithered horizon glow bands (pixel-art banding)
-  for (let y = 70; y < HORIZON; y++) for (let x = (y & 1); x < VIEW_W; x += 2) if (rng() < (y - 70) / 140) { g.fillStyle = 'rgba(120,30,70,0.25)'; g.fillRect(x, y, 1, 1); }
+  softEllipse(g, VIEW_W / 2, HORIZON + 6, 420, 70, 'rgba(255,110,80,0.30)', 'rgba(255,110,80,0)');
+  softEllipse(g, 150, HORIZON, 200, 40, 'rgba(255,170,90,0.12)', 'rgba(255,170,90,0)');
   // stars
-  for (let i = 0; i < 140; i++) {
-    const x = Math.floor(rng() * VIEW_W), y = Math.floor(rng() * 110);
-    g.fillStyle = rng() < 0.15 ? '#fff8e0' : rng() < 0.5 ? '#8a80b0' : '#4a4070';
-    g.fillRect(x, y, 1, 1);
+  for (let i = 0; i < 300; i++) {
+    const x = rng() * VIEW_W, y = Math.pow(rng(), 1.4) * 118, r = 0.18 + rng() * rng() * 0.55;
+    const a = 0.25 + rng() * 0.75;
+    g.fillStyle = rng() < 0.2 ? `rgba(255,236,200,${a})` : rng() < 0.5 ? `rgba(200,210,255,${a})` : `rgba(255,255,255,${a})`;
+    if (r > 0.5) { g.shadowColor = g.fillStyle; g.shadowBlur = 3 * S; }
+    g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
+    g.shadowBlur = 0;
   }
-  // moon behind clouds
-  g.fillStyle = '#e8e0c8'; for (let y = -7; y <= 7; y++) { const w = Math.round(Math.sqrt(49 - y * y)); g.fillRect(520 - w, 34 + y, w * 2, 1); }
-  g.fillStyle = '#c8c0a8'; g.fillRect(516, 30, 3, 2); g.fillRect(523, 37, 2, 2);
-  g.fillStyle = '#2a1840'; for (let y = -7; y <= 7; y++) { const w = Math.round(Math.sqrt(49 - y * y)); g.fillRect(525 - w, 32 + y, w * 2, 1); }
-  // clouds (flat pixel bands)
-  for (let k = 0; k < 9; k++) {
-    const cx = rng() * VIEW_W, cy = 20 + rng() * 70, w = 60 + rng() * 90;
-    g.fillStyle = 'rgba(70,40,90,0.35)'; g.fillRect(Math.round(cx), Math.round(cy), Math.round(w), 3);
-    g.fillStyle = 'rgba(90,50,110,0.25)'; g.fillRect(Math.round(cx + 10), Math.round(cy - 2), Math.round(w * 0.6), 2);
+  // moon
+  const mx = 522, my = 36;
+  softEllipse(g, mx, my, 60, 60, 'rgba(190,200,255,0.16)', 'rgba(190,200,255,0)');
+  softEllipse(g, mx, my, 18, 18, 'rgba(230,230,255,0.25)', 'rgba(230,230,255,0)');
+  const mg = g.createRadialGradient(mx - 3, my - 3, 1, mx, my, 9);
+  mg.addColorStop(0, '#fffbee'); mg.addColorStop(0.7, '#e6dfca'); mg.addColorStop(1, '#bdb39a');
+  g.fillStyle = mg; g.beginPath(); g.arc(mx, my, 8.5, 0, Math.PI * 2); g.fill();
+  g.fillStyle = 'rgba(120,110,90,0.18)';
+  for (const [dx, dy, r] of [[-3, -2, 1.8], [2.5, 1.5, 2.2], [-1, 4, 1.2], [3.5, -3.5, 1]]) { g.beginPath(); g.arc(mx + dx, my + dy, r, 0, Math.PI * 2); g.fill(); }
+  // clouds: soft, lit from below by the town
+  for (let k = 0; k < 12; k++) {
+    const cx = rng() * VIEW_W, cy = 18 + rng() * 80, w = 50 + rng() * 120;
+    softEllipse(g, cx, cy, w, w * 0.16, 'rgba(110,70,140,0.20)', 'rgba(110,70,140,0)');
+    softEllipse(g, cx + 6, cy + 3, w * 0.7, w * 0.08, 'rgba(255,120,120,0.07)', 'rgba(255,120,120,0)');
   }
-  // city skyline (Nordhamn docks): cranes, church spire, tower blocks, terraces
-  const sil = '#0b0614';
-  g.fillStyle = sil;
+  // moon passes behind a cloud bank
+  softEllipse(g, mx + 10, my + 6, 46, 6, 'rgba(60,36,80,0.55)', 'rgba(60,36,80,0)');
+}
+
+function paintSkyline(g, S, rng) {
+  // far haze layer
+  g.fillStyle = '#1e1230';
   let x = 0;
+  g.beginPath(); g.moveTo(0, HORIZON + 4);
+  while (x < VIEW_W) { const w = 8 + rng() * 22, h = 6 + rng() * 22; g.lineTo(x, HORIZON - h); g.lineTo(x + w, HORIZON - h); x += w; }
+  g.lineTo(VIEW_W, HORIZON + 4); g.closePath(); g.fill();
+  // near silhouettes with lit windows
+  const sil = '#0b0614';
+  x = 0;
+  const wins = [];
   while (x < VIEW_W) {
-    const w = 14 + Math.floor(rng() * 26), h = 10 + Math.floor(rng() * 30);
-    g.fillRect(x, HORIZON - h, w, h + 10);
-    for (let wy = HORIZON - h + 3; wy < HORIZON; wy += 4) for (let wx = x + 2; wx < x + w - 2; wx += 4) if (rng() < 0.18) { g.fillStyle = rng() < 0.8 ? '#e8c060' : '#80a0e0'; g.fillRect(wx, wy, 2, 2); g.fillStyle = sil; }
+    const w = 14 + Math.floor(rng() * 26), h = 10 + Math.floor(rng() * 28);
+    g.fillStyle = sil; g.fillRect(x, HORIZON - h, w + 0.5, h + 10);
+    if (rng() < 0.3) { g.fillRect(x + w * 0.3, HORIZON - h - 4, 2, 4); }
+    for (let wy = HORIZON - h + 3; wy < HORIZON - 1; wy += 3.5) for (let wx = x + 2; wx < x + w - 2; wx += 3.2) if (rng() < 0.16) wins.push([wx, wy, rng() < 0.82 ? '#ffcf70' : '#9fc0ff']);
     x += w;
   }
   // tower block
-  g.fillStyle = sil; g.fillRect(118, HORIZON - 62, 26, 62);
-  for (let wy = HORIZON - 58; wy < HORIZON - 4; wy += 5) for (let wx = 121; wx < 141; wx += 5) if (rng() < 0.3) { g.fillStyle = '#e0b850'; g.fillRect(wx, wy, 2, 2); g.fillStyle = sil; }
+  g.fillStyle = sil; g.fillRect(118, HORIZON - 64, 26, 64);
+  for (let wy = HORIZON - 60; wy < HORIZON - 4; wy += 4) for (let wx = 121; wx < 141; wx += 4) if (rng() < 0.32) wins.push([wx, wy, '#ffd27a']);
   // church spire
-  g.fillStyle = sil; g.fillRect(452, HORIZON - 40, 12, 40); g.beginPath(); g.moveTo(452, HORIZON - 40); g.lineTo(458, HORIZON - 74); g.lineTo(464, HORIZON - 40); g.fill();
-  g.fillRect(457, HORIZON - 80, 2, 8); g.fillRect(455, HORIZON - 77, 6, 2);
-  g.fillStyle = '#ffe8a0'; g.fillRect(456, HORIZON - 34, 4, 4);
-  // harbour cranes
-  for (const cx of [24, 588]) {
-    g.fillStyle = sil;
-    g.fillRect(cx, HORIZON - 70, 4, 70);
-    g.fillRect(cx - 22, HORIZON - 72, 50, 3);
-    for (let k = 0; k < 8; k++) g.fillRect(cx - 20 + k * 6, HORIZON - 70, 1, 4);
-    g.fillRect(cx + 20, HORIZON - 69, 1, 26); g.fillRect(cx + 17, HORIZON - 44, 7, 4);
-    g.fillStyle = '#ff3a3a'; g.fillRect(cx + 1, HORIZON - 74, 2, 2);
+  g.beginPath(); g.moveTo(452, HORIZON); g.lineTo(452, HORIZON - 40); g.lineTo(458, HORIZON - 76); g.lineTo(464, HORIZON - 40); g.lineTo(464, HORIZON); g.fill();
+  g.fillRect(457.5, HORIZON - 84, 1, 9); g.fillRect(455.5, HORIZON - 81, 5, 1);
+  softEllipse(g, 458, HORIZON - 32, 8, 8, 'rgba(255,220,140,0.45)', 'rgba(255,220,140,0)');
+  g.fillStyle = '#ffe6a0'; g.beginPath(); g.arc(458, HORIZON - 32, 2, 0, Math.PI * 2); g.fill();
+  // harbour cranes (lattice)
+  g.strokeStyle = sil; g.fillStyle = sil;
+  for (const cx of [24, 590]) {
+    g.lineWidth = 2.4; g.beginPath(); g.moveTo(cx, HORIZON); g.lineTo(cx, HORIZON - 72); g.moveTo(cx + 4, HORIZON); g.lineTo(cx + 4, HORIZON - 72); g.stroke();
+    g.lineWidth = 0.5; g.beginPath();
+    for (let y = HORIZON; y > HORIZON - 70; y -= 6) { g.moveTo(cx, y); g.lineTo(cx + 4, y - 6); }
+    g.stroke();
+    g.lineWidth = 1.6; g.beginPath(); g.moveTo(cx - 24, HORIZON - 72); g.lineTo(cx + 30, HORIZON - 72); g.stroke();
+    g.lineWidth = 0.5; g.beginPath(); g.moveTo(cx + 2, HORIZON - 86); g.lineTo(cx - 24, HORIZON - 72); g.moveTo(cx + 2, HORIZON - 86); g.lineTo(cx + 30, HORIZON - 72); g.moveTo(cx + 2, HORIZON - 86); g.lineTo(cx + 2, HORIZON - 72); g.stroke();
+    g.beginPath(); g.moveTo(cx + 22, HORIZON - 72); g.lineTo(cx + 22, HORIZON - 46); g.stroke();
+    g.fillRect(cx + 19, HORIZON - 46, 6, 4);
   }
+  // windows with a little bloom
+  g.shadowBlur = 2.5 * S;
+  for (const [wx, wy, c] of wins) { g.shadowColor = c; g.fillStyle = c; g.globalAlpha = 0.55 + rng() * 0.45; g.fillRect(wx, wy, 1.4, 1.6); }
+  g.globalAlpha = 1; g.shadowBlur = 0;
+  // haze where the town meets the stadium
+  const hz = g.createLinearGradient(0, HORIZON - 30, 0, HORIZON + 6);
+  hz.addColorStop(0, 'rgba(110,40,80,0)'); hz.addColorStop(1, 'rgba(140,50,80,0.35)');
+  g.fillStyle = hz; g.fillRect(0, HORIZON - 30, VIEW_W, 36);
+}
 
-  // ---- far stand
-  // roof slab with trusses
-  g.fillStyle = '#151020'; g.fillRect(40, HORIZON - 4, VIEW_W - 80, 10);
-  g.fillStyle = '#2a2238'; g.fillRect(40, HORIZON - 4, VIEW_W - 80, 1);
-  g.fillStyle = '#3a3048'; for (let k = 44; k < VIEW_W - 44; k += 12) { g.fillRect(k, HORIZON - 3, 1, 8); g.fillRect(k, HORIZON + 1, 6, 1); }
-  g.fillStyle = WHITE; g.fillRect(40, HORIZON + 6, VIEW_W - 80, 1);
-  g.fillStyle = '#8a8098'; g.fillRect(40, HORIZON + 7, VIEW_W - 80, 1);
-  // under-roof darkness
-  const st = g.createLinearGradient(0, STAND_TOP - 4, 0, STAND_BOT);
-  st.addColorStop(0, '#07050c'); st.addColorStop(1, '#1e1626');
-  g.fillStyle = st; g.fillRect(40, STAND_TOP - 4, VIEW_W - 80, STAND_BOT - STAND_TOP + 4);
-  // stand ends (wings)
-  g.fillStyle = '#100c18';
-  g.beginPath(); g.moveTo(0, STAND_TOP + 10); g.lineTo(40, HORIZON - 4); g.lineTo(40, BOARDS); g.lineTo(0, BOARDS + 4); g.fill();
-  g.beginPath(); g.moveTo(VIEW_W, STAND_TOP + 10); g.lineTo(VIEW_W - 40, HORIZON - 4); g.lineTo(VIEW_W - 40, BOARDS); g.lineTo(VIEW_W, BOARDS + 4); g.fill();
+function paintStand(g, S) {
+  // stand interior (crowd tiers are separate layers)
+  const st = g.createLinearGradient(0, STAND_TOP - 6, 0, STAND_BOT);
+  st.addColorStop(0, '#06040a'); st.addColorStop(0.5, '#150e1e'); st.addColorStop(1, '#2a1c30');
+  g.fillStyle = st; g.fillRect(36, HORIZON + 4, VIEW_W - 72, STAND_BOT - HORIZON);
+  // wings (stand ends, angled)
+  for (const side of [-1, 1]) {
+    const x0 = side < 0 ? 0 : VIEW_W, x1 = side < 0 ? 36 : VIEW_W - 36;
+    const wg = g.createLinearGradient(x0, 0, x1, 0);
+    wg.addColorStop(0, '#0a0712'); wg.addColorStop(1, '#1a1224');
+    g.fillStyle = wg;
+    g.beginPath(); g.moveTo(x0, HORIZON + 16); g.lineTo(x1, HORIZON - 2); g.lineTo(x1, BOARDS); g.lineTo(x0, BOARDS + 5); g.closePath(); g.fill();
+    g.strokeStyle = 'rgba(255,255,255,0.12)'; g.lineWidth = 0.6;
+    g.beginPath(); g.moveTo(x0, HORIZON + 16); g.lineTo(x1, HORIZON - 2); g.stroke();
+  }
+  // roof: fascia with club trim and a row of under-roof lights
+  const rf = g.createLinearGradient(0, HORIZON - 6, 0, HORIZON + 5);
+  rf.addColorStop(0, '#3a3046'); rf.addColorStop(0.3, '#221a2e'); rf.addColorStop(1, '#0e0a16');
+  g.fillStyle = rf; g.fillRect(30, HORIZON - 6, VIEW_W - 60, 11);
+  g.fillStyle = 'rgba(255,255,255,0.35)'; g.fillRect(30, HORIZON - 6, VIEW_W - 60, 0.6);
+  g.fillStyle = '#e8e2d4'; g.fillRect(30, HORIZON + 5, VIEW_W - 60, 1.2);
+  g.fillStyle = RED; g.fillRect(30, HORIZON + 6.2, VIEW_W - 60, 1.4);
+  // truss rhythm on the fascia
+  g.strokeStyle = 'rgba(120,100,140,0.35)'; g.lineWidth = 0.4; g.beginPath();
+  for (let k = 36; k < VIEW_W - 36; k += 10) { g.moveTo(k, HORIZON - 5); g.lineTo(k + 5, HORIZON + 4); g.moveTo(k + 5, HORIZON + 4); g.lineTo(k + 10, HORIZON - 5); }
+  g.stroke();
   // roof supports
-  g.fillStyle = '#2a2238'; for (const sx of [120, 240, 400, 520]) g.fillRect(sx, STAND_TOP, 2, STAND_BOT - STAND_TOP);
-  // advertising boards (fictional local businesses)
-  const ads = [['HAMNÖL LAGER', '#c8102e', '#fff'], ['NORDHAMN FERRIES', '#1a3a6a', '#f0f0f0'], ['SILLEN FISH BAR', '#f4f1e8', '#1a1a1a'], ['DOCKSIDE MOTORS', '#2a2a2a', '#ffd23a'], ['KAFFE KRONA', '#5a2a10', '#f4e0b0'], ['ANCHOR BOOKMAKERS', '#c8102e', '#f4f1e8']];
-  let bx = 0, ai = 0;
-  while (bx < VIEW_W) {
-    const [txt, bg, fg] = ads[ai % ads.length];
-    const w = txt.length * 6 + 18;
-    g.fillStyle = '#000'; g.fillRect(bx, BOARDS - 1, w, 12);
-    g.fillStyle = bg; g.fillRect(bx + 1, BOARDS, w - 2, 10);
-    g.fillStyle = 'rgba(255,255,255,0.18)'; g.fillRect(bx + 1, BOARDS, w - 2, 1);
-    drawText(g, txt, bx + 9, BOARDS + 2, { color: fg });
-    bx += w; ai++;
-  }
-  // ---- pitch
-  for (let y = PITCH_TOP; y < PITCH_BOT + 40; y++) {
-    const f = (y - PITCH_TOP) / (PITCH_BOT - PITCH_TOP);
-    const band = Math.floor(Math.pow(f, 0.7) * 9) % 2;
-    g.fillStyle = band ? '#1f5a26' : '#2a6e30';
-    g.fillRect(0, y, VIEW_W, 1);
-  }
-  g.fillStyle = 'rgba(240,250,240,0.85)';
-  g.fillRect(0, PITCH_TOP + 2, VIEW_W, 1);                                   // far touchline
-  g.fillRect(318, PITCH_TOP + 2, 2, PITCH_BOT - PITCH_TOP);                   // halfway line
-  for (let a = 0; a < Math.PI * 2; a += 0.01) g.fillRect(Math.round(320 + Math.cos(a) * 78), Math.round(250 + Math.sin(a) * 17), 2, 1);
-  g.fillRect(318, 249, 3, 2);
-  // penalty boxes at the sides (perspective-ish)
-  g.fillRect(0, PITCH_TOP + 22, 70, 1); g.fillRect(70, PITCH_TOP + 22, 1, 50); g.fillRect(0, PITCH_TOP + 72, 72, 1);
-  g.fillRect(VIEW_W - 70, PITCH_TOP + 22, 70, 1); g.fillRect(VIEW_W - 71, PITCH_TOP + 22, 1, 50); g.fillRect(VIEW_W - 72, PITCH_TOP + 72, 72, 1);
-  // floodlit pools
-  for (const [px, py] of [[160, 240], [480, 240], [320, 270]]) {
-    const rg = g.createRadialGradient(px, py, 0, px, py, 150);
-    rg.addColorStop(0, 'rgba(230,255,200,0.16)'); rg.addColorStop(1, 'rgba(0,0,0,0)');
-    g.fillStyle = rg; g.fillRect(px - 150, PITCH_TOP, 300, PITCH_BOT - PITCH_TOP + 40);
-  }
-  return c;
+  g.fillStyle = '#251c30'; for (const sx of [128, 248, 392, 512]) g.fillRect(sx, HORIZON + 7, 1.6, STAND_BOT - HORIZON - 7);
+  // front wall
+  const fw = g.createLinearGradient(0, STAND_BOT - 3, 0, BOARDS);
+  fw.addColorStop(0, '#3a2c44'); fw.addColorStop(1, '#1a1220');
+  g.fillStyle = fw; g.fillRect(36, STAND_BOT - 3, VIEW_W - 72, BOARDS - STAND_BOT + 3);
 }
 
-function buildGlow(r, col) {
-  const c = makeCanvas(r * 2, r * 2);
-  const g = c.getContext('2d');
+function paintPitch(g, S, rng) {
+  const N = 11;
+  for (let i = 0; i < N; i++) {
+    const y0 = PITCH_TOP + (PITCH_BOT + 10 - PITCH_TOP) * Math.pow(i / N, 1.45);
+    const y1 = PITCH_TOP + (PITCH_BOT + 10 - PITCH_TOP) * Math.pow((i + 1) / N, 1.45);
+    g.fillStyle = i % 2 ? '#24692c' : '#2c7a34';
+    g.fillRect(0, y0, VIEW_W, y1 - y0 + 0.5);
+  }
+  // fine grass texture
+  for (let i = 0; i < 2600; i++) {
+    const x = rng() * VIEW_W, y = PITCH_TOP + rng() * (PITCH_BOT - PITCH_TOP + 10);
+    g.fillStyle = rng() < 0.5 ? 'rgba(0,0,0,0.08)' : 'rgba(180,255,170,0.05)';
+    g.fillRect(x, y, 0.5 + rng(), 0.35);
+  }
+  // distance falloff + floodlit pools
+  const dg = g.createLinearGradient(0, PITCH_TOP, 0, PITCH_BOT);
+  dg.addColorStop(0, 'rgba(10,8,30,0.45)'); dg.addColorStop(0.5, 'rgba(10,8,30,0.12)'); dg.addColorStop(1, 'rgba(10,8,30,0.25)');
+  g.fillStyle = dg; g.fillRect(0, PITCH_TOP, VIEW_W, PITCH_BOT - PITCH_TOP + 10);
+  g.save(); g.globalCompositeOperation = 'lighter';
+  for (const [px, py, r] of [[150, 248, 170], [490, 248, 170], [320, 262, 210]]) softEllipse(g, px, py, r, r * 0.3, 'rgba(210,255,190,0.14)', 'rgba(210,255,190,0)');
+  g.restore();
+  // markings
+  g.strokeStyle = 'rgba(240,250,240,0.78)'; g.lineWidth = 0.9; g.lineCap = 'round';
+  g.beginPath();
+  g.moveTo(-5, PITCH_TOP + 2.5); g.lineTo(VIEW_W + 5, PITCH_TOP + 2.5);                          // far touchline
+  g.moveTo(320, PITCH_TOP + 2.5); g.lineTo(320, PITCH_BOT + 6);                                   // halfway line
+  g.moveTo(-5, PITCH_TOP + 21); g.lineTo(54, PITCH_TOP + 21); g.lineTo(72, PITCH_BOT - 14); g.lineTo(-5, PITCH_BOT - 14);
+  g.moveTo(VIEW_W + 5, PITCH_TOP + 21); g.lineTo(VIEW_W - 54, PITCH_TOP + 21); g.lineTo(VIEW_W - 72, PITCH_BOT - 14); g.lineTo(VIEW_W + 5, PITCH_BOT - 14);
+  g.stroke();
+  g.lineWidth = 1.0;
+  g.beginPath(); g.ellipse(320, 250, 74, 17, 0, 0, Math.PI * 2); g.stroke();
+  g.fillStyle = 'rgba(240,250,240,0.85)'; g.beginPath(); g.ellipse(320, 250, 1.6, 0.8, 0, 0, Math.PI * 2); g.fill();
+  // the stand's shadow line along the far touchline
+  const sh = g.createLinearGradient(0, PITCH_TOP, 0, PITCH_TOP + 8);
+  sh.addColorStop(0, 'rgba(0,0,0,0.45)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = sh; g.fillRect(0, PITCH_TOP, VIEW_W, 8);
+}
+
+function paintTower(g, S, fx) {
+  // tapered lattice mast
+  const top = 44, bot = 300, wt = 3, wb = 9;
+  g.strokeStyle = '#0d0a16'; g.lineWidth = 1.4;
+  g.beginPath(); g.moveTo(fx - wt, top); g.lineTo(fx - wb, bot); g.moveTo(fx + wt, top); g.lineTo(fx + wb, bot); g.stroke();
+  g.lineWidth = 0.55; g.beginPath();
+  let side = 0;
+  for (let y = top; y < bot; y += 9) {
+    const k0 = (y - top) / (bot - top), k1 = (y + 9 - top) / (bot - top);
+    const a = wt + (wb - wt) * k0, b = wt + (wb - wt) * k1;
+    g.moveTo(fx - a, y); g.lineTo(fx + a, y);
+    if (side) { g.moveTo(fx - a, y); g.lineTo(fx + b, y + 9); } else { g.moveTo(fx + a, y); g.lineTo(fx - b, y + 9); }
+    side ^= 1;
+  }
+  g.stroke();
+  // rim light from the lamps
+  g.strokeStyle = 'rgba(255,240,200,0.12)'; g.lineWidth = 0.5;
+  g.beginPath(); g.moveTo(fx - wt + 0.6, top); g.lineTo(fx - wb + 0.6, bot); g.stroke();
+  // lamp head frame
+  const hg = g.createLinearGradient(0, 18, 0, 46);
+  hg.addColorStop(0, '#2a2434'); hg.addColorStop(1, '#0c0a12');
+  g.fillStyle = hg;
+  g.beginPath(); g.moveTo(fx - 19, 18); g.lineTo(fx + 19, 18); g.lineTo(fx + 17, 44); g.lineTo(fx - 17, 44); g.closePath(); g.fill();
+  g.strokeStyle = 'rgba(255,255,255,0.18)'; g.lineWidth = 0.5; g.stroke();
+}
+
+function paintFence(g) {
+  const top = PITCH_BOT - 28, bot = PITCH_BOT;
+  g.fillStyle = 'rgba(30,24,40,0.55)'; g.fillRect(0, top, VIEW_W, bot - top);
+  g.strokeStyle = 'rgba(120,110,140,0.32)'; g.lineWidth = 0.35;
+  g.beginPath();
+  for (let x = 0; x < VIEW_W; x += 2.6) { g.moveTo(x, top); g.lineTo(x + 2.6, top + 2.6 * 4); }
+  for (let x = 0; x < VIEW_W; x += 2.6) { g.moveTo(x + 2.6, top); g.lineTo(x, top + 2.6 * 4); }
+  g.stroke();
+  g.strokeStyle = 'rgba(120,110,140,0.22)';
+  g.beginPath(); for (let y = top + 10; y < bot; y += 4) { g.moveTo(0, y); g.lineTo(VIEW_W, y); } g.stroke();
+  // posts and rails
+  for (let x = 6; x < VIEW_W; x += 44) {
+    const pg = g.createLinearGradient(x - 1.2, 0, x + 1.2, 0);
+    pg.addColorStop(0, '#5a5068'); pg.addColorStop(1, '#1a1422');
+    g.fillStyle = pg; g.fillRect(x - 1.2, top - 3, 2.4, bot - top + 3);
+  }
+  const rg = g.createLinearGradient(0, top - 3, 0, top);
+  rg.addColorStop(0, '#9a90a8'); rg.addColorStop(1, '#3a3246');
+  g.fillStyle = rg; g.fillRect(0, top - 3, VIEW_W, 2.6);
+  g.fillStyle = '#2a2234'; g.fillRect(0, bot - 3, VIEW_W, 3);
+}
+
+function buildStatic(S) {
+  const L = layer(S, VIEW_W, VIEW_H), g = L.g;
+  const rng = makeRng(1986);
+  paintSky(g, S, rng);
+  paintSkyline(g, S, rng);
+  paintStand(g, S);
+  paintPitch(g, S, rng);
+  for (const [fx] of TOWERS) paintTower(g, S, fx);
+  paintFence(g);
+  // terrace floor (behind the near crowd)
+  const tg = g.createLinearGradient(0, PITCH_BOT, 0, VIEW_H);
+  tg.addColorStop(0, '#1a0e16'); tg.addColorStop(1, '#0a0508');
+  g.fillStyle = tg; g.fillRect(0, PITCH_BOT, VIEW_W, VIEW_H - PITCH_BOT);
+  return L;
+}
+
+// far crowd: three interleaved layers that bounce out of phase
+function buildCrowd(S, far) {
+  const out = [];
+  for (let k = 0; k < 3; k++) {
+    const L = layer(S, VIEW_W, STAND_BOT - STAND_TOP + 12), g = L.g;
+    for (const p of far) {
+      if (p.layer !== k) continue;
+      const y = p.y - STAND_TOP + 6, s = p.s;
+      g.fillStyle = p.c;
+      g.beginPath(); g.ellipse(p.x, y + 1.4 * s, 1.35 * s, 1.6 * s, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = p.skin;
+      g.beginPath(); g.arc(p.x, y - 0.9 * s, 0.85 * s, 0, Math.PI * 2); g.fill();
+      if (p.scarf) {
+        g.fillStyle = RED; g.fillRect(p.x - 2.2 * s, y - 3 * s, 4.4 * s, 0.9 * s);
+        g.fillStyle = WHITE; g.fillRect(p.x - 0.6 * s, y - 3 * s, 1.2 * s, 0.9 * s);
+      }
+    }
+    // under-roof shadow at the back, floodlight on the front rows
+    g.globalCompositeOperation = 'source-atop';
+    const sg = g.createLinearGradient(0, 0, 0, L.h);
+    sg.addColorStop(0, 'rgba(0,0,0,0.72)'); sg.addColorStop(0.6, 'rgba(0,0,0,0.25)'); sg.addColorStop(1, 'rgba(255,240,220,0.06)');
+    g.fillStyle = sg; g.fillRect(0, 0, L.w, L.h);
+    g.globalCompositeOperation = 'source-over';
+    out.push(L);
+  }
+  return out;
+}
+
+// LED advertising strip (scrolls)
+function buildAds(S) {
+  const pad = 14, h = 11;
+  let total = 0;
+  const px = sizeForCap(FONT.ui, 800, 5.4);
+  const mg = document.createElement('canvas').getContext('2d');
+  mg.font = `800 ${px}px ${FONT.ui}`;
+  const items = ADS.map(([t, bg, fg]) => { const w = mg.measureText(t).width * 1.12 + pad * 2; total += w; return { t, bg, fg, w }; });
+  const L = layer(S, total, h), g = L.g;
+  let x = 0;
+  for (const it of items) {
+    const bg = g.createLinearGradient(0, 0, 0, h);
+    bg.addColorStop(0, it.bg); bg.addColorStop(1, it.bg === '#f4f1e8' ? '#c8c2b4' : '#000000');
+    g.fillStyle = it.bg; g.fillRect(x, 0, it.w, h);
+    g.globalAlpha = 0.35; g.fillStyle = bg; g.fillRect(x, 0, it.w, h); g.globalAlpha = 1;
+    g.font = `800 ${px}px ${FONT.ui}`;
+    if ('letterSpacing' in g) g.letterSpacing = (px * 0.12).toFixed(2) + 'px';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.shadowColor = it.fg; g.shadowBlur = 3 * S;
+    g.fillStyle = it.fg; g.fillText(it.t, x + it.w / 2, h / 2 + 0.4);
+    g.shadowBlur = 0;
+    g.fillStyle = 'rgba(0,0,0,0.6)'; g.fillRect(x + it.w - 0.5, 0, 0.5, h);
+    x += it.w;
+  }
+  // LED pixel grid
+  g.fillStyle = 'rgba(0,0,0,0.18)';
+  for (let yy = 0; yy < h; yy += 1.1) g.fillRect(0, yy, total, 0.35);
+  g.fillStyle = 'rgba(255,255,255,0.18)'; g.fillRect(0, 0, total, 0.5);
+  return L;
+}
+
+function buildGlow(S, r, col, a0 = 0.9) {
+  const L = layer(S, r * 2, r * 2), g = L.g;
   const rg = g.createRadialGradient(r, r, 0, r, r, r);
-  rg.addColorStop(0, col); rg.addColorStop(0.25, col.replace(/[\d.]+\)$/, '0.35)')); rg.addColorStop(1, 'rgba(0,0,0,0)');
+  rg.addColorStop(0, `rgba(${col},${a0})`); rg.addColorStop(0.18, `rgba(${col},${a0 * 0.45})`); rg.addColorStop(0.5, `rgba(${col},${a0 * 0.1})`); rg.addColorStop(1, `rgba(${col},0)`);
   g.fillStyle = rg; g.fillRect(0, 0, r * 2, r * 2);
-  return c;
+  return L;
 }
 
-function buildBeam(len, spread, dir) {
-  const w = spread * 2 + 20, h = len;
-  const c = makeCanvas(w + Math.abs(dir) * len, h);
-  const g = c.getContext('2d');
-  const ox = dir < 0 ? Math.abs(dir) * len : 0;
-  const lg = g.createLinearGradient(0, 0, 0, h);
-  lg.addColorStop(0, 'rgba(255,250,220,0.22)'); lg.addColorStop(1, 'rgba(255,250,220,0)');
+// volumetric floodlight cone pointing down and inwards
+function buildBeam(S, dir) {
+  const len = 260, spread = 120, w = 360;
+  const L = layer(S, w, len), g = L.g;
+  const ox = dir > 0 ? 40 : w - 40;
+  const lg = g.createLinearGradient(0, 0, 0, len);
+  lg.addColorStop(0, 'rgba(255,248,225,0.28)'); lg.addColorStop(0.35, 'rgba(255,248,225,0.10)'); lg.addColorStop(1, 'rgba(255,248,225,0)');
   g.fillStyle = lg;
   g.beginPath();
-  g.moveTo(ox + w / 2 - 8, 0); g.lineTo(ox + w / 2 + 8, 0);
-  g.lineTo(ox + w / 2 + spread + dir * len, h); g.lineTo(ox + w / 2 - spread + dir * len, h);
+  g.moveTo(ox - 12, 0); g.lineTo(ox + 12, 0);
+  g.lineTo(ox + dir * 170 + spread, len); g.lineTo(ox + dir * 170 - spread, len);
   g.closePath(); g.fill();
-  return { c, ox: ox + w / 2 };
+  // brighter core
+  const cg = g.createLinearGradient(0, 0, 0, len * 0.8);
+  cg.addColorStop(0, 'rgba(255,250,235,0.22)'); cg.addColorStop(1, 'rgba(255,250,235,0)');
+  g.fillStyle = cg;
+  g.beginPath(); g.moveTo(ox - 5, 0); g.lineTo(ox + 5, 0); g.lineTo(ox + dir * 150 + 30, len * 0.8); g.lineTo(ox + dir * 150 - 30, len * 0.8); g.closePath(); g.fill();
+  return { L, ox };
 }
 
-// dithered smoke puff sprites
-function buildPuff(r) {
-  const c = makeCanvas(r * 2 + 2, r * 2 + 2);
-  const g = c.getContext('2d');
-  for (let y = -r; y <= r; y++) for (let x = -r; x <= r; x++) {
-    const d = Math.hypot(x, y) / r;
-    if (d > 1) continue;
-    if (d > 0.7 && ((x + y) & 1)) continue;
-    g.fillStyle = d < 0.5 ? '#b89aa8' : '#806878';
-    g.fillRect(x + r + 1, y + r + 1, 1, 1);
+function buildPuff(S) {
+  const r = 16, L = layer(S, r * 2, r * 2), g = L.g;
+  const rg = g.createRadialGradient(r, r, 0, r, r, r);
+  rg.addColorStop(0, 'rgba(200,170,185,0.55)'); rg.addColorStop(0.5, 'rgba(150,120,140,0.28)'); rg.addColorStop(1, 'rgba(120,100,120,0)');
+  g.fillStyle = rg; g.fillRect(0, 0, r * 2, r * 2);
+  return L;
+}
+
+// terrace fans, seen from behind and rim-lit by the flares. kinds: still, arms (up/down), scarf
+function buildFan(S, body, hair, kind, armsUp) {
+  const L = layer(S, 36, 76), g = L.g;
+  const ax = 18, ay = 44;                                 // anchor: shoulder line centre
+  const rim = 'rgba(255,110,70,0.75)';
+  const arm = (side) => {
+    const sx = ax + side * 7.5, sy = ay + 2;
+    const hx = ax + side * (armsUp ? 10 : 11), hy = armsUp ? ay - 22 : ay - 9;
+    g.strokeStyle = body; g.lineWidth = 4.2; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(sx, sy); g.quadraticCurveTo(sx + side * 3, (sy + hy) / 2, hx, hy); g.stroke();
+    g.strokeStyle = rim; g.lineWidth = 0.7;
+    g.beginPath(); g.moveTo(sx + side * 1.5, sy - 1); g.quadraticCurveTo(sx + side * 4.6, (sy + hy) / 2, hx + side * 1.6, hy); g.stroke();
+    g.fillStyle = '#b07a64'; g.beginPath(); g.arc(hx, hy - 1.2, 2, 0, Math.PI * 2); g.fill();
+    return [hx, hy];
+  };
+  let hands = null;
+  if (kind !== 'still') hands = [arm(-1), arm(1)];
+  // torso
+  const tg = g.createLinearGradient(0, ay - 2, 0, ay + 32);
+  tg.addColorStop(0, body); tg.addColorStop(1, '#050306');
+  g.fillStyle = tg;
+  g.beginPath();
+  g.moveTo(ax - 10, ay + 32); g.lineTo(ax - 10.5, ay + 6); g.quadraticCurveTo(ax - 10, ay - 1, ax - 3, ay - 1.5);
+  g.lineTo(ax + 3, ay - 1.5); g.quadraticCurveTo(ax + 10, ay - 1, ax + 10.5, ay + 6); g.lineTo(ax + 10, ay + 32); g.closePath(); g.fill();
+  g.strokeStyle = rim; g.lineWidth = 0.8;
+  g.beginPath(); g.moveTo(ax - 10.3, ay + 8); g.quadraticCurveTo(ax - 10, ay - 1, ax - 3, ay - 1.5); g.lineTo(ax + 3, ay - 1.5); g.quadraticCurveTo(ax + 10, ay - 1, ax + 10.3, ay + 8); g.stroke();
+  // neck + head (back of)
+  g.fillStyle = '#7a4c3c'; g.fillRect(ax - 2.4, ay - 4.5, 4.8, 4);
+  const hg = g.createRadialGradient(ax, ay - 12, 1, ax, ay - 9, 7);
+  hg.addColorStop(0, hair === 'bald' ? '#c09078' : shadeC(hair, 0.25)); hg.addColorStop(1, hair === 'bald' ? '#6a4434' : hair);
+  g.fillStyle = hg; g.beginPath(); g.ellipse(ax, ay - 9, 4.6, 5.4, 0, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = 'rgba(255,120,80,0.6)'; g.lineWidth = 0.6;
+  g.beginPath(); g.ellipse(ax, ay - 9, 4.6, 5.4, 0, Math.PI * 1.1, Math.PI * 1.9); g.stroke();
+  g.fillStyle = '#9a6450'; g.beginPath(); g.ellipse(ax - 4.6, ay - 8.5, 0.9, 1.6, 0, 0, Math.PI * 2); g.ellipse(ax + 4.6, ay - 8.5, 0.9, 1.6, 0, 0, Math.PI * 2); g.fill();
+  if (kind === 'scarf' && hands) {
+    // scarf held taut overhead
+    const [[x0, y0], [x1, y1]] = hands;
+    const n = 7;
+    for (let i = 0; i < n; i++) {
+      const a = i / n, b = (i + 1) / n;
+      g.fillStyle = i % 2 ? WHITE : RED;
+      g.beginPath();
+      g.moveTo(x0 + (x1 - x0) * a, y0 - 3.6 + Math.sin(a * Math.PI) * 1.2); g.lineTo(x0 + (x1 - x0) * b, y0 - 3.6 + Math.sin(b * Math.PI) * 1.2);
+      g.lineTo(x0 + (x1 - x0) * b, y0 + 0.6 + Math.sin(b * Math.PI) * 1.2); g.lineTo(x0 + (x1 - x0) * a, y0 + 0.6 + Math.sin(a * Math.PI) * 1.2); g.closePath(); g.fill();
+    }
+    g.strokeStyle = RED; g.lineWidth = 0.6;
+    g.beginPath(); g.moveTo(x0 - 0.5, y0); g.lineTo(x0 - 1.5, y0 + 6); g.moveTo(x1 + 0.5, y1); g.lineTo(x1 + 1.5, y1 + 6); g.stroke();
   }
-  return c;
+  return L;
+}
+function shadeC(hex, k) {
+  const n = parseInt(hex.slice(1), 16);
+  const f = c => Math.round(c + (255 - c) * k);
+  return `rgb(${f((n >> 16) & 255)},${f((n >> 8) & 255)},${f(n & 255)})`;
 }
 
+// ---------------------------------------------------------------- the backdrop
 export class Backdrop {
   constructor() {
     this.t = 0;
-    this.ready = false;
+    this.ready = true;
     this.smoke = [];
     this.sparks = [];
+    this.flashes = [];
+    this.caches = new Map();
     const rng = makeRng(42);
-    // far crowd: tiers of tiny supporters
+    // far crowd: tiers of supporters, slightly larger toward the front
     this.far = [];
-    for (let row = 0; row < 9; row++) {
-      const y = STAND_TOP + 3 + row * 6;
-      for (let x = 44 + (row % 2) * 2; x < VIEW_W - 44; x += 4) {
-        if (rng() < 0.08) continue;
+    const rows = 10;
+    for (let row = 0; row < rows; row++) {
+      const y = STAND_TOP + 4 + row * 5.8, s = 0.82 + row * 0.04;
+      for (let x = 40 + (row % 2) * 1.7; x < VIEW_W - 40; x += 3.5 * s) {
+        if (rng() < 0.06) continue;
         const r = rng();
-        this.far.push({ x, y, c: r < 0.5 ? RED : r < 0.8 ? WHITE : r < 0.9 ? '#3a2a3a' : '#8a1020', ph: x * 0.07 + row * 0.6 + rng(), scarf: rng() < 0.18 });
+        this.far.push({ x: x + (rng() - 0.5) * 0.6, y, s, layer: Math.floor(rng() * 3), c: r < 0.5 ? RED : r < 0.75 ? '#e8e2d6' : r < 0.88 ? '#2a2030' : '#7a0c20', skin: rng() < 0.85 ? '#d0a088' : '#8a5c48', scarf: rng() < 0.14 });
       }
     }
-    // near terrace crowd (backs of heads, arms, held scarves)
+    // terrace crowd in front (backs of heads, arms, held scarves)
     this.near = [];
     for (let row = 0; row < 4; row++) {
-      const y = 300 + row * 16;
-      for (let x = -10 + (row % 2) * 9; x < VIEW_W + 10; x += 17 + Math.floor(rng() * 6)) {
+      const y = 306 + row * 15;
+      for (let x = -12 + (row % 2) * 9; x < VIEW_W + 12; x += 16 + rng() * 6) {
         const r = rng();
-        this.near.push({ x, y: y + Math.floor(rng() * 4), row, ph: rng() * 6, kind: r < 0.14 ? 'scarf' : r < 0.36 ? 'arms' : 'still', c: rng() < 0.4 ? '#160e16' : rng() < 0.5 ? '#100e18' : '#22090e', hair: rng() < 0.5 ? '#0a0608' : '#1e140c' });
+        this.near.push({ x, y: y + rng() * 4, row, ph: rng() * 6, kind: r < 0.16 ? 'scarf' : r < 0.4 ? 'arms' : 'still', v: Math.floor(rng() * 4), s: 0.92 + row * 0.08 + rng() * 0.06 });
       }
     }
     this.near.sort((a, b) => a.y - b.y);
-    this.flares = [{ x: 96, y: 306 }, { x: 352, y: 312 }, { x: 556, y: 304 }];
-    this.flags = [{ x: 200, y: 262, w: 46, h: 28, ph: 0 }, { x: 466, y: 266, w: 40, h: 24, ph: 2 }];
+    this.flares = [{ x: 96, y: 304 }, { x: 352, y: 310 }, { x: 556, y: 302 }];
+    this.flags = [{ x: 196, y: 258, w: 50, h: 30, ph: 0 }, { x: 468, y: 262, w: 42, h: 25, ph: 2 }];
+    this.stars = [];
+    for (let i = 0; i < 26; i++) this.stars.push({ x: rng() * VIEW_W, y: Math.pow(rng(), 1.3) * 104, ph: rng() * 10, f: 0.8 + rng() * 1.6 });
     this.refreshLook();
   }
 
   refreshLook() {
     this.lads = [0, 1, 2, 3, 4].map(i => ({
       look: i === 2 ? buildLook(save.data.outfit) : casualLook(makeRng(i * 7 + 3), { a: RED, b: WHITE }),
-      x: [208, 262, 320, 378, 432][i], anim: i === 2 ? 'guard' : i % 2 ? 'cheer' : 'idle', ph: i * 0.37, scale: i === 2 ? 2 : 1.6,
+      x: [196, 258, 320, 382, 444][i], anim: i === 2 ? 'guard' : i % 2 ? 'cheer' : 'idle', ph: i * 0.37, scale: i === 2 ? 2 : 1.6,
+      yaw: [0.55, 0.3, 0, -0.3, -0.55][i], h: i === 2 ? 112 : 92, feet: i === 2 ? 356 : 350,
     }));
-    this.ladDirty = true;
   }
 
-  build() {
-    this.static = buildStatic();
-    this.lampGlow = buildGlow(46, 'rgba(255,250,220,0.9)');
-    this.flareGlow = buildGlow(60, 'rgba(255,70,40,0.75)');
-    this.beamL = buildBeam(200, 70, 0.9);
-    this.beamR = buildBeam(200, 70, -0.9);
-    this.puffs = [buildPuff(4), buildPuff(6), buildPuff(9), buildPuff(12)];
-    this.farFrames = [];
-    const NF = 10;
-    for (let k = 0; k < NF; k++) {
-      const c = makeCanvas(VIEW_W, BOARDS);
-      const g = c.getContext('2d');
-      const t = k / NF * (Math.PI * 2 / 5) * 1;   // one bounce period (sin(t*5)) sampled NF times
-      for (const p of this.far) {
-        const jump = Math.max(0, Math.sin(t * 5 + p.ph)) > 0.8 ? 1 : 0;
-        g.fillStyle = p.c; g.fillRect(p.x, p.y - jump, 2, 3);
-        g.fillStyle = '#c89878'; g.fillRect(p.x, p.y - 2 - jump, 2, 1);
-        if (p.scarf && Math.sin(t * 5 + p.ph * 2) > 0) { g.fillStyle = RED; g.fillRect(p.x - 1, p.y - 4 - jump, 4, 1); g.fillStyle = WHITE; g.fillRect(p.x + 1, p.y - 4 - jump, 1, 1); }
-      }
-      this.farFrames.push(c);
+  build() { /* caches are built lazily per output resolution */ }
+
+  cache(S) {
+    const key = Math.round(S * 100);
+    let c = this.caches.get(key);
+    if (c) return c;
+    if (this.caches.size >= 2) this.caches.delete(this.caches.keys().next().value);
+    const BODY = ['#1c1018', '#14101c', '#2a0a12', '#181418'], HAIR = ['#0e0a0a', '#2a1a10', '#4a3020', 'bald'];
+    c = {
+      static: buildStatic(S),
+      crowd: buildCrowd(S, this.far),
+      ads: buildAds(S),
+      lampGlow: buildGlow(S, 70, '255,250,225', 0.95),
+      lampCore: buildGlow(S, 8, '255,255,245', 1),
+      flareGlow: buildGlow(S, 80, '255,80,40', 0.7),
+      sparkGlow: buildGlow(S, 4, '255,220,140', 1),
+      beamL: buildBeam(S, 1), beamR: buildBeam(S, -1),
+      puff: buildPuff(S),
+      fans: [],
+    };
+    for (let v = 0; v < 4; v++) {
+      c.fans.push({
+        still: buildFan(S, BODY[v], HAIR[v], 'still', false),
+        down: buildFan(S, BODY[v], HAIR[v], 'arms', false),
+        up: buildFan(S, BODY[v], HAIR[v], 'arms', true),
+        scarf: buildFan(S, BODY[v], HAIR[(v + 1) % 4], 'scarf', true),
+      });
     }
-    for (const f of this.flags) f.canvas = this.buildFlag(f);
-    this.ready = true;
+    this.caches.set(key, c);
+    return c;
   }
 
   update(dt) {
     this.t += dt;
-    if (!this.ready) return;
     for (const f of this.flares) {
-      if (Math.random() < dt * 14) this.smoke.push({ x: f.x + (Math.random() - 0.5) * 4, y: f.y - 6, vx: 6 + Math.random() * 10, vy: -14 - Math.random() * 10, life: 0, max: 3 + Math.random() * 2 });
-      if (Math.random() < dt * 30) this.sparks.push({ x: f.x, y: f.y - 4, vx: (Math.random() - 0.5) * 40, vy: -30 - Math.random() * 40, life: 0, max: 0.4 + Math.random() * 0.3 });
+      if (Math.random() < dt * 12) this.smoke.push({ x: f.x + (Math.random() - 0.5) * 4, y: f.y - 6, vx: 6 + Math.random() * 10, vy: -12 - Math.random() * 10, life: 0, max: 3.5 + Math.random() * 2.5, r: 0.5 + Math.random() * 0.4, rot: Math.random() * 6 });
+      if (Math.random() < dt * 34) this.sparks.push({ x: f.x, y: f.y - 5, vx: (Math.random() - 0.5) * 46, vy: -30 - Math.random() * 46, life: 0, max: 0.4 + Math.random() * 0.4 });
     }
     for (const s of this.smoke) { s.life += dt; s.x += s.vx * dt; s.y += s.vy * dt; s.vy *= 0.995; s.vx += dt * 3; }
-    this.smoke = this.smoke.filter(s => s.life < s.max).slice(-140);
+    this.smoke = this.smoke.filter(s => s.life < s.max).slice(-120);
     for (const s of this.sparks) { s.life += dt; s.x += s.vx * dt; s.y += s.vy * dt; s.vy += 120 * dt; }
     this.sparks = this.sparks.filter(s => s.life < s.max);
+    // camera flashes in the far stand
+    if (Math.random() < dt * 3.5) { const p = this.far[Math.floor(Math.random() * this.far.length)]; this.flashes.push({ x: p.x, y: p.y - 1, life: 0 }); }
+    for (const f of this.flashes) f.life += dt;
+    this.flashes = this.flashes.filter(f => f.life < 0.12);
   }
 
   draw(ctx, opts = {}) {
     if (opts === false || opts === true) opts = { lads: opts };
-    if (!this.ready) this.build();
-    const t = this.t;
-    ctx.drawImage(this.static, 0, 0);
+    const S = devScale(ctx), C = this.cache(S), t = this.t;
+    blit(ctx, C.static, 0, 0);
     // twinkling stars
-    for (let i = 0; i < 18; i++) {
-      const on = Math.sin(t * (1.3 + i * 0.17) + i * 2.1) > 0.6;
-      if (!on) continue;
-      const x = (i * 97 + 31) % VIEW_W, y = (i * 53 + 7) % 100;
-      ctx.fillStyle = '#ffffff'; ctx.fillRect(x, y, 1, 1);
-      ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fillRect(x - 1, y, 3, 1); ctx.fillRect(x, y - 1, 1, 3);
+    for (const s of this.stars) {
+      const k = Math.sin(t * s.f + s.ph);
+      if (k < 0.4) continue;
+      ctx.globalAlpha = (k - 0.4) / 0.6;
+      ctx.drawImage(C.sparkGlow.c, s.x - 3, s.y - 3, 6, 6);
     }
-    // far crowd: cached bounce frames + a live scarf wave rolling along the stand
-    const fi = Math.floor(t * 8) % this.farFrames.length;
-    ctx.drawImage(this.farFrames[fi], 0, 0);
-    const wave = (t * 120) % (VIEW_W + 200) - 100;
-    for (const p of this.far) {
-      if (Math.abs(p.x - wave) >= 30) continue;
-      ctx.fillStyle = '#1e1626'; ctx.fillRect(p.x - 1, p.y - 5, 4, 8);
-      ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y - 2, 2, 3);
-      ctx.fillStyle = '#c89878'; ctx.fillRect(p.x, p.y - 4, 2, 1);
-      ctx.fillStyle = RED; ctx.fillRect(p.x - 1, p.y - 6, 4, 1); ctx.fillStyle = WHITE; ctx.fillRect(p.x + 1, p.y - 6, 1, 1);
-    }
-    // floodlight pylons
-    for (const [fx, dir] of [[64, 1], [VIEW_W - 64, -1]]) {
-      ctx.fillStyle = '#0a0812';
-      ctx.fillRect(fx - 3, 46, 6, 250);
-      for (let y = 50; y < 296; y += 10) { ctx.fillRect(fx - 6, y, 12, 1); }
-      ctx.fillStyle = '#1a1626'; for (let y = 50; y < 296; y += 10) { ctx.fillRect(fx - 5 + ((y / 10) % 2) * 5, y, 5, 10); }
-      ctx.fillStyle = '#0a0812'; ctx.fillRect(fx - 16, 24, 32, 22);
-      for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) {
-        const flick = (Math.floor(t * 4 + r * 3 + c * 7) % 23) === 0;
-        ctx.fillStyle = flick ? '#a09870' : '#fffbe0';
-        ctx.fillRect(fx - 14 + c * 6, 26 + r * 6, 5, 5);
-      }
+    ctx.globalAlpha = 1;
+    // crane aviation lights
+    if (Math.sin(t * 3) > 0) for (const cx of [26, 592]) { ctx.drawImage(C.sparkGlow.c, cx - 4, HORIZON - 90, 8, 8); }
+    // far crowd: three tiers bouncing out of phase
+    C.crowd.forEach((L, i) => blit(ctx, L, 0, STAND_TOP - 6 - Math.max(0, Math.sin(t * 5 + i * 2.1)) * 0.9));
+    // scarf wave rolling along the stand
+    const wave = (t * 110) % (VIEW_W + 240) - 120;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const wg = ctx.createLinearGradient(wave - 40, 0, wave + 40, 0);
+    wg.addColorStop(0, 'rgba(255,60,80,0)'); wg.addColorStop(0.5, 'rgba(255,90,100,0.16)'); wg.addColorStop(1, 'rgba(255,60,80,0)');
+    ctx.fillStyle = wg; ctx.fillRect(wave - 40, STAND_TOP, 80, STAND_BOT - STAND_TOP);
+    for (const f of this.flashes) { ctx.globalAlpha = 1 - f.life / 0.12; ctx.drawImage(C.sparkGlow.c, f.x - 4, f.y - 4, 8, 8); }
+    ctx.restore();
+    // LED boards (scroll)
+    const A = C.ads, off = (t * 14) % A.w;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, BOARDS, VIEW_W, A.h); ctx.clip();
+    for (let x = -off; x < VIEW_W; x += A.w) ctx.drawImage(A.c, x, BOARDS, A.w, A.h);
+    ctx.restore();
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, BOARDS + A.h, VIEW_W, 0.8);
+    // floodlights: lamps, beams, glare
+    for (const [fx, dir] of TOWERS) {
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
-      const beam = dir > 0 ? this.beamL : this.beamR;
-      ctx.globalAlpha = 0.85 + Math.sin(t * 0.7 + fx) * 0.1;
-      ctx.drawImage(beam.c, Math.round(fx - beam.ox), 40);
+      const beam = dir > 0 ? C.beamL : C.beamR;
+      ctx.globalAlpha = 0.8 + Math.sin(t * 0.7 + fx) * 0.12;
+      blit(ctx, beam.L, fx - beam.ox, 38);
       ctx.globalAlpha = 1;
-      ctx.drawImage(this.lampGlow, fx - 46, 36 - 46 + 6);
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) {
+        const flick = (Math.floor(t * 4 + r * 3 + c * 7) % 29) === 0;
+        ctx.globalAlpha = flick ? 0.35 : 1;
+        ctx.drawImage(C.lampCore.c, fx - 16 + c * 6.4 - 4, 21 + r * 7.2 - 4, 8, 8);
+      }
+      ctx.globalAlpha = 0.85 + Math.sin(t * 1.3 + fx) * 0.08;
+      blit(ctx, C.lampGlow, fx - 70, 31 - 70);
+      // anamorphic streak
+      const sg = ctx.createLinearGradient(fx - 90, 0, fx + 90, 0);
+      sg.addColorStop(0, 'rgba(200,220,255,0)'); sg.addColorStop(0.5, 'rgba(230,240,255,0.55)'); sg.addColorStop(1, 'rgba(200,220,255,0)');
+      ctx.globalAlpha = 1; ctx.fillStyle = sg; ctx.fillRect(fx - 90, 30.5, 180, 0.9);
       ctx.restore();
-      // lens flare streak
-      ctx.fillStyle = 'rgba(255,255,230,0.5)'; ctx.fillRect(fx - 40, 35, 80, 1);
     }
     // flags on the near terrace
     for (const f of this.flags) this.drawFlag(ctx, f, t);
-    // perimeter fence
-    ctx.fillStyle = 'rgba(20,16,28,0.9)'; ctx.fillRect(0, PITCH_BOT - 4, VIEW_W, 3);
-    ctx.fillStyle = 'rgba(60,54,72,0.8)';
-    for (let x = 0; x < VIEW_W; x += 6) ctx.fillRect(x, PITCH_BOT - 26, 1, 24);
-    ctx.fillStyle = 'rgba(90,80,100,0.9)'; ctx.fillRect(0, PITCH_BOT - 27, VIEW_W, 2);
-    // flare glow behind near crowd
+    // flare glow behind the terrace crowd
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
-    for (const f of this.flares) { ctx.globalAlpha = 0.75 + Math.sin(t * 23 + f.x) * 0.15 + Math.sin(t * 7) * 0.1; ctx.drawImage(this.flareGlow, f.x - 60, f.y - 70); }
+    for (const f of this.flares) { ctx.globalAlpha = 0.7 + Math.sin(t * 23 + f.x) * 0.12 + Math.sin(t * 7) * 0.08; blit(ctx, C.flareGlow, f.x - 80, f.y - 90); }
     ctx.restore();
-    // near crowd
-    for (const p of this.near) this.drawFan(ctx, p, t);
-    // flares themselves + sparks
-    for (const f of this.flares) {
-      ctx.fillStyle = '#2a1018'; ctx.fillRect(f.x - 1, f.y - 2, 3, 12);
-      ctx.fillStyle = Math.sin(t * 40 + f.x) > 0 ? '#fff6c0' : '#ffd040'; ctx.fillRect(f.x - 2, f.y - 6, 5, 4);
-      ctx.fillStyle = '#ff6030'; ctx.fillRect(f.x - 1, f.y - 8, 3, 2);
+    // terrace crowd
+    for (const p of this.near) {
+      const bounce = Math.max(0, Math.sin(t * 5.5 + p.ph)) * 2.6;
+      const F = C.fans[p.v];
+      const spr = p.kind === 'still' ? F.still : p.kind === 'scarf' ? F.scarf : (Math.sin(t * 5.5 + p.ph) > -0.2 ? F.up : F.down);
+      const w = spr.w * p.s, h = spr.h * p.s;
+      ctx.drawImage(spr.c, p.x - w / 2, p.y - bounce - 44 * p.s, w, h);
     }
-    for (const s of this.sparks) { ctx.fillStyle = s.life < s.max * 0.5 ? '#fff0a0' : '#ff8030'; ctx.fillRect(Math.round(s.x), Math.round(s.y), 1, 1); }
-    // smoke
-    for (const s of this.smoke) {
+    // flares + sparks + smoke
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (const f of this.flares) {
+      ctx.fillStyle = '#3a1418'; ctx.fillRect(f.x - 1, f.y - 2, 2.2, 12);
+      ctx.globalAlpha = 0.9 + Math.sin(t * 40 + f.x) * 0.1;
+      ctx.drawImage(C.lampCore.c, f.x - 6, f.y - 11, 12, 12);
+      ctx.drawImage(C.flareGlow.c, f.x - 16, f.y - 21, 32, 32);
+      ctx.globalAlpha = 1;
+    }
+    for (const s of this.sparks) {
       const k = s.life / s.max;
-      const pi = Math.min(3, Math.floor(k * 4));
-      ctx.globalAlpha = (1 - k) * 0.45;
-      const pc = this.puffs[pi];
-      ctx.drawImage(pc, Math.round(s.x - pc.width / 2), Math.round(s.y - pc.height / 2));
+      ctx.globalAlpha = 1 - k;
+      ctx.drawImage(C.sparkGlow.c, s.x - 2, s.y - 2, 4, 4);
+    }
+    ctx.restore();
+    for (const s of this.smoke) {
+      const k = s.life / s.max, r = (6 + k * 26) * s.r * 2;
+      ctx.globalAlpha = Math.sin(Math.min(1, k * 4) * Math.PI / 2) * (1 - k) * 0.55;
+      ctx.drawImage(C.puff.c, s.x - r, s.y - r, r * 2, r * 2);
     }
     ctx.globalAlpha = 1;
-    // red flare tint over the terrace
-    ctx.fillStyle = `rgba(160,20,30,${0.08 + Math.sin(t * 9) * 0.02})`; ctx.fillRect(0, 280, VIEW_W, 80);
-    // lads in front
-    if (opts.lads) {
-      // the dolls are expensive: render them into a layer at 15 fps
-      const LY = 200;
-      if (!this.ladLayer) this.ladLayer = makeCanvas(VIEW_W, VIEW_H - LY);
-      const frame = Math.floor(t * 15);
-      if (frame !== this.ladFrame || this.ladDirty) {
-        this.ladFrame = frame; this.ladDirty = false;
-        const g = this.ladLayer.getContext('2d');
-        g.clearRect(0, 0, VIEW_W, VIEW_H - LY);
-        const tt = frame / 15;
-        for (const l of this.lads) {
-          const flip = l.x > VIEW_W / 2;
-          drawDoll(g, l.x, VIEW_H - LY, l.look, sampleAnim(l.anim, tt + l.ph), { flip, time: tt, face: l.anim === 'guard' ? 'angry' : 'shout', scale: l.scale });
-        }
-      }
-      ctx.drawImage(this.ladLayer, 0, LY);
+    // red flare light over the terrace + floor shadow
+    const tg = ctx.createLinearGradient(0, 270, 0, VIEW_H);
+    tg.addColorStop(0, 'rgba(170,24,30,0)'); tg.addColorStop(0.4, `rgba(170,24,30,${0.12 + Math.sin(t * 9) * 0.02})`); tg.addColorStop(1, 'rgba(10,2,6,0.55)');
+    ctx.fillStyle = tg; ctx.fillRect(0, 270, VIEW_W, VIEW_H - 270);
+    if (opts.lads) this.drawLads(ctx, t);
+    if (opts.dim) {
+      ctx.fillStyle = `rgba(4,2,10,${opts.dim})`; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
     }
-    if (opts.dim) { ctx.fillStyle = `rgba(4,2,10,${opts.dim})`; ctx.fillRect(0, 0, VIEW_W, VIEW_H); }
   }
 
-  buildFlag(f) {
-    const c = makeCanvas(f.w, f.h);
-    const g = c.getContext('2d');
-    for (let x = 0; x < f.w; x++) for (let y = 0; y < f.h; y++) {
-      const stripe = Math.floor(y / (f.h / 5)) % 2;
-      let col = stripe ? WHITE : RED;
-      // anchor emblem in the middle
-      const ax = x - f.w / 2, ay = y - f.h / 2;
-      if ((Math.abs(ax) < 1 && ay > -7 && ay < 7) || (ay > 5 && ay < 7 && Math.abs(ax) < 6) || (ay > 2 && ay < 6 && Math.abs(Math.abs(ax) - 6) < 1) || (Math.abs(ay + 6) < 1.5 && Math.abs(ax) < 3)) col = '#120c14';
-      g.fillStyle = col; g.fillRect(x, y, 1, 1);
+  // the firm in front: rigged 3D characters when available, else the 2D dolls
+  drawLads(ctx, t) {
+    // contact shadows / flare light on the ground
+    for (const l of this.lads) {
+      const g = ctx.createRadialGradient(l.x, l.feet, 0, l.x, l.feet, l.h * 0.3);
+      g.addColorStop(0, 'rgba(0,0,0,0.6)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(l.x, l.feet, l.h * 0.3, l.h * 0.07, 0, 0, Math.PI * 2); ctx.fill();
     }
-    return c;
+    const stage = r3d.menu;
+    if (stage && stage.ready && stage.draw(ctx, 'lads', this.lads.map(l => ({ look: l.look, x: l.x, feet: l.feet, h: l.h, anim: l.anim, phase: l.ph, yaw: l.yaw })), { x: 120, y: 210, w: 400, h: 150 }, t, { light: 'terrace' })) return;
+    const sorted = [...this.lads].sort((a, b) => a.scale - b.scale);
+    for (const l of sorted) {
+      const flip = l.x > VIEW_W / 2;
+      drawDoll(ctx, l.x, l.feet + 2, l.look, sampleAnim(l.anim, t + l.ph), { flip, time: t, face: l.anim === 'guard' ? 'angry' : 'shout', scale: l.scale });
+    }
   }
 
   drawFlag(ctx, f, t) {
     // pole
-    ctx.fillStyle = '#18121e'; ctx.fillRect(f.x - 1, f.y - 4, 2, 70);
-    if (!f.canvas) f.canvas = this.buildFlag(f);
-    for (let x = 0; x < f.w; x++) {
-      const off = Math.round(Math.sin(t * 4 + f.ph - x * 0.18) * (x / f.w) * 4);
-      ctx.drawImage(f.canvas, x, 0, 1, f.h, f.x + 1 + x, f.y + off, 1, f.h);
-      const shade = Math.sin(t * 4 + f.ph - x * 0.18 - 0.6) * 0.25;
-      if (Math.abs(shade) > 0.05) { ctx.fillStyle = shade > 0 ? `rgba(255,255,255,${(shade * 0.5).toFixed(2)})` : `rgba(0,0,0,${(-shade).toFixed(2)})`; ctx.fillRect(f.x + 1 + x, f.y + off, 1, f.h); }
-    }
-  }
-
-  drawFan(ctx, p, t) {
-    const bounce = Math.round(Math.max(0, Math.sin(t * 5.5 + p.ph)) * 3);
-    const y = p.y - bounce;
-    const lit = p.row === 0 ? 0.2 : 0;
-    // shoulders / back
-    ctx.fillStyle = '#05030a'; ctx.fillRect(p.x - 8, y - 1, 18, 30);
-    ctx.fillStyle = p.c; ctx.fillRect(p.x - 7, y, 16, 30);
-    ctx.fillStyle = `rgba(255,80,60,${0.25 + lit})`; ctx.fillRect(p.x - 7, y, 16, 1);
-    // head (back of)
-    ctx.fillStyle = '#05030a'; ctx.fillRect(p.x - 4, y - 11, 10, 12);
-    ctx.fillStyle = p.hair; ctx.fillRect(p.x - 3, y - 10, 8, 10);
-    ctx.fillStyle = '#8a5a48'; ctx.fillRect(p.x - 3, y - 2, 8, 2);
-    ctx.fillStyle = 'rgba(255,90,60,0.35)'; ctx.fillRect(p.x - 3, y - 10, 8, 1);
-    if (p.kind === 'arms' || p.kind === 'scarf') {
-      const up = Math.sin(t * 5.5 + p.ph) > -0.2;
-      const ay = up ? y - 20 : y - 12;
-      ctx.fillStyle = '#05030a'; ctx.fillRect(p.x - 10, ay - 1, 5, y - ay + 3); ctx.fillRect(p.x + 7, ay - 1, 5, y - ay + 3);
-      ctx.fillStyle = p.c; ctx.fillRect(p.x - 9, ay, 3, y - ay + 2); ctx.fillRect(p.x + 8, ay, 3, y - ay + 2);
-      ctx.fillStyle = '#c89878'; ctx.fillRect(p.x - 9, ay - 2, 3, 3); ctx.fillRect(p.x + 8, ay - 2, 3, 3);
-      if (p.kind === 'scarf') {
-        // scarf held taut overhead
-        for (let k = 0; k < 6; k++) { ctx.fillStyle = k % 2 ? WHITE : RED; ctx.fillRect(p.x - 8 + k * 3, ay - 3, 3, 4); }
-        ctx.fillStyle = '#05030a'; ctx.fillRect(p.x - 8, ay - 4, 18, 1);
-        ctx.fillStyle = RED; ctx.fillRect(p.x - 9, ay + 1, 1, 6); ctx.fillRect(p.x + 10, ay + 1, 1, 6);
+    const pg = ctx.createLinearGradient(f.x - 1, 0, f.x + 1, 0);
+    pg.addColorStop(0, '#6a6070'); pg.addColorStop(1, '#16101c');
+    ctx.fillStyle = pg; ctx.fillRect(f.x - 1, f.y - 5, 2, 74);
+    ctx.fillStyle = '#d8c070'; ctx.beginPath(); ctx.arc(f.x, f.y - 6, 1.6, 0, Math.PI * 2); ctx.fill();
+    const N = 18, stripes = 5;
+    const off = x => Math.sin(t * 4 + f.ph - x * 0.16) * (x / f.w) * 4.2;
+    ctx.save();
+    for (let i = 0; i < N; i++) {
+      const x0 = i / N * f.w, x1 = (i + 1) / N * f.w;
+      const o0 = off(x0), o1 = off(x1);
+      for (let s = 0; s < stripes; s++) {
+        const y0 = f.y + s * f.h / stripes, y1 = y0 + f.h / stripes;
+        ctx.fillStyle = s % 2 ? WHITE : RED;
+        ctx.beginPath();
+        ctx.moveTo(f.x + 1 + x0, y0 + o0); ctx.lineTo(f.x + 1 + x1 + 0.3, y0 + o1); ctx.lineTo(f.x + 1 + x1 + 0.3, y1 + o1 + 0.3); ctx.lineTo(f.x + 1 + x0, y1 + o0 + 0.3);
+        ctx.closePath(); ctx.fill();
       }
+      // fold shading
+      const shade = Math.sin(t * 4 + f.ph - x0 * 0.16 - 0.8) * 0.3;
+      ctx.fillStyle = shade > 0 ? `rgba(255,255,255,${(shade * 0.45).toFixed(3)})` : `rgba(0,0,0,${(-shade * 0.9).toFixed(3)})`;
+      ctx.beginPath(); ctx.moveTo(f.x + 1 + x0, f.y + o0); ctx.lineTo(f.x + 1 + x1 + 0.3, f.y + o1); ctx.lineTo(f.x + 1 + x1 + 0.3, f.y + f.h + o1); ctx.lineTo(f.x + 1 + x0, f.y + f.h + o0); ctx.closePath(); ctx.fill();
     }
+    // anchor emblem
+    const cx = f.x + 1 + f.w / 2, cy = f.y + f.h / 2 + off(f.w / 2);
+    ctx.strokeStyle = '#120c14'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(cx, cy - 7); ctx.lineTo(cx, cy + 6); ctx.moveTo(cx - 3.5, cy - 4); ctx.lineTo(cx + 3.5, cy - 4);
+    ctx.moveTo(cx - 6, cy + 2); ctx.quadraticCurveTo(cx - 5, cy + 7, cx, cy + 6.5); ctx.quadraticCurveTo(cx + 5, cy + 7, cx + 6, cy + 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy - 8.2, 1.4, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
   }
 }
 

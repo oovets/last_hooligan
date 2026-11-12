@@ -7,6 +7,9 @@
 <meta name="description" content="THE LAST HOOLIGAN - a retro isometric terrace brawler. No rules. No fear. Just football.">
 <title>THE LAST HOOLIGAN</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Crect width='16' height='16' fill='%23120c14'/%3E%3Crect x='1' y='1' width='14' height='14' fill='%23c8102e'/%3E%3Crect x='3' y='3' width='2' height='10' fill='%23f4f1e8'/%3E%3Crect x='11' y='3' width='2' height='10' fill='%23f4f1e8'/%3E%3Crect x='5' y='7' width='6' height='2' fill='%23f4f1e8'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;0,800;1,600&display=swap">
 <style>
   html,body{margin:0;height:100%;background:#05040a;overflow:hidden}
   body{display:flex;align-items:center;justify-content:center}
@@ -14,11 +17,13 @@
   #stage canvas{position:absolute;left:0;top:0}
   #gl{display:none;image-rendering:auto}
   canvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block;background:#000;outline:none}
+  canvas.hd{image-rendering:auto}
   #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;
-    font:bold 14px/1.4 monospace;letter-spacing:3px;color:#f4f1e8;background:#05040a;pointer-events:none}
-  #loading b{color:#c8102e;font-size:22px}
-  #loading i{font-style:normal;color:#8a7a9a;animation:blink 1s steps(2) infinite}
-  @keyframes blink{50%{opacity:0}}
+    font:600 15px/1.4 "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:4px;color:#f4f1e8;
+    background:radial-gradient(ellipse at 50% 40%,#2a0c1e 0%,#0a0612 55%,#05040a 100%);pointer-events:none}
+  #loading b{font:400 44px/1 Anton,Impact,sans-serif;letter-spacing:2px;color:#e8203c;text-shadow:0 0 24px rgba(232,32,60,.5)}
+  #loading i{font-style:normal;color:#8a7a9a;animation:blink 1.4s ease-in-out infinite}
+  @keyframes blink{50%{opacity:.25}}
 </style>
 </head>
 <body>

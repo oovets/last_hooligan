@@ -14,7 +14,8 @@ import { sampleAnim, attackPose, ATTACK_POSES, ANIMS } from '../game/poses.js';
 import { ATTACKS } from '../game/combat.js';
 import { specForLook, drawCharacter, SPRITE_MODELS } from '../game/sprites.js';
 import { backdrop } from './backdrop.js';
-import { frame, bar, hintBar, heading, lockIcon, Repeater, blink, C } from './widgets.js';
+import { frame, bar, hintBar, heading, lockIcon, Repeater, blink, C, rrect, devScale } from './widgets.js';
+import { r3d } from '../render3d/index.js';
 
 const MOVES = {
   hooligan: ['J J J / J K L / K J K COMBOS', 'L L = SPIN KICK', 'RUN + J = SHOULDER CHARGE', 'WARDROBE: DRESS HIM UP'],
@@ -86,6 +87,14 @@ export class CharSelectScene {
   drawFighter(ctx, i, x, y, scale, facing, dark) {
     const c = CHARACTERS[i], spec = this.specs[i], look = this.looks[i];
     const d = this.demo(c);
+    // rigged 3D character when the 3D renderer is loaded
+    const stage = r3d.menu;
+    if (stage && stage.ready) {
+      const pose = d.attack ? attackPose(d.attack, d.phase, d.p) : null;
+      const yaw = 0.35 + Math.sin(this.t * 0.45) * 0.55;
+      const H = 150 * (look.height || 1);
+      if (stage.draw(ctx, 'select', [{ look, x, feet: y, h: H, anim: d.anim || 'guard', phase: d.t - this.t, pose, yaw, dark }], { x: 16, y: 40, w: 246, h: 248 }, this.t, { light: 'studio' })) return;
+    }
     if (SPRITE_MODELS[spec.model]) {
       let clip = 'idle', frame = 0;
       const meta = SPRITE_MODELS[spec.model].meta;
@@ -122,12 +131,20 @@ export class CharSelectScene {
     ctx.fillStyle = g; ctx.fillRect(16, 40, 246, 248);
     ctx.restore();
     ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.beginPath(); ctx.ellipse(139, 262, 46, 14, 0, 0, Math.PI * 2); ctx.fill();
+    // spotlight cone
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const cone = ctx.createLinearGradient(0, 40, 0, 262);
+    cone.addColorStop(0, 'rgba(255,240,215,0.16)'); cone.addColorStop(1, 'rgba(255,240,215,0.02)');
+    ctx.fillStyle = cone; ctx.beginPath(); ctx.moveTo(129, 40); ctx.lineTo(149, 40); ctx.lineTo(205, 262); ctx.lineTo(73, 262); ctx.closePath(); ctx.fill();
+    ctx.restore();
+    ctx.save(); ctx.shadowColor = 'rgba(255,40,70,0.9)'; ctx.shadowBlur = 8 * devScale(ctx);
+    ctx.strokeStyle = 'rgba(255,74,94,0.9)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(139, 262, 50, 8, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
     const di = Math.floor(this.t / 2.2) % 3;
     const facing = [DIRS[0], DIRS[1], DIRS[7]][di];
     const pickBounce = this.picked >= 0 ? Math.sin(Math.min(1, this.pickT * 3) * Math.PI) * 8 : 0;
     this.drawFighter(ctx, this.sel, 139, 262 - pickBounce, 2.3, facing, !unlocked);
     if (!unlocked) { lockIcon(ctx, 131, 140, 2); }
-    drawText(ctx, c.nick ? '"' + c.nick + '"' : '', 139, 272, { color: C.dim, align: 'center' });
+    drawText(ctx, c.nick ? '"' + c.nick + '"' : '', 139, 276, { color: C.dim, align: 'center' });
 
     // ---- info panel
     const px = 278, pw = VIEW_W - px - 14;
@@ -147,7 +164,26 @@ export class CharSelectScene {
 
     // ---- roster strip (portraits)
     const n = CHARACTERS.length, cw = 40, x0 = Math.round(VIEW_W / 2 - (n * (cw + 6) - 6) / 2), y0 = 298;
+    const stage = r3d.menu, busts = [];
     CHARACTERS.forEach((ch, i) => {
+      const x = x0 + i * (cw + 6), sel = i === this.sel;
+      frame(ctx, x, y0, cw, 36, { accent: sel ? C.gold : null, fill: sel ? 'rgba(80,10,24,0.95)' : 'rgba(14,9,22,0.9)', rivets: false, edge: sel ? '#ffd23a' : undefined });
+      busts.push({ look: this.looks[i], x: x + cw / 2, feet: y0 + 4 + 118 * (this.looks[i].height || 1), h: 118 * (this.looks[i].height || 1), anim: 'idle', phase: i * 0.7, yaw: sel ? 0.25 + Math.sin(this.t * 2) * 0.2 : 0.35, dark: !isCharacterUnlocked(ch, save.data) });
+    });
+    let drew3d = false;
+    if (stage && stage.ready) {
+      ctx.save();
+      ctx.beginPath(); CHARACTERS.forEach((ch, i) => rrect(ctx, x0 + i * (cw + 6) + 1, y0 + 1, cw - 2, 34, 4, true)); ctx.clip();
+      drew3d = stage.draw(ctx, 'roster', busts, { x: x0 - 6, y: y0 - 4, w: n * (cw + 6) + 6, h: 44 }, this.t, { light: 'studio' });
+      ctx.restore();
+    }
+    CHARACTERS.forEach((ch, i) => {
+      if (drew3d) {
+        const x = x0 + i * (cw + 6), sel = i === this.sel;
+        if (!isCharacterUnlocked(ch, save.data)) lockIcon(ctx, x + 17, y0 + 14, 1);
+        if (sel) { ctx.save(); ctx.shadowColor = 'rgba(255,210,58,0.9)'; ctx.shadowBlur = 8 * devScale(ctx); ctx.strokeStyle = C.gold; ctx.lineWidth = 1; rrect(ctx, x - 1, y0 - 1, cw + 2, 38, 5); ctx.stroke(); ctx.restore(); }
+        return;
+      }
       const x = x0 + i * (cw + 6), sel = i === this.sel, ok = isCharacterUnlocked(ch, save.data);
       frame(ctx, x, y0, cw, 36, { accent: sel ? C.gold : null, fill: sel ? 'rgba(80,10,24,0.95)' : 'rgba(14,9,22,0.9)', rivets: false });
       if (ok) drawPortrait(ctx, this.looks[i], x + 4, y0 + 3, 32, { face: sel ? 'shout' : 'angry' });

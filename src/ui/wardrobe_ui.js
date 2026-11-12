@@ -10,7 +10,7 @@ import { drawDoll } from '../game/doll.js';
 import { sampleAnim } from '../game/poses.js';
 import { WARDROBE, CATEGORY_NAMES, CATEGORY_ORDER, buildLook, isUnlocked, isOwned, progressTotals } from '../content/wardrobe.js';
 import { backdrop } from './backdrop.js';
-import { frame, hintBar, heading, lockIcon, tickIcon, starIcon, coinIcon, scarfIcon, badgeIcon, Repeater, scanlines, C } from './widgets.js';
+import { frame, hintBar, heading, lockIcon, tickIcon, starIcon, coinIcon, scarfIcon, badgeIcon, Repeater, scanlines, C, ladFigure, devScale, rrect } from './widgets.js';
 
 const ANIMS = ['idle', 'guard', 'taunt', 'victory', 'cheer'];
 const TABS = { jacket: 'JACKET', pants: 'LEGS', shoes: 'SHOES', scarf: 'SCARF', hair: 'HAIR', hairColor: 'DYE', facial: 'FACE', extra: 'HATS', gloves: 'GLOVE' };
@@ -91,16 +91,24 @@ export class WardrobeScene {
     sg.addColorStop(0, 'rgba(255,240,200,0.22)'); sg.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = sg; ctx.fillRect(sx + 2, sy + 2, sw - 4, sh - 4);
     // spotlight cone + pedestal
-    ctx.fillStyle = 'rgba(255,250,220,0.07)';
+    const cone = ctx.createLinearGradient(0, sy, 0, sy + 236);
+    cone.addColorStop(0, 'rgba(255,248,225,0.14)'); cone.addColorStop(1, 'rgba(255,248,225,0.03)');
+    ctx.fillStyle = cone;
     ctx.beginPath(); ctx.moveTo(sx + sw / 2 - 12, sy + 2); ctx.lineTo(sx + sw / 2 + 12, sy + 2); ctx.lineTo(sx + sw / 2 + 70, sy + 236); ctx.lineTo(sx + sw / 2 - 70, sy + 236); ctx.fill();
-    ctx.fillStyle = '#2a1e36'; ctx.beginPath(); ctx.ellipse(sx + sw / 2, sy + 238, 64, 12, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#c8102e'; ctx.beginPath(); ctx.ellipse(sx + sw / 2, sy + 236, 60, 10, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#e8304a'; ctx.beginPath(); ctx.ellipse(sx + sw / 2, sy + 234, 56, 8, 0, 0, Math.PI * 2); ctx.fill();
+    { // pedestal: dark disc with a glowing club-red rim
+      const px = sx + sw / 2, py = sy + 236;
+      const pg = ctx.createLinearGradient(0, py - 8, 0, py + 12);
+      pg.addColorStop(0, '#3a2a46'); pg.addColorStop(1, '#0a0610');
+      ctx.fillStyle = pg; ctx.beginPath(); ctx.ellipse(px, py + 3, 62, 11, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.save(); ctx.shadowColor = 'rgba(255,40,70,0.9)'; ctx.shadowBlur = 10 * devScale(ctx);
+      ctx.strokeStyle = '#ff4a5e'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(px, py, 58, 9, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+      ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.ellipse(px, py, 24, 4, 0, 0, Math.PI * 2); ctx.fill();
+    }
     const preview = { ...d.outfit, [this.cat]: this.opt.id };
     const look = buildLook(preview);
     const anim = ANIMS[Math.floor(this.t / 3) % ANIMS.length];
     const turn = Math.floor(this.t / 6) % 2 === 1;
-    drawDoll(ctx, sx + sw / 2, sy + 234, look, sampleAnim(anim, this.t), { scale: 4, flip: turn, time: this.t, face: anim === 'taunt' || anim === 'cheer' ? 'shout' : 'angry' });
+    ladFigure(ctx, look, sx + sw / 2, sy + 234, 4.8, this.t, { key: 'wardrobe', anim, flip: turn, yaw: turn ? -0.6 + Math.sin(this.t * 0.7) * 0.25 : 0.6 + Math.sin(this.t * 0.7) * 0.25, face: anim === 'taunt' || anim === 'cheer' ? 'shout' : 'angry' });
     for (const s of this.spark) { ctx.globalAlpha = 1 - s.t / 0.9; ctx.fillStyle = s.c; ctx.fillRect(Math.round(sx + s.x - 20), Math.round(sy + s.y), 2, 2); }
     ctx.globalAlpha = 1;
     drawText(ctx, 'THE LAST HOOLIGAN', sx + sw / 2, sy + sh - 14, { color: C.gold, align: 'center', outline: '#000' });
@@ -110,8 +118,8 @@ export class WardrobeScene {
     const tabW = pw / this.cats.length;
     this.cats.forEach((c, i) => {
       const x = Math.round(px + i * tabW), sel = i === this.ci;
-      ctx.fillStyle = sel ? C.red : 'rgba(30,20,44,0.9)'; ctx.fillRect(x, 44, Math.ceil(tabW) - 2, 12);
-      if (sel) { ctx.fillStyle = '#ff6a7a'; ctx.fillRect(x, 44, Math.ceil(tabW) - 2, 1); }
+      ctx.save(); if (sel) { ctx.shadowColor = 'rgba(232,24,56,0.7)'; ctx.shadowBlur = 8 * devScale(ctx); }
+      ctx.fillStyle = sel ? C.red : 'rgba(30,20,44,0.9)'; rrect(ctx, x, 43, Math.ceil(tabW) - 2, 14, 3.5); ctx.fill(); ctx.restore();
       const short = TABS[c] || (CATEGORY_NAMES[c] || c.toUpperCase()).slice(0, 5);
       drawText(ctx, short, x + tabW / 2 - 1, 47, { color: sel ? '#fff' : '#8a7a9a', align: 'center' });
       if (this.list(c).some(o => this.isNew(c, o))) { ctx.fillStyle = C.gold; ctx.fillRect(x + Math.ceil(tabW) - 5, 45, 2, 2); }
@@ -130,7 +138,7 @@ export class WardrobeScene {
       const y = ly + 20 + r * rowH;
       const isSel = i === sel;
       const unl = isUnlocked(o, d), owned = isOwned(this.cat, o, d), wearing = d.outfit[this.cat] === o.id;
-      if (isSel) { ctx.fillStyle = `rgba(200,16,46,${0.5 + Math.sin(this.t * 6) * 0.1})`; ctx.fillRect(px + 4, y - 4, pw - 8, rowH - 1); }
+      if (isSel) { const g = ctx.createLinearGradient(px + 4, 0, px + pw - 4, 0); g.addColorStop(0, `rgba(226,26,58,${0.85 + Math.sin(this.t * 5) * 0.1})`); g.addColorStop(1, 'rgba(160,10,36,0.25)'); ctx.save(); ctx.shadowColor = 'rgba(232,24,56,0.5)'; ctx.shadowBlur = 10 * devScale(ctx); ctx.fillStyle = g; rrect(ctx, px + 4, y - 4, pw - 8, rowH - 1, 3); ctx.fill(); ctx.restore(); }
       // colour swatch
       const sw2 = o.color || o.a || (o.hat && o.hat.color) || o.gloves || null;
       if (sw2) { ctx.fillStyle = '#000'; ctx.fillRect(px + 9, y - 1, 9, 9); ctx.fillStyle = sw2; ctx.fillRect(px + 10, y, 7, 7); if (o.b) { ctx.fillStyle = o.b; ctx.fillRect(px + 14, y, 3, 7); } }

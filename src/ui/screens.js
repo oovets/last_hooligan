@@ -16,7 +16,7 @@ import { drawLogo, drawCrest, drawChrome } from './logo.js';
 import { backdrop } from './backdrop.js';
 import { levelThumb, drawFit } from './minimap.js';
 import { drawCreditsRoll, creditsHeight, NameEntryScene } from './menus.js';
-import { frame, hintBar, heading, stripes, scanlines, blink, typed, typedCount, fmtTime, fmtScore, scarfIcon, badgeIcon, secretIcon, coinIcon, starIcon, vignette, C } from './widgets.js';
+import { frame, hintBar, heading, stripes, scanlines, blink, typed, typedCount, fmtTime, fmtScore, scarfIcon, badgeIcon, secretIcon, coinIcon, starIcon, vignette, C, ladFigure } from './widgets.js';
 
 const pressed = () => input.pressed('confirm') || input.pressed('punchL') || input.pressed('pause');
 
@@ -214,7 +214,7 @@ class LevelCompleteScene {
     }
     // the lad celebrating
     const look = game.look();
-    drawDoll(ctx, 36, 330, look, sampleAnim('victory', t), { scale: 2, time: t, face: 'shout' });
+    ladFigure(ctx, look, 36, 330, 2, t, { key: 'complete', anim: 'victory', yaw: 0.4, face: 'shout' });
     if (t > 1 && blink(t, 2)) drawText(ctx, t < endT + 0.8 ? 'PRESS START TO SKIP' : 'PRESS START', VIEW_W - 16, VIEW_H - 16, { color: C.gold, align: 'right', outline: '#000', scale: t < endT + 0.8 ? 1 : 2 });
     scanlines(ctx);
   }
@@ -256,7 +256,7 @@ class GameOverScene {
     vignette(ctx, 0.85);
     // the lad, flat out
     const look = game.look();
-    drawDoll(ctx, VIEW_W / 2, 330, look, sampleAnim('down', t), { scale: 3, time: t, face: 'ko' });
+    ladFigure(ctx, look, VIEW_W / 2, 330, 3, t, { key: 'gameover', anim: 'down', yaw: 0.3, face: 'ko' });
     // stars circling
     for (let i = 0; i < 3; i++) { const a = t * 3 + i * 2.1; drawText(ctx, '★', VIEW_W / 2 - 34 + Math.cos(a) * 18, 296 + Math.sin(a) * 5, { color: C.gold }); }
     const k = Math.min(1, t * 2);
@@ -319,7 +319,7 @@ class EndingScene {
       ctx.globalAlpha = 1;
       drawText(ctx, `${this.page + 1}/${ENDING_PAGES.length}`, 592, 232, { color: C.dim, align: 'right' });
       const look = game.look();
-      drawDoll(ctx, 92, 352, look, sampleAnim(P.anim, t), { scale: 3.2, time: t, face: P.anim === 'idle' ? 'normal' : 'shout' });
+      ladFigure(ctx, look, 92, 352, 3.2, t, { key: 'ending', anim: P.anim, yaw: 0.5, face: P.anim === 'idle' ? 'normal' : 'shout' });
       drawLogo(ctx, VIEW_W / 2, 6, t, { small: true });
       if (this.pageT > 1.2 && blink(t, 2) && Math.floor(this.pageT * 35) >= total) drawText(ctx, 'PRESS START', VIEW_W / 2, VIEW_H - 16, { color: C.gold, align: 'center', outline: '#000' });
     } else if (this.phase === 'credits') {

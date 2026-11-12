@@ -41,6 +41,7 @@ export function ladLook(l) {
 
 // ------------------------------------------------------------------ the scene
 export class HubScene {
+  get pixel() { return true; }   // walkable world: pixel-art resolution (main.js)
   constructor() { this.t = 0; this.panel = null; this.msg = null; }
 
   enter() {

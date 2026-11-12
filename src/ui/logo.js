@@ -1,140 +1,174 @@
-// Title logo: "THE LAST" in steel chrome on a waving club scarf, "HOOLIGAN" in blood-red chrome with
-// a deep pixel extrusion, bevel highlights, glint sweep, sparkles and a slam-in entrance animation.
+// Title logo and chrome headlines, painted with vector type at the canvas's full resolution.
+//
+// "THE LAST" in brushed steel on a waving club scarf, "HOOLIGAN" in blood-red chrome: a deep extrusion, a black
+// keyline, a mirrored horizon in the face gradient, bevel highlights, an outer glow, a glint sweep and sparkles,
+// plus the slam-in entrance (one letter at a time, with squash on landing).
 //
 //   drawLogo(ctx, cx, y, t, opts)  -> bottom y of the logo
 //      opts.intro: seconds since the entrance animation started (omit = fully landed)
 //      opts.small: compact variant for menus
 //   LOGO_LAND_TIMES: entrance times (s) at which each HOOLIGAN letter lands (title plays a thud there)
-import { drawText, measureText } from '../engine/font.js';
-import { makeCanvas } from '../engine/gfx.js';
+//   drawChrome(ctx, text, x, y, scale, style, align): chrome headline whose capitals are 7*scale tall at y
+//   drawCrest(ctx, x, y, s): the club crest (an original anchor in a shield), 15s x 16s
+import { FONT, sizeForCap } from '../engine/font.js';
 
 const BIG = 'HOOLIGAN', TOP = 'THE LAST';
 const cache = new Map();
-
-function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
-function lerpC(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
-function ramp(stops, f) {
-  // stops: [[pos, '#hex'], ...] sorted
-  for (let i = 0; i < stops.length - 1; i++) {
-    const [p0, c0] = stops[i], [p1, c1] = stops[i + 1];
-    if (f <= p1) return lerpC(hexRgb(c0), hexRgb(c1), p1 === p0 ? 0 : Math.max(0, (f - p0) / (p1 - p0)));
-  }
-  return hexRgb(stops[stops.length - 1][1]);
-}
+const devScale = ctx => (ctx.getTransform ? ctx.getTransform().a : 2) || 2;
 
 const BLOOD = {
-  fill: [[0, '#ffffff'], [0.18, '#ffd8cc'], [0.44, '#ff6a50'], [0.47, '#ff6a50'], [0.48, '#3a0008'], [0.53, '#3a0008'], [0.54, '#ff2a1a'], [0.8, '#c8102e'], [0.92, '#8a0418'], [1, '#e8404a']],
-  ext: ['#7a0818', '#3a020a'], hi: '#ffffff', lo: '#3a0008', outline: '#0a0206', depth: 6,
+  fill: [[0, '#ffffff'], [0.16, '#ffe0d6'], [0.42, '#ff7058'], [0.47, '#ff5a44'], [0.485, '#4a000c'], [0.53, '#5a0410'], [0.56, '#ff2a1a'], [0.8, '#c8102e'], [0.93, '#7a0418'], [1, '#e8404a']],
+  ext: ['#8a0c1e', '#2a0108'], hi: 'rgba(255,255,255,0.85)', lo: 'rgba(40,0,8,0.55)', outline: '#0a0206', glow: 'rgba(255,40,50,0.45)', depth: 0.11,
 };
 const STEEL = {
-  fill: [[0, '#ffffff'], [0.4, '#c8d4ec'], [0.5, '#2a3052'], [0.58, '#e8ecff'], [1, '#7880a8']],
-  ext: ['#3a3e5a', '#10121e'], hi: '#ffffff', lo: '#20243a', outline: '#05060c', depth: 3,
+  fill: [[0, '#ffffff'], [0.38, '#cfd8f0'], [0.49, '#8890b8'], [0.5, '#262a48'], [0.6, '#e4eaff'], [1, '#7880a8']],
+  ext: ['#44486a', '#0e1020'], hi: 'rgba(255,255,255,0.9)', lo: 'rgba(10,12,30,0.5)', outline: '#05060c', glow: 'rgba(160,180,255,0.25)', depth: 0.09,
 };
 
-// Build a chrome letter/word canvas from the bitmap font with bevel, extrusion and outline.
-function chrome(text, scale, sty) {
-  const key = text + '|' + scale + '|' + sty.depth + sty.ext[0];
-  if (cache.has(key)) return cache.get(key);
-  const P = 2, D = sty.depth;
-  const tw = measureText(text, scale), th = 7 * scale;
-  const W = tw + P * 2 + D, H = th + P * 2 + D;
-  const m = makeCanvas(W, H);
-  const mg = m.getContext('2d');
-  drawText(mg, text, P, P, { color: '#ffffff', scale });
-  const out = makeCanvas(W, H);
-  const og = out.getContext('2d');
-  let M;
-  try { M = mg.getImageData(0, 0, W, H).data; } catch (e) { M = null; }
-  if (!M || !M.length) { // headless / no pixel access: plain text fallback
-    drawText(og, text, P, P, { color: sty.hi, scale, outline: sty.outline });
-    const r = { c: out, w: W, h: H, P };
-    cache.set(key, r);
-    return r;
+function fontFor(cap) {
+  const px = sizeForCap(FONT.display, 400, cap);
+  return { font: `400 ${px.toFixed(2)}px ${FONT.display}`, ls: px * 0.02 };
+}
+function newCanvas(w, h) { const c = document.createElement('canvas'); c.width = Math.max(1, Math.ceil(w)); c.height = Math.max(1, Math.ceil(h)); return c; }
+
+// Chrome text block, cached per (text, cap height, style, resolution). The canvas is in device px;
+// ox/oy (logical px) = where the left edge / cap top of the text sits inside it.
+function chrome(text, cap, sty, S) {
+  const key = text + '|' + cap.toFixed(2) + '|' + (sty === BLOOD ? 'b' : 's') + '|' + S.toFixed(2);
+  let r = cache.get(key);
+  if (r) return r;
+  const f = fontFor(cap);
+  const mg = newCanvas(1, 1).getContext('2d');
+  mg.font = f.font; if ('letterSpacing' in mg) mg.letterSpacing = f.ls + 'px';
+  const tw = Math.max(1, mg.measureText(text).width);
+  const D = cap * sty.depth, pad = cap * 0.45 + 4;
+  const W = tw + pad * 2 + D, H = cap + pad * 2 + D;
+  const c = newCanvas(W * S, H * S), g = c.getContext('2d');
+  g.scale(S, S);
+  g.font = f.font; if ('letterSpacing' in g) g.letterSpacing = f.ls + 'px';
+  g.textBaseline = 'alphabetic';
+  const x0 = pad, base = pad + cap;
+  const kl = Math.max(1.2, cap * 0.075);
+  // keyline + glow behind everything (front, middle and back of the extrusion)
+  g.lineJoin = 'round'; g.lineWidth = kl * 2; g.strokeStyle = sty.outline;
+  g.shadowColor = sty.glow; g.shadowBlur = cap * 0.35 * S;
+  for (const k of [D, D / 2, 0]) g.strokeText(text, x0 + k, base + k);
+  g.shadowBlur = 0;
+  for (const k of [D, D / 2, 0]) g.fillText(text, x0 + k, base + k);   // fill the keyline's inside (no gaps)
+  // extrusion (back to front)
+  const steps = Math.max(4, Math.ceil(D * S / 1.5));
+  for (let i = steps; i >= 1; i--) {
+    const k = D * i / steps;
+    g.fillStyle = mix(sty.ext[0], sty.ext[1], (i - 1) / Math.max(1, steps - 1));
+    g.fillText(text, x0 + k, base + k);
   }
-  const at = (x, y) => x >= 0 && y >= 0 && x < W && y < H && M[(y * W + x) * 4 + 3] > 0;
-  const img = og.createImageData(W, H);
-  const d = img.data;
-  const ext0 = hexRgb(sty.ext[0]), ext1 = hexRgb(sty.ext[1]);
-  const hi = hexRgb(sty.hi), lo = hexRgb(sty.lo), ol = hexRgb(sty.outline);
-  const extAt = (x, y) => { for (let k = 1; k <= D; k++) if (at(x - k, y - k)) return k; return 0; };
-  const set = (i, c, a = 255) => { d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = a; };
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    const i = (y * W + x) * 4;
-    if (at(x, y)) {
-      let f = (y - P) / (th - 1);
-      f = Math.round(f * 18) / 18;
-      let c = ramp(sty.fill, f);
-      if (!at(x, y - 1)) c = lerpC(c, hi, 0.7);
-      else if (!at(x - 1, y)) c = lerpC(c, hi, 0.25);
-      else if (!at(x, y + 1) || !at(x + 1, y)) c = lerpC(c, lo, 0.55);
-      set(i, c);
-      continue;
-    }
-    const k = extAt(x, y);
-    if (k) { set(i, lerpC(ext0, ext1, (k - 1) / Math.max(1, D - 1))); continue; }
-    let near = false;
-    for (let dy = -1; dy <= 1 && !near; dy++) for (let dx = -1; dx <= 1; dx++) if (at(x + dx, y + dy) || extAt(x + dx, y + dy)) { near = true; break; }
-    if (near) set(i, ol);
-  }
-  og.putImageData(img, 0, 0);
-  const r = { c: out, w: W, h: H, P };
+  // face
+  const fg = g.createLinearGradient(0, base - cap, 0, base);
+  for (const [p, col] of sty.fill) fg.addColorStop(p, col);
+  g.fillStyle = fg; g.fillText(text, x0, base);
+  // bevel: light rim top-left, dark rim bottom-right
+  const rim = (dx, dy, col) => {
+    const m = newCanvas(c.width, c.height), mg2 = m.getContext('2d');
+    mg2.scale(S, S); mg2.font = f.font; if ('letterSpacing' in mg2) mg2.letterSpacing = f.ls + 'px'; mg2.textBaseline = 'alphabetic';
+    mg2.fillStyle = col; mg2.fillText(text, x0, base);
+    mg2.globalCompositeOperation = 'destination-out'; mg2.fillText(text, x0 + dx, base + dy);
+    g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(m, 0, 0); g.setTransform(S, 0, 0, S, 0, 0);
+  };
+  const b = Math.max(0.6, cap * 0.035);
+  rim(b * 0.6, b, sty.hi);
+  rim(-b * 0.6, -b, sty.lo);
+  r = { c, W, H, ox: pad, oy: pad, tw, S };
   cache.set(key, r);
+  if (cache.size > 160) cache.delete(cache.keys().next().value);
   return r;
 }
+function mix(a, b, t) {
+  const A = parseInt(a.slice(1), 16), B = parseInt(b.slice(1), 16);
+  const ch = s => Math.round(((A >> s) & 255) + (((B >> s) & 255) - ((A >> s) & 255)) * t);
+  return `rgb(${ch(16)},${ch(8)},${ch(0)})`;
+}
+function put(ctx, r, x, y, w, h) { ctx.drawImage(r.c, x - r.ox, y - r.oy, w ?? r.W, h ?? r.H); }
 
-// mask of a word (for the glint)
-function maskOf(text, scale) {
-  const key = 'mask|' + text + scale;
-  if (cache.has(key)) return cache.get(key);
-  const W = measureText(text, scale) + 4, H = 7 * scale + 4;
-  const c = makeCanvas(W, H);
-  drawText(c.getContext('2d'), text, 2, 2, { color: '#ffffff', scale });
-  cache.set(key, c);
-  return c;
+// face-only mask of the landed word (for the glint)
+function wordMask(cap, letters, S) {
+  const key = 'mask|' + cap + '|' + S.toFixed(2);
+  let m = cache.get(key);
+  if (m) return m;
+  const f = fontFor(cap);
+  const w = letters.reduce((s, L) => s + L.adv, 0) + cap, h = cap * 1.4;
+  const c = newCanvas(w * S, h * S), g = c.getContext('2d');
+  g.scale(S, S); g.font = f.font; g.textBaseline = 'alphabetic'; g.fillStyle = '#fff';
+  let x = 0;
+  for (const L of letters) { g.fillText(L.ch, x, cap * 1.2); x += L.adv; }
+  m = { c, w, h, top: cap * 0.2, tmp: newCanvas(c.width, c.height) };
+  cache.set(key, m);
+  return m;
 }
 
-let glintCanvas = null;
-
-// Club scarf ribbon behind "THE LAST": red/white bars with fringes, waving.
+// Club scarf ribbon: red/white blocks with knit texture and fringes, waving.
 function drawScarf(ctx, x0, y0, w, h, t, alpha = 1) {
-  const seg = 6;
+  const N = Math.ceil(w / 3), block = h * 1.05;
+  const wave = x => Math.sin(t * 3.2 + x * 0.045) * h * 0.16 + Math.sin(t * 1.7 + x * 0.02) * h * 0.1;
+  ctx.save();
   ctx.globalAlpha = alpha;
-  for (let x = 0; x < w; x += 2) {
-    const wave = Math.round(Math.sin(t * 3.2 + x * 0.045) * 2.5 + Math.sin(t * 1.7 + x * 0.02) * 1.5);
-    const bar = Math.floor((x + Math.floor(t * 0)) / (seg * 2)) % 2;
-    const edge = x < 2 || x >= w - 2;
-    ctx.fillStyle = '#120c14';
-    ctx.fillRect(x0 + x, y0 + wave - 1, 2, h + 2);
-    ctx.fillStyle = edge ? '#8a0a1a' : bar ? '#f4f1e8' : '#c8102e';
-    ctx.fillRect(x0 + x, y0 + wave, 2, h);
-    ctx.fillStyle = bar ? '#d8d0c0' : '#8a0a1a';
-    ctx.fillRect(x0 + x, y0 + wave + h - 2, 2, 2);
-    // knit texture
-    if ((x >> 1) % 2 === 0) { ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fillRect(x0 + x, y0 + wave + 2, 1, h - 4); }
+  // shadow under the ribbon
+  ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 8 * devScale(ctx); ctx.shadowOffsetY = 2 * devScale(ctx);
+  ctx.fillStyle = '#120c14';
+  ctx.beginPath();
+  for (let i = 0; i <= N; i++) { const x = i / N * w; ctx.lineTo(x0 + x, y0 + wave(x)); }
+  for (let i = N; i >= 0; i--) { const x = i / N * w; ctx.lineTo(x0 + x, y0 + h + wave(x)); }
+  ctx.closePath(); ctx.fill();
+  ctx.shadowColor = 'transparent';
+  // blocks
+  for (let i = 0; i < N; i++) {
+    const xa = i / N * w, xb = (i + 1) / N * w;
+    const bar = Math.floor((xa + 0.01) / block) % 2;
+    ctx.fillStyle = bar ? '#f4f1e8' : '#c8102e';
+    ctx.beginPath();
+    ctx.moveTo(x0 + xa, y0 + wave(xa)); ctx.lineTo(x0 + xb + 0.25, y0 + wave(xb)); ctx.lineTo(x0 + xb + 0.25, y0 + h + wave(xb)); ctx.lineTo(x0 + xa, y0 + h + wave(xa));
+    ctx.closePath(); ctx.fill();
+    // light from the slope of the wave
+    const sl = (wave(xb) - wave(xa)) / (xb - xa);
+    ctx.fillStyle = sl > 0 ? `rgba(0,0,0,${Math.min(0.35, sl * 0.9).toFixed(3)})` : `rgba(255,255,255,${Math.min(0.25, -sl * 0.6).toFixed(3)})`;
+    ctx.fill();
   }
-  // fringes at both ends
+  // knit ribs + top/bottom shading
+  ctx.strokeStyle = 'rgba(0,0,0,0.13)'; ctx.lineWidth = 0.45; ctx.beginPath();
+  for (let x = 1.5; x < w; x += 2.2) { ctx.moveTo(x0 + x, y0 + wave(x) + 1.5); ctx.lineTo(x0 + x, y0 + h + wave(x) - 1.5); }
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 0.6; ctx.beginPath();
+  for (let i = 0; i <= N; i++) { const x = i / N * w; ctx.lineTo(x0 + x, y0 + wave(x) + 0.6); }
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(80,0,10,0.45)'; ctx.lineWidth = 1.2; ctx.beginPath();
+  for (let i = 0; i <= N; i++) { const x = i / N * w; ctx.lineTo(x0 + x, y0 + h + wave(x) - 0.8); }
+  ctx.stroke();
+  // fringes
+  ctx.lineWidth = 0.9; ctx.lineCap = 'round';
   for (const side of [-1, 1]) {
-    const ex = side < 0 ? x0 - 1 : x0 + w;
-    const wave = Math.round(Math.sin(t * 3.2 + (side < 0 ? 0 : w) * 0.045) * 2.5 + Math.sin(t * 1.7 + (side < 0 ? 0 : w) * 0.02) * 1.5);
-    for (let k = 0; k < h; k += 2) {
-      const len = 4 + ((k * 7) % 3) + Math.round(Math.sin(t * 5 + k) * 1.2);
-      ctx.fillStyle = (k >> 1) % 2 ? '#f4f1e8' : '#c8102e';
-      if (side < 0) ctx.fillRect(ex - len, y0 + wave + k, len, 1);
-      else ctx.fillRect(ex, y0 + wave + k, len, 1);
+    const ex = side < 0 ? 0 : w;
+    for (let k = 0.5; k < h; k += 1.6) {
+      const len = h * 0.3 + ((k * 7) % 3) + Math.sin(t * 5 + k) * 1.2;
+      ctx.strokeStyle = Math.floor(k / 1.6) % 2 ? '#f4f1e8' : '#c8102e';
+      ctx.beginPath(); ctx.moveTo(x0 + ex, y0 + wave(ex) + k); ctx.lineTo(x0 + ex + side * len, y0 + wave(ex) + k + Math.sin(t * 4 + k) * 0.8); ctx.stroke();
     }
   }
-  ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
 function sparkle(ctx, x, y, r, a) {
   if (a <= 0) return;
+  ctx.save();
   ctx.globalAlpha = Math.min(1, a);
+  ctx.globalCompositeOperation = 'lighter';
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r * 1.6);
+  g.addColorStop(0, 'rgba(255,250,220,0.9)'); g.addColorStop(1, 'rgba(255,200,160,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * 1.6, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = '#ffffff';
-  ctx.fillRect(x - r, y, r * 2 + 1, 1);
-  ctx.fillRect(x, y - r, 1, r * 2 + 1);
-  ctx.fillStyle = '#fff4c0';
-  ctx.fillRect(x - 1, y - 1, 3, 3);
-  ctx.globalAlpha = 1;
+  for (const [w, h] of [[r * 2.6, r * 0.16], [r * 0.16, r * 2.6]]) {
+    ctx.beginPath(); ctx.moveTo(x - w, y); ctx.quadraticCurveTo(x, y - h, x + w, y); ctx.quadraticCurveTo(x, y + h, x - w, y); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x, y - w); ctx.quadraticCurveTo(x + h, y, x, y + w); ctx.quadraticCurveTo(x - h, y, x, y - w); ctx.fill();
+  }
+  ctx.restore();
 }
 
 const easeOutBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); };
@@ -142,128 +176,151 @@ const easeOutBack = t => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * Math.pow
 export const LOGO_LAND_TIMES = BIG.split('').map((_, i) => 0.55 + i * 0.09 + 0.22);
 export const LOGO_INTRO_LEN = 2.0;
 
+function letterSet(cap, S) {
+  const key = 'set|' + cap + '|' + S.toFixed(2);
+  let set = cache.get(key);
+  if (set) return set;
+  const f = fontFor(cap);
+  const mg = newCanvas(1, 1).getContext('2d'); mg.font = f.font;
+  set = BIG.split('').map(ch => ({ ch, r: chrome(ch, cap, BLOOD, S), adv: mg.measureText(ch).width + cap * 0.06 }));
+  cache.set(key, set);
+  return set;
+}
+
 export function drawLogo(ctx, cx, y, t = 0, opts = {}) {
+  const S = devScale(ctx);
   const small = !!opts.small;
-  const bigScale = small ? 5 : 9, topScale = small ? 2 : 3;
+  const cap = small ? 34 : 64, topCap = small ? 11 : 17;
   const intro = opts.intro === undefined ? 99 : opts.intro;
-  const top = chrome(TOP, topScale, STEEL);
-  const letters = BIG.split('').map(ch => chrome(ch, bigScale, BLOOD));
-  const gap = bigScale; // font spacing
-  let totalW = 0;
-  letters.forEach((L, i) => { totalW += L.w - L.P * 2 - BLOOD.depth + (i ? gap : 0); });
-  totalW += letters[0].P * 2 + BLOOD.depth;
-  const x0 = Math.round(cx - totalW / 2);
-  const topY = y;
-  const bigY = y + (small ? 16 : 26);
-  const bob = small ? 0 : Math.round(Math.sin(t * 1.6) * 1);
+  const letters = letterSet(cap, S);
+  const totalW = letters.reduce((s, L) => s + L.adv, 0) - cap * 0.06;
+  const x0 = cx - totalW / 2;
+  const bigY = y + (small ? 18 : 30);
+  const bob = small ? 0 : Math.sin(t * 1.6) * 1.2;
 
   // ---- scarf ribbon + THE LAST (slides in from the left)
   const ts = Math.min(1, Math.max(0, (intro - 0.05) / 0.45));
-  const slide = Math.round((1 - easeOutBack(ts)) * -260);
+  const slide = (1 - easeOutBack(ts)) * -300;
   if (ts > 0) {
-    const sw = top.w + (small ? 26 : 44), sh = small ? 12 : 17;
-    drawScarf(ctx, Math.round(cx - sw / 2) + slide, topY + (small ? 1 : 2) + bob, sw, sh, t, Math.min(1, ts * 2));
-    ctx.drawImage(top.c, Math.round(cx - top.w / 2) + slide, topY - (small ? 1 : 2) + bob);
+    const top = chrome(TOP, topCap, STEEL, S);
+    const sw = top.tw + (small ? 34 : 60), sh = topCap + (small ? 6 : 9);
+    drawScarf(ctx, cx - sw / 2 + slide, y - sh * 0.5 + topCap * 0.5 + bob, sw, sh, t, Math.min(1, ts * 2));
+    ctx.globalAlpha = Math.min(1, ts * 2);
+    put(ctx, top, cx - top.tw / 2 + slide, y + bob - 0.5);
+    ctx.globalAlpha = 1;
   }
 
   // ---- HOOLIGAN letters slam down one by one
   let lx = x0;
-  const glintPos = [];
+  const pos = [];
   letters.forEach((L, i) => {
     const t0 = 0.55 + i * 0.09, dur = 0.22;
     const k = Math.min(1, Math.max(0, (intro - t0) / dur));
-    const adv = L.w - L.P * 2 - BLOOD.depth + gap;
     if (k > 0) {
-      const fall = Math.round((1 - k * k) * -170);
-      // squash on landing
+      const fall = (1 - k * k) * -190;
       const since = intro - (t0 + dur);
-      const sq = since > 0 && since < 0.12 ? Math.sin(since / 0.12 * Math.PI) * 0.18 : 0;
-      const wob = small ? 0 : Math.round(Math.sin(t * 2.2 + i * 0.7) * 1.2);
+      const sq = since > 0 && since < 0.14 ? Math.sin(since / 0.14 * Math.PI) * 0.16 : 0;
+      const wob = small ? 0 : Math.sin(t * 2.2 + i * 0.7) * 1.1;
       const yy = bigY + fall + bob + wob;
       if (sq) {
-        const h2 = Math.round(L.h * (1 - sq)), w2 = Math.round(L.w * (1 + sq * 0.6));
-        ctx.drawImage(L.c, Math.round(lx - (w2 - L.w) / 2), yy + (L.h - h2), w2, h2);
-      } else ctx.drawImage(L.c, lx, yy);
-      glintPos.push([lx, yy]);
+        const r = L.r, w2 = r.W * (1 + sq * 0.6), h2 = r.H * (1 - sq);
+        ctx.drawImage(r.c, lx - r.ox - (w2 - r.W) / 2, yy - r.oy + (r.H - h2), w2, h2);
+      } else put(ctx, L.r, lx, yy);
+      pos.push([lx, yy, L]);
     }
-    lx += adv;
+    lx += L.adv;
   });
 
-  // ---- glint sweep (masked to the letters), every ~3.5s once landed
+  // ---- glint sweep across the face, every ~3.6 s once landed
   const landed = intro > LOGO_INTRO_LEN;
   if (landed && !small) {
     const period = 3.6, gt = (t % period) / 0.9;
     if (gt < 1) {
-      const mk = maskOf(BIG, bigScale);
-      if (!glintCanvas || glintCanvas.width !== mk.width || glintCanvas.height !== mk.height) glintCanvas = makeCanvas(mk.width, mk.height);
-      const g = glintCanvas.getContext('2d');
+      const m = wordMask(cap, letters, S);
+      const g = m.tmp.getContext('2d');
+      g.setTransform(1, 0, 0, 1, 0, 0);
       g.globalCompositeOperation = 'source-over';
-      g.clearRect(0, 0, mk.width, mk.height);
-      g.drawImage(mk, 0, 0);
+      g.clearRect(0, 0, m.tmp.width, m.tmp.height);
+      g.drawImage(m.c, 0, 0);
       g.globalCompositeOperation = 'source-in';
-      const gx = -60 + gt * (mk.width + 120);
-      g.fillStyle = 'rgba(255,255,255,0.85)';
-      g.beginPath(); g.moveTo(gx, 0); g.lineTo(gx + 14, 0); g.lineTo(gx - 16, mk.height); g.lineTo(gx - 30, mk.height); g.closePath(); g.fill();
-      g.fillStyle = 'rgba(255,255,255,0.45)';
-      g.beginPath(); g.moveTo(gx + 20, 0); g.lineTo(gx + 25, 0); g.lineTo(gx - 5, mk.height); g.lineTo(gx - 10, mk.height); g.closePath(); g.fill();
-      ctx.drawImage(glintCanvas, x0 + letters[0].P - 2, bigY + letters[0].P - 2 + bob);
+      g.setTransform(S, 0, 0, S, 0, 0);
+      const gx = -cap + gt * (m.w + cap * 2);
+      const band = g.createLinearGradient(gx - cap * 0.5, 0, gx + cap * 0.5, cap * 0.3);
+      band.addColorStop(0, 'rgba(255,255,255,0)'); band.addColorStop(0.45, 'rgba(255,255,255,0.75)'); band.addColorStop(0.55, 'rgba(255,255,255,0.75)'); band.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = band; g.fillRect(0, 0, m.w, m.h);
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.8;
+      ctx.drawImage(m.tmp, x0, bigY + bob - m.top, m.w, m.h);
+      ctx.restore();
     }
     // sparkles hopping between letter corners
     const sp = Math.floor(t * 1.3) % letters.length, sk = (t * 1.3) % 1;
-    const gp = glintPos[sp];
-    if (gp) sparkle(ctx, gp[0] + 4 + ((sp * 13) % 20), gp[1] + 4 + ((sp * 7) % 10), 3 + Math.round(Math.sin(sk * Math.PI) * 3), Math.sin(sk * Math.PI) * 1.2);
+    const p = pos[sp];
+    if (p) sparkle(ctx, p[0] + cap * 0.12 + ((sp * 13) % 20) * cap / 64, p[1] + cap * 0.08 + ((sp * 7) % 10) * cap / 64, 2.5 + Math.sin(sk * Math.PI) * 3.5, Math.sin(sk * Math.PI) * 1.2);
   }
   // white flash on the final slam
   const lastLand = LOGO_LAND_TIMES[LOGO_LAND_TIMES.length - 1];
-  if (!small && intro > lastLand && intro < lastLand + 0.25) {
-    ctx.globalAlpha = (1 - (intro - lastLand) / 0.25) * 0.5;
+  if (!small && intro > lastLand && intro < lastLand + 0.3) {
+    ctx.save();
+    ctx.globalAlpha = (1 - (intro - lastLand) / 0.3) * 0.55;
     ctx.fillStyle = '#ffffff';
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    ctx.globalAlpha = 1;
+    ctx.restore();
   }
-  return bigY + letters[0].h + bob;
+  return bigY + cap + cap * BLOOD.depth + bob;
 }
 
-// Small reusable club crest (an original anchor emblem in a shield), drawn with pixel rects.
-const CREST = [
-  '..rrrrrrrrrrr..',
-  '.rwwwwwwwwwwwr.',
-  'rwwwwwkkkwwwwwr',
-  'rwwwwwk.kwwwwwr',
-  'rwwwwwkkkwwwwwr',
-  'rwwkkkkkkkkkwwr',
-  'rwwwwwwkwwwwwwr',
-  'rrrrrrrkrrrrrrr',
-  'rrrrrrrkrrrrrrr',
-  'rkrrrrrkrrrrrkr',
-  'rkkrrrrkrrrrkkr',
-  '.rkkrrrkrrrkkr.',
-  '.rrkkkkkkkkkrr.',
-  '..rrrrrkrrrrr..',
-  '....rrrrrrr....',
-  '......rrr......',
-];
+// The club crest: an original anchor emblem in a red-and-white shield. Fits a 15s x 16s box at (x, y).
 export function drawCrest(ctx, x, y, s = 1) {
-  const pal = { r: '#c8102e', w: '#f4f1e8', k: '#120c14' };
+  const S = devScale(ctx);
+  const w = 15 * s, h = 16 * s, cx = x + w / 2;
+  const shield = () => {
+    ctx.beginPath();
+    ctx.moveTo(x + w * 0.08, y + h * 0.04); ctx.lineTo(x + w * 0.92, y + h * 0.04);
+    ctx.quadraticCurveTo(x + w, y + h * 0.04, x + w, y + h * 0.14);
+    ctx.lineTo(x + w, y + h * 0.5); ctx.quadraticCurveTo(x + w * 0.95, y + h * 0.82, cx, y + h);
+    ctx.quadraticCurveTo(x + w * 0.05, y + h * 0.82, x, y + h * 0.5);
+    ctx.lineTo(x, y + h * 0.14); ctx.quadraticCurveTo(x, y + h * 0.04, x + w * 0.08, y + h * 0.04); ctx.closePath();
+  };
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 6 * S * s / 2; ctx.shadowOffsetY = 1.5 * S;
+  shield(); ctx.fillStyle = '#120c14'; ctx.fill();
+  ctx.shadowColor = 'transparent';
+  ctx.save(); shield(); ctx.clip();
+  const rg = ctx.createLinearGradient(0, y, 0, y + h);
+  rg.addColorStop(0, '#ff3048'); rg.addColorStop(1, '#8a0418');
+  ctx.fillStyle = rg; ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = '#f4f1e8'; ctx.fillRect(x, y, w, h * 0.42);
+  const sh = ctx.createLinearGradient(x, 0, x + w, 0);
+  sh.addColorStop(0, 'rgba(255,255,255,0.25)'); sh.addColorStop(0.5, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(0,0,0,0.25)');
+  ctx.fillStyle = sh; ctx.fillRect(x, y, w, h);
+  ctx.restore();
+  ctx.strokeStyle = '#120c14'; ctx.lineWidth = 0.8 * s; shield(); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,220,150,0.8)'; ctx.lineWidth = 0.3 * s;
+  ctx.save(); ctx.translate(cx, y + h * 0.53); ctx.scale(0.86, 0.86); ctx.translate(-cx, -(y + h * 0.53)); shield(); ctx.stroke(); ctx.restore();
+  // anchor
+  ctx.strokeStyle = '#120c14'; ctx.lineWidth = 1.15 * s; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.arc(cx, y + h * 0.19, 1.2 * s, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx, y + h * 0.26); ctx.lineTo(cx, y + h * 0.84);
+  ctx.moveTo(cx - 3.6 * s, y + h * 0.36); ctx.lineTo(cx + 3.6 * s, y + h * 0.36);
+  ctx.moveTo(cx - 5 * s, y + h * 0.6); ctx.quadraticCurveTo(cx - 4.6 * s, y + h * 0.86, cx, y + h * 0.84); ctx.quadraticCurveTo(cx + 4.6 * s, y + h * 0.86, cx + 5 * s, y + h * 0.6);
+  ctx.stroke();
   ctx.fillStyle = '#120c14';
-  for (let j = 0; j < CREST.length; j++) for (let i = 0; i < CREST[j].length; i++) if (CREST[j][i] !== '.') ctx.fillRect(x + (i - 1) * s, y + (j - 1) * s, s * 3, s * 3);
-  for (let j = 0; j < CREST.length; j++) for (let i = 0; i < CREST[j].length; i++) {
-    const c = CREST[j][i];
-    if (c === '.') continue;
-    ctx.fillStyle = pal[c];
-    ctx.fillRect(x + i * s, y + j * s, s, s);
-  }
-  return { w: 15 * s, h: CREST.length * s };
+  for (const d of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + d * 5.9 * s, y + h * 0.56); ctx.lineTo(cx + d * 3.9 * s, y + h * 0.63); ctx.lineTo(cx + d * 5.6 * s, y + h * 0.68); ctx.closePath(); ctx.fill(); }
+  ctx.restore();
+  return { w, h };
 }
 
 // Chrome headline text in the logo style. style: 'blood' | 'steel'. align: 'left' | 'center' | 'right'.
-// Returns { w, h } of the drawn block.
+// Capitals are 7*scale tall with their top at y (as with the bitmap font). Returns { w, h } of the drawn block.
 export function drawChrome(ctx, text, x, y, scale = 4, style = 'blood', align = 'left') {
   const sty = style === 'steel' ? STEEL : BLOOD;
-  const r = chrome(String(text), scale, sty);
-  let dx = x - r.P;
-  if (align === 'center') dx = x - r.w / 2;
-  else if (align === 'right') dx = x - r.w + r.P + sty.depth;
-  ctx.drawImage(r.c, Math.round(dx), Math.round(y - r.P));
-  return { w: r.w, h: r.h };
+  const cap = 7 * scale;
+  const r = chrome(String(text).toUpperCase(), cap, sty, devScale(ctx));
+  let dx = x;
+  if (align === 'center') dx = x - r.tw / 2;
+  else if (align === 'right') dx = x - r.tw;
+  put(ctx, r, dx, y);
+  return { w: r.tw, h: cap * (1 + sty.depth) };
 }

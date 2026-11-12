@@ -17,7 +17,7 @@ import { levelThumb, drawFit } from './minimap.js';
 import { optionItems, drawBindings, drawControlCard } from './options.js';
 import { drawComboList } from '../game/play.js';
 import { drawHallOfFame } from './attract.js';
-import { frame, MenuList, hintBar, heading, scarfIcon, badgeIcon, lockIcon, secretIcon, Repeater, scanlines, blink, fmtScore, C } from './widgets.js';
+import { frame, MenuList, hintBar, heading, scarfIcon, badgeIcon, lockIcon, secretIcon, Repeater, scanlines, blink, fmtScore, C, ladFigure, rrect, devScale } from './widgets.js';
 
 export function startNewRun(levelIndex = 0) {
   // pick a character first (src/ui/charselect.js), then kick off
@@ -65,12 +65,12 @@ export class LevelSelectScene {
       const lift = sel ? -2 : 0;
       frame(ctx, x, y + lift, cw, ch, { fill: locked ? 'rgba(10,6,16,0.94)' : sel ? 'rgba(40,10,20,0.95)' : 'rgba(14,9,22,0.92)', accent: sel ? C.gold : locked ? '#3a2e44' : C.red, edge: sel ? '#c8a030' : undefined });
       // number tab
-      ctx.fillStyle = locked ? '#3a2e44' : C.red; ctx.fillRect(x + 4, y + 4 + lift, 18, 13);
+      ctx.fillStyle = locked ? '#3a2e44' : C.red; rrect(ctx, x + 4, y + 4 + lift, 18, 13, 3); ctx.fill();
       drawText(ctx, String(L.num || i + 1), x + 13, y + 7 + lift, { color: '#fff', align: 'center' });
       drawText(ctx, L.name.length > 19 ? L.name.slice(0, 18) + '.' : L.name, x + 27, y + 7 + lift, { color: locked ? '#5a4a6a' : sel ? '#fff' : '#e0d8e8' });
       // map thumbnail
       const th = locked ? null : levelThumb(L);
-      ctx.fillStyle = '#06040c'; ctx.fillRect(x + 4, y + 21 + lift, cw - 8, 54);
+      ctx.fillStyle = '#06040c'; rrect(ctx, x + 4, y + 21 + lift, cw - 8, 54, 3); ctx.fill();
       if (th) drawFit(ctx, th, x + 6, y + 22 + lift, cw - 12, 52, sel ? 1 : 0.75);
       else { lockIcon(ctx, x + cw / 2 - 9, y + 36 + lift, 3); }
       if (!locked) {
@@ -82,7 +82,7 @@ export class LevelSelectScene {
         drawText(ctx, String(sec), x + 92, y + 80 + lift, { color: sec ? '#7affe0' : '#5a4a6a' });
         drawText(ctx, 'BEST ' + (d.best[L.id] ? fmtScore(d.best[L.id], 7) : '-------'), x + 6, y + 95 + lift, { color: d.best[L.id] ? C.gold : '#5a4a6a' });
       } else drawText(ctx, 'LOCKED', x + cw / 2, y + 88 + lift, { color: '#6a5a7a', align: 'center' });
-      if (sel && blink(this.t, 3)) { ctx.strokeStyle = C.gold; ctx.lineWidth = 1; ctx.strokeRect(x - 3.5, y - 3.5 + lift, cw + 7, ch + 7); }
+      if (sel) { ctx.save(); ctx.globalAlpha = 0.65 + Math.sin(this.t * 5) * 0.35; ctx.shadowColor = 'rgba(255,210,58,0.9)'; ctx.shadowBlur = 10 * devScale(ctx); ctx.strokeStyle = C.gold; ctx.lineWidth = 1.2; rrect(ctx, x - 2.5, y - 2.5 + lift, cw + 5, ch + 5, 7); ctx.stroke(); ctx.restore(); }
     });
     // detail strip
     const L = LEVELS[this.sel], locked = this.sel >= (d.unlocked || 1);
@@ -154,8 +154,9 @@ export class HowToPlayScene {
     // page tabs
     this.pages.forEach((p, i) => {
       const w = 150, x = VIEW_W / 2 - (this.pages.length * w) / 2 + i * w;
-      ctx.fillStyle = i === this.page ? C.red : 'rgba(30,20,44,0.9)'; ctx.fillRect(x + 2, 42, w - 4, 12);
-      drawText(ctx, `${i + 1}. ${p}`, x + w / 2, 45, { color: i === this.page ? '#fff' : C.dim, align: 'center' });
+      ctx.save(); if (i === this.page) { ctx.shadowColor = 'rgba(232,24,56,0.7)'; ctx.shadowBlur = 8 * devScale(ctx); }
+      ctx.fillStyle = i === this.page ? C.red : 'rgba(30,20,44,0.9)'; rrect(ctx, x + 2, 41, w - 4, 14, 4); ctx.fill(); ctx.restore();
+      drawText(ctx, `${i + 1}. ${p}`, x + w / 2, 44.5, { color: i === this.page ? '#fff' : C.dim, align: 'center' });
     });
     frame(ctx, 24, 60, VIEW_W - 48, 266);
     if (this.page === 0) {
@@ -173,11 +174,21 @@ export class HowToPlayScene {
       const [atk, key] = DEMO_COMBO[k];
       const pose = atk ? attackPose(atk, p < 0.3 ? 0 : p < 0.55 ? 1 : 2, p < 0.3 ? p / 0.3 : p < 0.55 ? (p - 0.3) / 0.25 : (p - 0.55) / 0.45) : sampleAnim('guard', this.t);
       ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fillRect(44, 170, VIEW_W - 88, 130);
-      drawDoll(ctx, 200, 292, look, pose, { scale: 3, time: this.t, face: atk ? 'shout' : 'angry' });
+      ladFigure(ctx, look, 200, 292, 3, this.t, { key: 'howto', pose, yaw: 1.25, face: atk ? 'shout' : 'angry' });
       // the victim (a punch bag in Portside blue)
-      ctx.fillStyle = '#120c14'; ctx.fillRect(299, 180, 2, 30); ctx.fillRect(285, 208, 30, 80);
       const wob = atk && p > 0.3 && p < 0.8 ? 3 : 0;
-      ctx.fillStyle = '#1f4fb4'; ctx.fillRect(287 + wob, 210, 26, 76); ctx.fillStyle = '#f2f2f2'; ctx.fillRect(287 + wob, 230, 26, 6); ctx.fillRect(287 + wob, 260, 26, 6);
+      ctx.strokeStyle = '#8a8098'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(300, 172); ctx.lineTo(300 + wob * 0.6, 210); ctx.stroke();
+      ctx.save(); ctx.translate(300, 172); ctx.rotate(-wob * 0.012); ctx.translate(-300, -172);
+      ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 10 * devScale(ctx);
+      const bg = ctx.createLinearGradient(286, 0, 314, 0);
+      bg.addColorStop(0, '#3a6ae0'); bg.addColorStop(0.45, '#1f4fb4'); bg.addColorStop(1, '#0c2260');
+      ctx.fillStyle = bg; rrect(ctx, 286 + wob, 208, 28, 80, 9); ctx.fill(); ctx.shadowColor = 'transparent';
+      ctx.save(); ctx.clip();
+      const wg = ctx.createLinearGradient(286, 0, 314, 0); wg.addColorStop(0, '#ffffff'); wg.addColorStop(1, '#a8a8b8');
+      ctx.fillStyle = wg; ctx.fillRect(286 + wob, 230, 28, 6); ctx.fillRect(286 + wob, 260, 28, 6);
+      ctx.restore();
+      ctx.fillStyle = '#2a2a34'; rrect(ctx, 292 + wob, 205, 16, 5, 2); ctx.fill();
+      ctx.restore();
       // input strip
       const seq = DEMO_COMBO.map(c => c[1]);
       let x = 350;
@@ -316,8 +327,8 @@ export class NameEntryScene {
         if (sel) { drawText(ctx, '↑', x + 22, y - 12, { color: C.gold, align: 'center' }); drawText(ctx, '↓', x + 22, y + 60, { color: C.gold, align: 'center' }); }
       }
       const look = buildLook(save.data.outfit);
-      drawDoll(ctx, 110, 300, look, sampleAnim('victory', this.t), { scale: 3, time: this.t, face: 'shout' });
-      drawDoll(ctx, 530, 300, look, sampleAnim('cheer', this.t + 0.3), { scale: 3, time: this.t, face: 'shout', flip: true });
+      ladFigure(ctx, look, 110, 300, 3, this.t, { key: 'ne1', anim: 'victory', yaw: 0.5, face: 'shout' });
+      ladFigure(ctx, look, 530, 300, 3, this.t + 0.3, { key: 'ne2', anim: 'cheer', yaw: -0.5, flip: true, face: 'shout' });
       hintBar(ctx, [['menuUp', 'LETTER'], ['menuLeft', 'MOVE'], ['confirm', 'OK']], VIEW_H - 14);
     }
     scanlines(ctx);

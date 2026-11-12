@@ -14,7 +14,7 @@ import { LEVELS } from '../content/levels/index.js';
 import { World } from '../game/world.js';
 import { game } from '../game/state.js';
 import { backdrop } from './backdrop.js';
-import { frame, heading, blink, scanlines, fmtScore, stripes, C } from './widgets.js';
+import { frame, heading, blink, scanlines, fmtScore, stripes, C, ladFigure } from './widgets.js';
 
 export const STORY = [
   'NORDHAMN. A HARBOUR TOWN OF RAIN, RUST',
@@ -111,7 +111,7 @@ class GalleryScene {
       // spotlight
       ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.ellipse(x + 70, yy + 124, 40, 8, 0, 0, Math.PI * 2); ctx.fill();
       const anim = Math.floor(pt + i) % 3 === 0 ? 'taunt' : 'guard';
-      drawDoll(ctx, x + 70, yy + 124, e.look, sampleAnim(anim, pt + i * 0.3), { scale: 2.4, time: pt, face: anim === 'taunt' ? 'shout' : 'angry', flip: true });
+      ladFigure(ctx, e.look, x + 70, yy + 124, 2.4, pt + i * 0.3, { key: 'rogue' + i, anim, flip: true, yaw: -0.45, face: anim === 'taunt' ? 'shout' : 'angry' });
       drawText(ctx, e.name, x + 70, yy + 140, { color: '#ffb0b0', align: 'center', outline: '#000' });
       // threat meter
       const thr = Math.min(5, Math.max(1, Math.round(e.hp / 15)));
