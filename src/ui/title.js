@@ -122,7 +122,7 @@ class MainMenuScene {
     const hasRun = () => !!d.run;
     this.menu = new MenuList([
       { label: 'NEW GAME', fn: () => startNewRun(0), hint: 'KICK OFF FROM LEVEL 1: THE STREETS' },
-      { label: 'CONTINUE', disabled: () => !hasRun(), fn: () => { game.reset(); game.restore(d.run); app.go(app.scenes.levelIntro(d.run.levelIndex)); }, hint: () => (d.run ? `RESUME AT LEVEL ${d.run.levelIndex + 1}: ${(LEVELS[d.run.levelIndex] || {}).name || ''}` : 'NOTHING TO CONTINUE YET') },
+      { label: 'CONTINUE', disabled: () => !hasRun(), fn: () => { game.reset(); game.restore(d.run); app.go((d.settings || {}).firm !== false && app.scenes.hub ? app.scenes.hub() : app.scenes.levelIntro(d.run.levelIndex)); }, hint: () => (d.run ? `RESUME AT LEVEL ${d.run.levelIndex + 1}: ${(LEVELS[d.run.levelIndex] || {}).name || ''}` : 'NOTHING TO CONTINUE YET') },
       { label: 'LEVEL SELECT', fn: () => app.go(new LevelSelectScene()), hint: `${d.unlocked || 1} OF ${LEVELS.length} LEVELS UNLOCKED`, badge: () => `${d.unlocked || 1}/${LEVELS.length}` },
       { label: 'WARDROBE', fn: () => app.go(new WardrobeScene()), hint: 'SPEND YOUR BANKED CASH ON CLOBBER', badge: () => '£' + (d.cash || 0) },
       { label: 'OPTIONS', fn: () => app.go(new OptionsScene()), hint: 'SOUND, SHAKE, DIFFICULTY, CONTROLS' },
@@ -176,5 +176,5 @@ class MainMenuScene {
 app.scenes.boot = () => new BootScene();
 app.scenes.title = opts => new TitleScene(opts);
 app.scenes.menu = () => new MainMenuScene();
-app.scenes.wardrobe = () => new WardrobeScene();
+app.scenes.wardrobe = back => new WardrobeScene(back);
 export { Backdrop, backdrop, startNewRun };

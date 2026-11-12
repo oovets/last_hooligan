@@ -154,6 +154,47 @@ Varje fas ska vara spelbar och klara `check.mjs --sim` innan nästa börjar.
 **Fas D — Firman mellan matcherna.** Puben som bas, grabbar med stats och egenskaper, rekrytering, träning, skador, kassa, rykte, heat och sparversion 2.
 *Klart när:* en hel loop fungerar: pub, resa, bana, tillbaka till puben med konsekvenser.
 
+> **Status fas D (2026-11-12): klar** på grenen `phase-d-firm-hub`.
+> - **Data och regler:** `src/game/firmdata.js` (inget ritande, testbart headless). Firman sparas i `save.data.firm`:
+>   dag, rykte, heat, grabbar, vilka som åker med, rekryter i baren, logg, rapport och väntande händelsekort.
+> - **Grabbarna:** stats (fists/kicks/tough/speed/nerve/loyalty, 1–10) och egenskaperna HOTHEAD, BIG LAD, SINGER,
+>   LOOKOUT, LIGHTWEIGHT, OLD SCHOOL, GRAFTER och LIABILITY. De får erfarenhet, går upp i nivå (+1 på bästa stat), får
+>   skador, avstängningar, humör och vänskapsband. Stats och egenskaper styr fighter-värden, AI-stil och nerv i
+>   striden (`fighterParams`); "proper mates" stöttar varandra.
+> - **Puben THE ANCHOR:** `src/content/hub.js`, `src/content/themes/hub.js` och `src/ui/hub.js`. Det är en gångbar
+>   World i 2D och 3D med grabbarna och Ron på plats, och du pratar med en grabb med E. Stationerna är THE MAP (nästa
+>   resa och vilka som åker), THE BAR (rekrytera), THE BACK ROOM (träna, en gång per grabb och dag), THE COAT RACK
+>   (wardrobe) och THE DOOR (en dag går). Grabbens kort har på/av bussen, sjukgymnast (£25) och "låt honom gå".
+> - **Konsekvenser** (`applyTrip`): en resa tar en dag. Rykte påverkas av vinst/förlust, rank, boss och flyktingar.
+>   Heat stiger av KOs, flyktingar och LIABILITY. KO:ade grabbar och grabbar som blev liggande kan skadas. KOs och
+>   erfarenhet registreras, vänskapsband byggs, bänkade grabbar surar och missnöjda illojala grabbar går till en annan
+>   firma. Heat 60+ ger avstängning, 85+ ger razzia mot puben (−25 % kassa). Åtta händelsekort med två val vardera.
+> - **Loopen:** NEW GAME startar en ny firma och sedan bana 1. Efter varje bana kommer man till puben med en rapport
+>   (och kanske ett händelsekort), väljer nästa resa på kartan, och sedan bana, och sedan tillbaka till puben.
+>   Game over räknas som en förlorad resa. CONTINUE leder till puben.
+> - **Test:** `node scripts/test_firmloop.mjs` (rekrytera, träna, sjukgymnast, bussen, en riktig bana med truppen,
+>   konsekvenser, läkning, händelser, heat, avhopp, nästa trupp). `test_firm.mjs` och alla 8 banor i `check.mjs --sim`
+>   är godkända. Hela loopen är provkörd i webbläsaren (2D och 3D).
+> - **Kvar:** en riktig Football Tour-karta (fas F), att kunna se och styra relationer mer aktivt, och balansering av
+>   ekonomin.
+
+> **Grafik-overhaul (2026-11-12, början):** beslut att stanna i webbläsaren (Three.js) och att bygga figurerna själv i Blender.
+> - **Karaktärer v2:** `scripts/blender/char_v2.py` och `scripts/build_models_v2.py` ger 9 modeller i `assets/models/v2/`.
+>   Varje modell har en mjuk, skinnad kropp (Skin-modifier med subdivision och automatiska vikter) på ett namngivet
+>   människoskelett med 22 ben. Klädregionerna är material med samma ID:n och palett som tidigare, och jackan sticker
+>   ut från kroppen. Huvudet har ansikte (näsa, ögon, bryn, mun, öron) och är stiliserat stort. Halsduk, hår, hattar och
+>   skägg är tillbehör.
+> - **Animatorn** (`src/render3d/characters2.js`): poslibraryt omvandlas till skelettet, så att alla rörelser fungerar.
+>   Gång och löpning är procedurella och drivs av faktisk förflyttning, så fötterna glider inte. Ovanpå ligger
+>   3D-lager: överkropp och höfter vrider sig mot den arm eller det ben som jobbar, armarna hålls ut från kroppen,
+>   fötterna hålls plana, figuren andas och huvudet följer motståndaren. Alla leder glider mot sina mål (snabbt vid slag).
+> - **Rendering:** efterbehandling med GTAO (ambient occlusion; billboards ligger i ett eget lager), bloom och
+>   färggradering med vinjett. `?post=0` stänger av den.
+> - **Puben:** den förklarar sig själv. Det finns en mål-ruta, en GO-pil till kartan, skyltar över alla stationer,
+>   M öppnar kartan och en välkomstskärm visas första besöket. Coach-raden visar vem som saknas och varför.
+> - **Nästa steg:** handanimerade nyckelklipp i Blender för de viktigaste slagen (anticipation och follow-through),
+>   bättre händer och ansikten, sedan fas F (Football Tour-kartan).
+
 **Fas E — THE TERRACES** som första bana byggd för 3D och firma: läktartrappsteg (motorstöd finns redan), strålkastare som slocknar och tänds, stor strid om läktaren och bossen THE FOGHORN.
 
 **Fas F — Konvertering och touren.** Övriga banors props får glTF i prioritetsordning, Football Tour-kartan byggs och sedan kommer arenorna i ordning.

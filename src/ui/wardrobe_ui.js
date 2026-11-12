@@ -16,7 +16,8 @@ const ANIMS = ['idle', 'guard', 'taunt', 'victory', 'cheer'];
 const TABS = { jacket: 'JACKET', pants: 'LEGS', shoes: 'SHOES', scarf: 'SCARF', hair: 'HAIR', hairColor: 'DYE', facial: 'FACE', extra: 'HATS', gloves: 'GLOVE' };
 
 export class WardrobeScene {
-  constructor() {
+  constructor(back) {
+    this.back = back || null;   // scene factory to return to (the pub hub); default: main menu
     this.cats = (CATEGORY_ORDER || Object.keys(WARDROBE)).filter(c => WARDROBE[c]);
     this.ci = 0; this.sel = {}; this.scroll = {};
     this.t = 0; this.msg = ''; this.msgT = 0; this.armed = null; this.spark = [];
@@ -52,7 +53,7 @@ export class WardrobeScene {
     if (this.rep.check('menuUp', dt)) { this.sel[cat] = (this.sel[cat] + n - 1) % n; this.armed = null; this.tryWear(); audio.sfx('menuMove'); this.markSeen(); }
     if (this.rep.check('menuDown', dt)) { this.sel[cat] = (this.sel[cat] + 1) % n; this.armed = null; this.tryWear(); audio.sfx('menuMove'); this.markSeen(); }
     if (input.pressed('confirm')) this.buy();
-    if (input.pressed('back')) { audio.sfx('menuBack'); backdrop.refreshLook(); app.go(app.scenes.menu()); }
+    if (input.pressed('back')) { audio.sfx('menuBack'); backdrop.refreshLook(); app.go(this.back ? this.back() : app.scenes.menu()); }
   }
   tryWear() {
     const d = save.data, o = this.opt;

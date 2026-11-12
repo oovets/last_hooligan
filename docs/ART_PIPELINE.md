@@ -46,6 +46,17 @@ in its bind pose, with every accessory included and joints as plain glTF nodes, 
 `set_pose()` (rotation about Blender +Y by a = rotation about three +Z by −a). It shows accessories by their
 `acc:<layer>` extras and recolours by material name (`ID_<n>` → palette from `specForLook`).
 
+## 3D characters v2 (`scripts/build_models_v2.py`)
+
+`python3 scripts/build_models_v2.py [--only m_jacket]` runs `scripts/blender/char_v2.py` for each model and writes
+`assets/models/v2/<build>_<torso>.glb`. Each file holds a skinned body grown from a joint graph with the Skin modifier
+and auto-weighted to a 22-bone humanoid rig (`root`, `hips`, `spine`, `chest`, `neck`, `head`, plus
+`shoulder`/`upperArm`/`forearm`/`hand`/`thigh`/`shin`/`foot`/`toe` with `_L`/`_R`). Clothing regions are `ID_<n>`
+materials. The head and its accessories are rigid on `head`, and the scarf is on `chest`. Bone-local axes follow
+Blender: limbs swing forward about X, out to the side about Z and twist about Y. A job with `"preview": "x.png"`
+renders a pose sheet from the game's camera angle.
+`src/render3d/characters2.js` animates the rig (see the comment at the top of that file).
+
 ## Environment (`scripts/blender/render_env.py`)
 
 Piece modules (`scripts/blender/env_<theme>.py`) define `PIECES`. Each piece is a wall (per style × height ×

@@ -29,6 +29,7 @@ export const KEYMAP = {
   orderHold: ['KeyH'],
   orderSing: ['KeyY'],
   select4: ['Digit4'],
+  hubMap: ['KeyM'],          // the pub: open THE MAP from anywhere
   pause: ['Escape', 'KeyP'],
   // menu actions
   confirm: ['Enter', 'Space', 'KeyJ', 'NumpadEnter'],

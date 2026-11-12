@@ -15,6 +15,9 @@ city of Nordhamn.
   same atlases. Walls, floors and props are rendered from the same isometric camera.
 * Fully synthesized WebAudio soundtrack, crowd ambience and original terrace chants.
 * Wardrobe unlocks, save/continue, level select, hall of fame, gamepad support.
+* **The firm** (see [`docs/DESIGN-V2.md`](docs/DESIGN-V2.md)): your lads fight alongside you and follow orders. Between
+  trips you're at THE ANCHOR, your local, where you recruit, train, pick who travels and live with the consequences
+  (injuries, reputation, police heat, event cards).
 
 ## Play
 

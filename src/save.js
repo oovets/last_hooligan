@@ -45,6 +45,7 @@ export function defaultSave() {
     hiscores: DEFAULT_HISCORES.map(h => ({ ...h })),
     lastInitials: 'AAA',
     totals: { kos: 0, playTime: 0, games: 0, deaths: 0, cashEarned: 0, bestCombo: 0 },
+    firm: null,                  // the persistent firm (game/firmdata.js), created on first use
     seenNew: [],                 // wardrobe ids the player has already seen as unlocked ("NEW!" tag)
   };
 }

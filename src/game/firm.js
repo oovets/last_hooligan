@@ -15,12 +15,17 @@
 //
 // Lads who are knocked out stay down until the current encounter is won, then get back up.
 // World integration: world.firm (null when disabled), see World constructor / update / onHit / onDeath / clearEncounter.
+//
+// Phase D: the lads come from the persistent firm (game/firmdata.js, save.data.firm): the travelling squad, with
+// stats -> fighter numbers, traits (hothead, singer, old school, lookout...) and bonds (proper mates keep each
+// other going). report() hands each lad's KOs / knockdowns back for the trip's consequences.
 
 import { Fighter } from './fighter.js';
 import { AIController } from './ai.js';
 import { CHARACTERS, characterById } from '../content/characters.js';
 import { audio } from '../audio/audio.js';
 import { save } from '../save.js';
+import { getFirm, squadLads, fighterParams } from './firmdata.js';
 
 export const ORDER_TEXT = { follow: 'WITH ME!', charge: 'GET INTO THEM!', hold: 'HOLD!', move: 'OVER THERE!', attack: 'HAVE HIM!', sing: 'SING UP!' };
 export const ORDER_TAG = { follow: 'FOL', charge: 'ATK', hold: 'HLD', move: 'MOV', attack: 'TGT' };
@@ -120,13 +125,15 @@ export class LadController extends AIController {
   chooseFoe(f, world) {
     const o = this.order, P = world.player;
     if (o.type === 'attack') return o.target;
+    const hot = f.traits && f.traits.has('hothead');
     if (o.type === 'hold' || o.type === 'move') {
       const c = o.type === 'hold' ? o : f;
-      return this.nearestFoe(f, world, c, o.type === 'hold' ? 2.6 : 1.6);
+      return this.nearestFoe(f, world, c, o.type === 'hold' ? (hot ? 3.6 : 2.6) : 1.6);
     }
     if (o.type === 'charge') return this.nearestFoe(f, world, f, 12) || this.nearestFoe(f, world, P, 12);
     // follow: anything close to me or the leader; spread over targets (fewest lads on it first)
-    return this.nearestFoe(f, world, f, ENGAGE) || this.nearestFoe(f, world, P, ENGAGE);
+    const r = (f.engage || ENGAGE) + (hot ? 1.5 : 0);
+    return this.nearestFoe(f, world, f, r) || this.nearestFoe(f, world, P, r);
   }
 
   nearestFoe(f, world, c, r) {
@@ -171,6 +178,39 @@ export class Firm {
   }
 
   spawn(game) {
+    const firm = getFirm(this.world.player.character);
+    const recs = squadLads(firm).slice(0, Math.max(1, this.size + (firm.rep >= 60 ? 1 : 0)));
+    if (recs.length) { recs.forEach((rec, i) => this.spawnLad(rec, i, game)); return; }
+    this.spawnCharacters(game);
+  }
+
+  // a lad from the persistent firm
+  spawnLad(rec, i, game) {
+    const w = this.world, P = w.player;
+    const ch = rec.char ? characterById(rec.char) : null;
+    const pr = fighterParams(rec);
+    const look = rec.look || (ch && ch.look) || game.look();
+    const f = new Fighter({
+      type: 'lad', name: rec.name, team: 'player', look, x: P.x, y: P.y,
+      hp: pr.hp, speed: pr.speed, runSpeed: pr.runSpeed, power: pr.power, defense: pr.defense, guard: pr.guard,
+      weight: pr.weight, superArmor: pr.superArmor, reachMul: (ch && ch.fighter && ch.fighter.reachMul) || 1,
+    });
+    f.isLad = true; f.character = rec.char; f.ladIdx = i; f.rec = rec;
+    f.grabCfg = (ch && ch.grab) || null;
+    f.kickMul = pr.kickMul + ((ch && ch.kickMul) || 0); f.punchMul = (ch && ch.punchMul) || 0;
+    f.nerve = pr.nerve; f.nerveMul = pr.nerveMul; f.engage = pr.engage;
+    f.traits = new Set(rec.traits); f.bonds = rec.bonds || {};
+    f.fight = { kos: 0, downs: 0 };
+    const sig = rec.char && LAD_AI[rec.char];
+    const ai = { ...pr.ai, ...(sig ? { attacks: sig.attacks, comboLen: sig.comboLen } : {}), sight: 99, shouts: false };
+    f.controller = new LadController({ ai }, this, i);
+    this.place(f, i);
+    w.fighters.push(f);
+    this.lads.push(f);
+  }
+
+  // no saved firm (fallback): the other playable characters
+  spawnCharacters(game) {
     const w = this.world, P = w.player;
     this.roster(P.character).forEach((id, i) => {
       const ch = characterById(id);
@@ -185,7 +225,7 @@ export class Firm {
       f.isLad = true; f.character = id; f.ladIdx = i;
       f.grabCfg = ch.grab || null;
       f.kickMul = ch.kickMul || 0; f.punchMul = ch.punchMul || 0;
-      f.nerve = 100;
+      f.nerve = 100; f.fight = { kos: 0, downs: 0 };
       f.controller = new LadController({ ai: { ...LAD_AI[id], sight: 99, shouts: false } }, this, i);
       this.place(f, i);
       w.fighters.push(f);
@@ -245,7 +285,8 @@ export class Firm {
     if (this.singCd > 0) { w.toast(`THEY'RE HOARSE. SING AGAIN IN ${Math.ceil(this.singCd)}S`); return false; }
     this.singCd = 15;
     let n = 0;
-    for (const l of this.active) if (dist(l, P) < 9) { l.nerve = Math.min(100, (l.nerve ?? 100) + 35); n++; if (l.routT > 0) l.routT = 0.3; }
+    const bonus = this.active.some(l => l.traits && l.traits.has('singer')) ? 15 : 0;
+    for (const l of this.active) if (dist(l, P) < 9) { l.nerve = Math.min(100, (l.nerve ?? 100) + 35 + bonus); n++; if (l.routT > 0) l.routT = 0.3; }
     for (const e of w.fighters) if (e.team !== 'player' && live(e) && !e.boss && dist(e, P) < 7) e.nerve = Math.max(5, (e.nerve ?? 100) - 10);
     P.say && P.say(ORDER_TEXT.sing, 1.4);
     this.active.forEach((l, i) => setTimeout(() => l.alive && l.say && l.say(pick(REPLY.sing), 1.6), 200 + i * 220));
@@ -285,8 +326,17 @@ export class Firm {
       let dn = 0;
       if (foes > mates + 1.6) dn -= 5 * (foes - mates - 1);
       else if (foes < mates) dn += 3;
-      if (f.team === 'player' && dist(f, P) < 6) dn += 2.5;
-      if (f.team === 'player' && f.routT > 0) dn = 0;
+      if (f.team === 'player') {
+        if (dist(f, P) < 6) dn += 2.5;
+        if (dn < 0) dn *= f.nerveMul || 1;
+        for (const o of this.lads) {
+          if (o === f || !live(o) || dist(o, f) > 4.5) continue;
+          if (o.traits && o.traits.has('oldschool') && dn < 0) dn *= 0.5;
+          if (o.traits && o.traits.has('singer')) dn += 1.5;
+          if (f.bonds && o.rec && (f.bonds[o.rec.id] || 0) >= 5) dn += 1.5;   // proper mates
+        }
+        if (f.routT > 0) dn = 0;
+      }
       f.nerve = Math.max(0, Math.min(100, f.nerve + dn * dt));
     }
     // routed enemies leg it, then they're gone
@@ -329,11 +379,14 @@ export class Firm {
     const w = this.world, P = w.player;
     if (f.isLad) {
       f.out = true;
+      if (f.fight) f.fight.downs++;
       w.toast && w.toast(`${f.name} IS OUT COLD!`);
       for (const o of w.fighters) if (live(o) && dist(o, f) < 7 && !o.isPlayer && !o.boss) o.nerve = Math.max(0, (o.nerve ?? 100) + (o.team === 'player' ? -15 : 10));
       return;
     }
     if (f.isPlayer) return;
+    const by = f.lastAttacker;
+    if (by && by.isLad && by.fight) by.fight.kos++;
     const elite = isElite(f) && !f.boss;
     for (const o of w.fighters) {
       if (!live(o) || o.isPlayer || o.boss || dist(o, f) > 8) continue;
@@ -358,6 +411,11 @@ export class Firm {
       setTimeout(() => l.alive && l.say && l.say(pick(REPLY.up), 1.4), 700);
     }
     for (const l of this.lads) { if (l.alive) { l.hp = Math.min(l.maxHp, l.hp + l.maxHp * 0.25); l.nerve = Math.max(l.nerve ?? 0, 80); } }
+  }
+
+  // per-lad results for the trip report (game/firmdata.js applyTrip)
+  report() {
+    return this.lads.filter(l => l.rec).map(l => ({ id: l.rec.id, name: l.name, kos: (l.fight && l.fight.kos) || 0, downs: (l.fight && l.fight.downs) || 0, out: !l.alive || l.dying || l.hp <= 0 }));
   }
 
   onRespawn() { this.lads.forEach((l, i) => { if (l.alive) { this.place(l, i); l.controller.foe = null; } }); }

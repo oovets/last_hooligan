@@ -27,6 +27,8 @@ export function startNewRun(levelIndex = 0) {
 
 function beginRun(levelIndex) {
   game.reset();
+  // a brand new game starts a brand new firm (game/firmdata.js); level select keeps the one you have
+  if (levelIndex === 0 && save.data.firm) save.data.firm = null;
   game.levelIndex = levelIndex;
   const T = (save.data.totals ||= {});
   T.games = (T.games || 0) + 1;

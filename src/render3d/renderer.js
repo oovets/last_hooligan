@@ -17,6 +17,29 @@
 //   walls in front of the player are dithered away (see-through) instead of the 2D alpha fade
 
 import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+// Colour grade + vignette (applied before tone mapping / output): a touch more contrast and saturation, cool shadows,
+// warm highlights — the sodium-lamp-and-rain look.
+const GradeShader = {
+  uniforms: { tDiffuse: { value: null }, uVignette: { value: 0.32 }, uContrast: { value: 1.08 }, uSat: { value: 1.12 } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `uniform sampler2D tDiffuse; uniform float uVignette, uContrast, uSat; varying vec2 vUv;
+    void main(){
+      vec4 c = texture2D(tDiffuse, vUv);
+      float l = dot(c.rgb, vec3(0.2126, 0.7152, 0.0722));
+      c.rgb = mix(vec3(l), c.rgb, uSat);
+      c.rgb = (c.rgb - 0.18) * uContrast + 0.18;
+      c.rgb += mix(vec3(-0.01, 0.0, 0.02), vec3(0.025, 0.012, -0.01), smoothstep(0.05, 0.6, l));
+      vec2 d = vUv - 0.5; c.rgb *= 1.0 - uVignette * smoothstep(0.25, 0.85, dot(d, d) * 2.2);
+      gl_FragColor = vec4(max(c.rgb, 0.0), c.a);
+    }`,
+};
 import { VIEW_W, VIEW_H, HALF_W, HALF_H, Z_PX } from '../engine/constants.js';
 import { toScreen } from '../engine/iso.js';
 import { FLOORS, WALLS } from '../engine/tiles.js';
@@ -25,8 +48,9 @@ import { hash2 } from '../engine/rng.js';
 import { hexToRgb } from '../engine/color.js';
 import { setQuant } from '../game/poses.js';
 import { CHAR, Character3D, modelFor, loadCharacterModels } from './characters.js';
+import { CHAR2, Character2, modelFor2, loadCharacters2 } from './characters2.js';
 
-export { loadCharacterModels };
+export { loadCharacterModels, loadCharacters2 };
 
 const ELEV = Math.PI / 6;                         // camera elevation (30°) -> 2:1 dimetric
 const K = HALF_W * Math.SQRT2;                    // screen px per world unit across the screen (22.63)
@@ -61,6 +85,8 @@ export class Renderer3D {
     // see-through uniforms shared by every wall material
     this.see = { uSeePos: { value: new THREE.Vector2(-1e5, -1e5) }, uSeeDepth: { value: 0 }, uSeeR: { value: new THREE.Vector2(50, 80) } };
     this.stats = { boards: 0, redraws: 0, ms: 0, chars: 0 };
+    // post-processing (ambient occlusion, bloom, grade); ?post=0 turns it off
+    this.post = new URLSearchParams(location.search).get('post') !== '0';
     setQuant(0);   // smooth (unquantised) pose sampling: the 3D characters are posed every frame
   }
 
@@ -73,9 +99,12 @@ export class Renderer3D {
     scene.background = new THREE.Color(L.bg || '#07060c');
     this.disposables = [];
     this.camera = new THREE.OrthographicCamera(-VIEW_W / 2 / K, VIEW_W / 2 / K, VIEW_H / 2 / K, -VIEW_H / 2 / K, 1, 800);
+    this.camera.layers.enable(1);
+    this.aoCamera = this.camera.clone(); this.aoCamera.layers.set(0);
     this.buildFloor(world);
     this.buildWalls(world);
     this.buildLights(world);
+    this.composer = null;             // built on first render (needs the camera + size)
     this.boards = new Map();          // entity -> board
     this.chars = new Map();           // fighter -> Character3D
     this.gl.style.display = 'block';
@@ -88,6 +117,7 @@ export class Renderer3D {
     for (const c of this.chars.values()) this.disposeChar(c);
     this.chars = null;
     for (const d of this.disposables) d.dispose();
+    if (this.composer) { this.composer.dispose && this.composer.dispose(); this.composer = null; }
     this.boards = null; this.scene = null; this.world = null;
     this.gl.style.display = 'none';
     this.c2d.style.background = '';
@@ -311,6 +341,7 @@ export class Renderer3D {
     mesh.rotation.y = Math.PI / 4;
     mesh.scale.set(wl / K, hl / PXV, 1);
     mesh.receiveShadow = true;
+    mesh.layers.set(1);              // billboards: hidden from the ambient-occlusion pass (flat cards would cast AO squares)
     this.scene.add(mesh);
     return { canvas, g, tex, mat, mesh, wl, hl, ax, ay, seen: 0 };
   }
@@ -412,7 +443,7 @@ export class Renderer3D {
     world.overheadQueue = [];
     for (const f of world.fighters) {
       if (f.removed) continue;
-      if (CHAR.ready && modelFor(f.look)) { this.syncChar(f, world, F, near(f.x, f.y)); continue; }
+      if ((CHAR2.ready && modelFor2(f.look)) || (CHAR.ready && modelFor(f.look))) { this.syncChar(f, world, F, near(f.x, f.y)); continue; }
       if (!near(f.x, f.y)) { const b0 = boards.get(f); if (b0) { b0.seen = F; b0.mesh.visible = false; } continue; }
       const sc = Math.max(1, (f.look && f.look.height) || 1) * (f.spriteScale || 1);
       let b = boards.get(f);
@@ -456,13 +487,18 @@ export class Renderer3D {
   // ------------------------------------------------------------------ 3D characters
   syncChar(f, world, F, vis) {
     let c = this.chars.get(f);
-    if (!c) { c = new Character3D(f.look); this.chars.set(f, c); this.scene.add(c.group, c.blob); }
+    if (!c) {
+      // v2 (skinned + layered animator) when its models are loaded, else the v1 rigid-part characters
+      c = CHAR2.ready && modelFor2(f.look) ? new Character2(f.look) : new Character3D(f.look);
+      this.chars.set(f, c); this.scene.add(c.group, c.blob);
+    }
     c.seen = F;
     f._char3d = true;
     c.group.visible = c.blob.visible = vis;
     if (!vis) return;
     c.update(f, world);
-    c.pose(f.getPose(), f.fx, f.fy);
+    if (c.animate) { const dt = c.lastT === undefined ? 1 / 60 : world.time - c.lastT; c.lastT = world.time; c.animate(f, world, dt); }
+    else c.pose(f.getPose(), f.fx, f.fy);
     c.group.position.set(f.x, f.z * ZS, f.y);
     const g = world.groundHeight(f.x, f.y, f.z);
     const air = Math.max(0, f.z - g);
@@ -511,8 +547,31 @@ export class Renderer3D {
     this.see.uSeeDepth.value = front.z * 0.5 + 0.5;
     const k = sz.x / VIEW_W;
     this.see.uSeeR.value.set(26 * k, 40 * k);
-    this.renderer.render(this.scene, this.camera);
+    if (this.post) {
+      try {
+        if (!this.composer) this.buildComposer();
+        this.aoCamera.copy(this.camera); this.aoCamera.layers.set(0);
+        this.composer.render();
+      } catch (e) { console.warn('[3d] post-processing off', e); this.post = false; this.composer = null; this.renderer.render(this.scene, this.camera); }
+    } else this.renderer.render(this.scene, this.camera);
     this.stats.ms = performance.now() - t0;
+  }
+
+  buildComposer() {
+    const r = this.renderer, sz = r.getSize(new THREE.Vector2());
+    const c = this.composer = new EffectComposer(r);
+    c.setPixelRatio(r.getPixelRatio());
+    c.setSize(sz.x, sz.y);
+    c.addPass(new RenderPass(this.scene, this.camera));
+    const ao = new GTAOPass(this.scene, this.aoCamera, sz.x, sz.y);
+    ao.updateGtaoMaterial({ radius: 0.9, distanceExponent: 1.2, thickness: 1.5, scale: 1.1, samples: 12 });
+    ao.blendIntensity = 0.85;
+    c.addPass(ao);
+    const bloom = new UnrealBloomPass(new THREE.Vector2(sz.x, sz.y), 0.42, 0.55, 0.78);
+    c.addPass(bloom);
+    c.addPass(new ShaderPass(GradeShader));
+    c.addPass(new OutputPass());
+    this.composerSize = sz.clone();
   }
 
   resize() {
@@ -523,6 +582,7 @@ export class Renderer3D {
       this.cw = w; this.ch = h; this.dpr = dpr;
       this.renderer.setPixelRatio(dpr);
       this.renderer.setSize(w, h, false);
+      if (this.composer) { this.composer.setPixelRatio(dpr); this.composer.setSize(w, h); }
     }
   }
 }

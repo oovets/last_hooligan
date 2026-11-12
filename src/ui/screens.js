@@ -8,6 +8,8 @@ import { save } from '../save.js';
 import { audio } from '../audio/audio.js';
 import { game } from '../game/state.js';
 import { LEVELS } from '../content/levels/index.js';
+import { firmMode } from './hub.js';
+import { getFirm, applyTrip, resultFromWorld } from '../game/firmdata.js';
 import { drawDoll } from '../game/doll.js';
 import { sampleAnim } from '../game/poses.js';
 import { drawLogo, drawCrest, drawChrome } from './logo.js';
@@ -139,6 +141,8 @@ class LevelCompleteScene {
     const next = this.i + 1;
     if (next < LEVELS.length) { game.levelIndex = next; game.keys = new Set(); d.run = game.snapshot(); }
     else { d.run = null; d.completed = true; }
+    // the firm: consequences of the trip (game/firmdata.js); you go back to the pub afterwards
+    if (firmMode() && this.world && this.world.firm) applyTrip(getFirm(game.character), resultFromWorld(this.world, true, this.rank));
     save.write();
     this.bankBefore = d.cash - this.cashEarned;
     audio.music('victory');
@@ -161,7 +165,7 @@ class LevelCompleteScene {
       if (this.t < endT + 0.8) { this.t = endT + 0.81; this.rows.forEach((r, k) => { this.rowShown[k] = r[2]; }); return; }
       const next = this.i + 1;
       audio.sfx('menuSelect');
-      if (next < LEVELS.length) app.go(app.scenes.levelIntro(next));
+      if (next < LEVELS.length) app.go(firmMode() && app.scenes.hub ? app.scenes.hub() : app.scenes.levelIntro(next));
       else app.go(new EndingScene());
     }
   }

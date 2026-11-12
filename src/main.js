@@ -10,6 +10,7 @@ import './ui/title.js';
 import './ui/screens.js';
 import './game/play.js';
 import './ui/charselect.js';
+import './ui/hub.js';
 import { game } from './game/state.js';
 
 const canvas = document.getElementById('game');
@@ -59,7 +60,7 @@ const want3d = (qp0.get('renderer') || save.data.settings.renderer) === '3d';
 async function load3d() {
   try {
     const m = await import('./render3d/renderer.js');
-    await m.loadCharacterModels();
+    await Promise.all([m.loadCharacterModels(), m.loadCharacters2()]);
     r3d.renderer = new m.Renderer3D(glCanvas, canvas);
   } catch (e) { console.warn('[3d] renderer unavailable, using 2D', e); }
 }

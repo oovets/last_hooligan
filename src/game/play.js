@@ -14,6 +14,7 @@ import { ITEMS } from './items.js';
 import { frame, MenuList, hintBar, heading, scarfIcon, badgeIcon, keyIcon, secretIcon, coinIcon, scanlines, fmtTime, fmtScore, hideLoader, C } from '../ui/widgets.js';
 import { optionItems, drawBindings, drawControlCard } from '../ui/options.js';
 import { r3d } from '../render3d/index.js';
+import { getFirm, applyTrip, resultFromWorld } from './firmdata.js';
 import { updateFirmInput, drawFirmWorld, drawFirmScreen, drawFirmPanel, COMMAND_SLOW } from '../ui/firmhud.js';
 
 export class PlayScene {
@@ -35,7 +36,12 @@ export class PlayScene {
     game.keys = new Set();
     this.world = new World(this.level, game, {
       onComplete: stats => this.complete(stats),
-      onGameOver: () => { this.bankTotals(); app.go(app.scenes.gameOver(this.levelIndex)); },
+      onGameOver: () => {
+        this.bankTotals();
+        // the firm takes the loss too (injuries, reputation, heat) — once per attempt
+        if (this.world.firm && (save.data.settings || {}).firm !== false && !this.firmApplied) { this.firmApplied = true; applyTrip(getFirm(game.character), resultFromWorld(this.world, false)); save.write(); }
+        app.go(app.scenes.gameOver(this.levelIndex));
+      },
     });
     this.hud = new HUD();
     this.firmUI = {};
