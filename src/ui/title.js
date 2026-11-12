@@ -49,7 +49,7 @@ class BootScene {
     if (t > 0.5) drawText(ctx, 'BYTES: 48K   FAST LOADER V2', px + 12, py + 24, { color: '#d8d8d8' });
     if (t > 0.9) {
       drawCrest(ctx, VIEW_W / 2 - 30, py + 60, 4);
-      drawText(ctx, 'NORDHAMN SOFTWARE', VIEW_W / 2, py + 136, { color: '#ffffff', scale: 2, align: 'center' });
+      drawText(ctx, 'STEVOO STUDIOS', VIEW_W / 2, py + 136, { color: '#ffffff', scale: 2, align: 'center' });
       drawText(ctx, 'PRESENTS', VIEW_W / 2, py + 156, { color: '#c8102e', align: 'center' });
     }
     // loading bar
@@ -108,7 +108,7 @@ class TitleScene {
         drawText(ctx, 'HI-SCORE ' + fmtScore(hs) + '  ' + (hs > top.score ? 'YOU' : top.name), VIEW_W / 2, 226, { color: '#ff8aa0', align: 'center', outline: '#000' });
       }
     }
-    drawText(ctx, '(C) 1994 NORDHAMN SOFTWARE', 8, VIEW_H - 10, { color: '#8a7a9a', outline: '#000' });
+    drawText(ctx, '(C) 1994 STEVOO STUDIOS', 8, VIEW_H - 10, { color: '#8a7a9a', outline: '#000' });
     drawText(ctx, 'V1.0', VIEW_W - 8, VIEW_H - 10, { color: '#8a7a9a', outline: '#000', align: 'right' });
     scanlines(ctx);
   }

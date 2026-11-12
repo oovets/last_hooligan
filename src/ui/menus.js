@@ -217,9 +217,9 @@ export class HowToPlayScene {
 export const CREDITS = [
   ['T', 'THE LAST HOOLIGAN'],
   ['', ''],
-  ['H', 'A NORDHAMN SOFTWARE PRODUCTION'],
+  ['H', 'A STEVOO STUDIOS PRODUCTION'],
   ['', ''],
-  ['H', 'GAME DESIGN, CODE, PIXELS & NOISE'], ['N', 'THE NORDHAMN SOFTWARE COLLECTIVE'], ['N', 'BUILT WITH CLAUDE'],
+  ['H', 'GAME DESIGN, CODE, PIXELS & NOISE'], ['N', 'STEVOO STUDIOS'], ['N', 'BUILT WITH CLAUDE'],
   ['', ''],
   ['H', 'LEVEL DESIGN'], ['N', 'EIGHT LADS IN A LOCK-UP GARAGE'],
   ['', ''],
