@@ -32,6 +32,7 @@ const FREE = new Set(['idle', 'walk', 'run']);
 export const PARRY_WINDOW = 0.15;
 export const COUNTER_WINDOW = 0.5;
 const PLAYER_MERCY_HITS = 4;
+const MOVE_ACCEL = 40, MOVE_DECEL = 55;   // tiles/s² for walking/running (instant velocity felt robotic)
 
 export function blankIntent() {
   return { mx: 0, my: 0, run: false, attack: null, attackName: null, jump: false, block: false, dodge: false, grab: false, use: false, taunt: false };
@@ -373,16 +374,18 @@ export class Fighter {
         }
         if (I.block) { this.setState('block'); this.parryT = PARRY_WINDOW; this.vx = this.vy = 0; break; }
         if (I.taunt) { this.setState('taunt'); this.vx = this.vy = 0; break; }
+        // velocity eases toward the stick (about 0.08 s to full speed, 0.06 s to a stop): snappy, but with weight
+        let tx = 0, ty = 0;
         if (mvMag > 0.05) {
           const sp = (I.run ? this.runSpeed : this.speed) * Math.min(1, mvMag);
-          this.vx = I.mx / mvMag * sp; this.vy = I.my / mvMag * sp;
+          tx = I.mx / mvMag * sp; ty = I.my / mvMag * sp;
           this.face2(I.mx, I.my);
           const ns = I.run ? 'run' : 'walk';
           if (this.state !== ns) { this.state = ns; this.stateT = 0; }
-        } else {
-          this.vx = this.vy = 0;
-          if (this.state !== 'idle') { this.state = 'idle'; this.stateT = 0; }
-        }
+        } else if (this.state !== 'idle') { this.state = 'idle'; this.stateT = 0; }
+        const ex = tx - this.vx, ey = ty - this.vy, el = Math.hypot(ex, ey);
+        const step = (mvMag > 0.05 ? MOVE_ACCEL : MOVE_DECEL) * dt;
+        if (el <= step) { this.vx = tx; this.vy = ty; } else { this.vx += ex / el * step; this.vy += ey / el * step; }
         break;
       }
       case 'jump': {

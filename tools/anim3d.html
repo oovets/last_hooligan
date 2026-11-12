@@ -84,7 +84,19 @@ window.filmstrip = (names, opt = {}) => {
       f.fx = face[0] / Math.hypot(...face); f.fy = face[1] / Math.hypot(...face);
       setMoment(f, name, u);
       const c = new Character2(f.look);
-      for (let n = 0; n < 40; n++) c.animate(f, world, 1 / 60);   // settle the smoothing (facing eases in)
+      if (name.startsWith('move:')) {
+        // 'move:<guard|relaxed>:<idle|fwd|back|left|right|run>' — simulate the procedural stance over time:
+        // frame i = i * 0.12 s into moving that way (relative to facing)
+        const [, mode, dir] = name.split(':');
+        f.state = dir === 'idle' ? 'idle' : dir === 'run' ? 'run' : 'walk'; f.combat = mode === 'guard'; f._forceClip = null;
+        const sp = dir === 'run' ? 5.4 : dir === 'idle' ? 0 : 3;
+        const ang = { fwd: 0, run: 0, back: Math.PI, left: Math.PI / 2, right: -Math.PI / 2 }[dir] || 0;
+        // left of facing = (fy, -fx) (see characters2.fightStep)
+        const mx = Math.cos(ang) * f.fx + Math.sin(ang) * f.fy, my = Math.cos(ang) * f.fy - Math.sin(ang) * f.fx;
+        const steps = 20 + Math.round(i * 0.12 * 60);
+        for (let n = 0; n < steps; n++) { f.x += mx * sp / 60; f.y += my * sp / 60; world.time = n / 60; c.animate(f, world, 1 / 60); }
+        world.time = 0;
+      } else for (let n = 0; n < 40; n++) c.animate(f, world, 1 / 60);   // settle the smoothing (facing eases in)
       // world (x,y) -> three (x,z); lay rows/columns along screen axes
       const sx = (i - (frames - 1) / 2) * spacing, sy = (r - (names.length - 1) / 2) * spacing * 0.95;
       const right = new THREE.Vector3(1, 0, -1).normalize(), down = new THREE.Vector3(1, 0, 1).normalize();

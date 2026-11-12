@@ -8,7 +8,8 @@
 // Animator layers (every frame):
 //   0. key clips — hand-keyed strikes (clips.js) locked to the attack's startup/active/recovery timing
 //   1. base pose — the game's pose library (Fighter.getPose(): every state, attack and boss move), converted to the
-//      skeleton; walking and running are generated procedurally from the distance actually travelled (no foot slide)
+//      skeleton; standing, walking and running are procedural (stance(): guard bounce / relaxed weight shift blended
+//      with a stepping cycle by speed, driven by the distance actually travelled, so there's no foot slide)
 //   2. 3D secondary motion — hip/shoulder counter-twist toward the working arm or leg, arms kept clear of the body,
 //      feet kept level, a breathing idle, a slight lean into movement, the head turning toward who you're fighting
 //   3. smoothing — every joint eases toward its target (fast for strikes, softer otherwise), so nothing snaps
@@ -20,7 +21,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { specForLook } from '../game/sprites.js';
 import { fillPose } from '../game/poses.js';
-import { CLIPS, evalClip, attackU, stateClipFor } from './clips.js';
+import { CLIPS, evalClip, attackU, stateClipFor, GUARD_RIG } from './clips.js';
 
 export const CHAR2 = { templates: {}, meta: {}, ready: false };
 export const CHAR2_SCALE = 1.27;          // the game's chunky character scale (matches the sprites)
@@ -89,6 +90,7 @@ export class Character2 {
     this.hipOff = new THREE.Vector3();
     this.phase = 0; this.lastX = null; this.lastY = null; this.speed = 0;
     this.headYaw = 0; this.first = true;
+    this.mdx = 1; this.mdy = 0; this.lean = 0; this.prevSpeed = 0;   // travel direction, lean into acceleration
     this.ik = { L: { v: new THREE.Vector3(), w: 0 }, R: { v: new THREE.Vector3(), w: 0 } };   // smoothed fist targets
   }
 
@@ -133,24 +135,32 @@ export class Character2 {
     // distance actually travelled drives the walk/run cycle
     if (this.lastX === null) { this.lastX = f.x; this.lastY = f.y; }
     const moved = Math.hypot(f.x - this.lastX, f.y - this.lastY);
+    if (moved > 1e-5) {
+      const a = 1 - Math.exp(-dt * 14);
+      this.mdx += ((f.x - this.lastX) / moved - this.mdx) * a; this.mdy += ((f.y - this.lastY) / moved - this.mdy) * a;
+    }
     this.lastX = f.x; this.lastY = f.y;
     const v = dt > 0 ? moved / dt : 0;
     this.speed += (v - this.speed) * (1 - Math.exp(-dt * 10));
-    const loco = (st === 'walk' || st === 'run' || st === 'idle') && !f.combat;
+    // lean: forward when speeding up, back when pulling up
+    const acc = dt > 0 ? (this.speed - this.prevSpeed) / dt : 0;
+    this.prevSpeed = this.speed;
+    this.lean += (clamp(acc * 0.012, -0.14, 0.16) - this.lean) * (1 - Math.exp(-dt * 8));
     const T = this.target || (this.target = {});
     const clip = st === 'attack' && f.attack ? CLIPS[f.attack.def.pose || f.attack.name] : null;
     T.ikL = T.ikR = null; T.yaw = 0;
     for (const b of ['shoulder_L', 'shoulder_R']) (T[b] || (T[b] = new THREE.Vector3())).set(0, 0, 0);
     const sc = clip ? null : stateClipFor(f);
+    const stance = !clip && !sc && (st === 'walk' || st === 'run' || st === 'idle') && f.onGround !== false;
     if (clip) this.fromClip(T, clip, attackU(f));
     else if (sc) this.fromClip(T, sc.clip, sc.u);
-    else if (loco && this.speed > 0.25) this.locomotion(T, f, moved, st === 'run' || this.speed > 4.2);
+    else if (stance) this.stance(T, f, moved, world.time, st === 'run' || this.speed > 4.2);
     else this.fromPose(T, f.getPose(), f, world.time);
     // secondary 3D layers
     this.secondary(T, f, world);
     // smoothing: strikes snap, everything else eases
     const fast = st === 'attack' || st === 'hurt' || st === 'blockstun' || st === 'knockdown' || st === 'thrown' || st === 'grabbed' || st === 'dodge' || st === 'getup';
-    const k = this.first ? 1 : 1 - Math.exp(-dt * (clip ? 48 : sc ? (fast ? 40 : 24) : fast ? 34 : loco ? 16 : 13));
+    const k = this.first ? 1 : 1 - Math.exp(-dt * (clip ? 48 : sc ? (fast ? 40 : 24) : stance ? 18 : fast ? 34 : 13));
     this.first = false;
     for (const b of ANIMATED) {
       const t = T[b] || ZERO;
@@ -163,7 +173,7 @@ export class Character2 {
     this.hipOff.lerp(T.hipOff || ZERO, k);
     if (this.B.hips) this.B.hips.position.copy(this.hipsRest).add(V1.copy(this.hipOff).applyQuaternion(this.rootInv));
     // facing
-    const flip = (this.lastPose && (this.lastPose.flip || 0) >= 0.5) && !loco;
+    const flip = (this.lastPose && (this.lastPose.flip || 0) >= 0.5);
     const yaw = Math.atan2(f.fx, f.fy) + (flip ? Math.PI : 0);
     if (this.baseYaw === undefined) this.baseYaw = this.group.rotation.y;
     let d = yaw - this.baseYaw;
@@ -248,6 +258,85 @@ export class Character2 {
     T.ikL = C.ikL; T.ikR = C.ikR;
     T.yaw = C.yaw * R;
     this.lastPose = null;
+  }
+
+  // ---------------------------------------------------------------- standing, walking, running (procedural)
+  // Standing pose (guard bounce in a fight, relaxed weight shift otherwise) blended with a stepping cycle by speed,
+  // so starting and stopping ease in and out instead of switching between two poses.
+  stance(T, f, moved, time, run) {
+    const t = time + (f.id || 0) * 1.37;
+    const guard = f.combat && !run;
+    if (guard) this.guardPose(T, t); else this.relaxedPose(T, t);
+    const wt = clamp((this.speed - 0.12) / 0.9, 0, 1), w = wt * wt * (3 - 2 * wt);
+    if (w > 0.01) {
+      const B = this.stepT || (this.stepT = {});
+      for (const b of ['shoulder_L', 'shoulder_R']) (B[b] || (B[b] = new THREE.Vector3())).set(0, 0, 0);
+      if (guard) this.fightStep(B, f, moved, t); else this.locomotion(B, f, moved, run);
+      for (const b of ANIMATED) if (B[b] && T[b]) T[b].lerp(B[b], w);
+      T.hipOff.lerp(B.hipOff, w);
+    }
+    T.hips.x += this.lean; T.chest.x += this.lean * 0.4;
+    this.lastPose = null;
+  }
+
+  rig(T, R0) {
+    const R = Math.PI / 180;
+    for (const b in R0) { if (b === 'hip') continue; const v = R0[b]; this.setBone(T, b, v[0] * R, v[1] * R, v[2] * R, b.endsWith('_R') ? 'R' : 'L'); }
+    (T.hipOff || (T.hipOff = new THREE.Vector3())).set(R0.hip[0], R0.hip[1], R0.hip[2]);
+  }
+
+  // fighting stance: a boxer's bounce on the balls of the feet, shoulders rolling, fists working
+  guardPose(T, t) {
+    this.rig(T, GUARD_RIG);
+    const bo = Math.sin(t * TAU * 1.55), sw = Math.sin(t * TAU * 0.775 + 0.6);
+    const dn = 0.5 + 0.5 * bo;                                       // 1 = bottom of the bounce
+    for (const sd of ['L', 'R']) { T['thigh_' + sd].x += dn * 0.1; T['shin_' + sd].x -= dn * 0.19; T['foot_' + sd].x += dn * 0.09; }
+    T.hips.y += sw * 0.06; T.spine.y -= sw * 0.03; T.chest.y -= sw * 0.05; T.chest.x += dn * 0.03; T.head.x -= dn * 0.025;
+    T.shoulder_L.x += sw * 0.06; T.shoulder_R.x -= sw * 0.06;
+    T.upperArm_L.x += sw * 0.05 + bo * 0.02; T.forearm_L.x += bo * 0.05;
+    T.upperArm_R.x -= sw * 0.05 - bo * 0.02; T.forearm_R.x -= bo * 0.04;
+    T.hipOff.x += sw * 0.014; T.hipOff.y -= dn * 0.05;
+  }
+
+  // standing about: slow weight shift from foot to foot, breathing, arms loose
+  relaxedPose(T, t) {
+    const ws = Math.sin(t * TAU / 3.8), br = Math.sin(t * 2.2);
+    for (const [sd, sg] of [['L', 1], ['R', -1]]) {
+      const unload = Math.max(0, -sg * ws);                         // the leg not carrying the weight relaxes its knee
+      this.setBone(T, 'upperArm_' + sd, 0.06 + br * 0.015, 0, 0.13, sd);
+      this.setBone(T, 'forearm_' + sd, 0.26 + br * 0.02, 0.03, 0, sd);
+      this.setBone(T, 'hand_' + sd, -0.15, 0, 0, sd);
+      this.setBone(T, 'thigh_' + sd, 0.02 + unload * 0.1, 0, 0.05 + sg * ws * 0.02, sd);
+      this.setBone(T, 'shin_' + sd, -0.05 - unload * 0.22, 0, 0, sd);
+      this.setBone(T, 'foot_' + sd, 0.03 + unload * 0.12, 0, 0, sd);
+      this.setBone(T, 'shoulder_' + sd, 0, 0, br * 0.025, sd);
+    }
+    this.setBone(T, 'hips', 0.02, ws * 0.05, ws * 0.05);
+    this.setBone(T, 'spine', 0.02 + br * 0.01, 0, -ws * 0.03);
+    this.setBone(T, 'chest', 0.01 + br * 0.025, -ws * 0.03, -ws * 0.02);
+    this.setBone(T, 'neck', 0.02, 0, 0);
+    this.setBone(T, 'head', 0.02 - br * 0.015, Math.sin(t * 0.37) * 0.12, ws * 0.03);
+    (T.hipOff || (T.hipOff = new THREE.Vector3())).set(ws * 0.03, -0.012 - Math.abs(ws) * 0.012, 0);
+  }
+
+  // stepping in the guard: shuffle forward/back, side-step (feet spread then close), relative to where he faces
+  fightStep(T, f, moved, t) {
+    this.guardPose(T, t);
+    this.phase = (this.phase + moved / 0.95 * TAU) % TAU;
+    const p = this.phase, s = Math.sin(p), c = Math.cos(p);
+    const vf = this.mdx * f.fx + this.mdy * f.fy;                   // + forward
+    const vs = this.mdx * f.fy - this.mdy * f.fx;                   // + toward his left
+    const spread = (0.5 - 0.5 * c) * Math.abs(vs);
+    const leadL = vs > 0;
+    for (const [sd, sg] of [['L', 1], ['R', -1]]) {
+      const sw = sg * s, lift = Math.max(0, sg * c) * Math.abs(vf) + (((sd === 'L') === leadL ? Math.max(0, s) : Math.max(0, -s)) * Math.abs(vs));
+      T['thigh_' + sd].x += 0.34 * sw * vf + lift * 0.2;
+      T['shin_' + sd].x -= lift * 0.55;
+      T['foot_' + sd].x += -0.2 * sw * vf + lift * 0.18;
+      T['thigh_' + sd].z += sg * spread * 0.36;                     // raw z: + is out for the left leg, in for the right
+    }
+    T.hips.x += vf * 0.05; T.chest.x += vf * 0.03;
+    T.hipOff.y -= (1 - Math.abs(c)) * 0.025;
   }
 
   // procedural walk/run from distance travelled
