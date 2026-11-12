@@ -1,22 +1,35 @@
 #!/usr/bin/env python3
 """Tiny static dev server with caching disabled (so edited ES modules always reload).
-Usage: python3 scripts/serve.py [port] [--public]   then open http://localhost:8642
-  --public  listen on all interfaces (for LAN / router port-forward). Dotfiles (.git, .claude, ...)
-            are hidden and the /__shot dev helper only accepts requests from this machine.
+Usage: python3 scripts/serve.py [port] [--public] [--root DIR]   then open http://localhost:8642
+  --public    listen on all interfaces (for LAN / router port-forward). Dotfiles (.git, .claude, ...)
+              are hidden and the /__shot dev helper only accepts requests from this machine.
+              Over a slow uplink the full no-store reload is painful, so public mode instead lets the
+              browser cache and revalidate (Last-Modified -> 304) and gzips JS/JSON/GLB/HTML/CSS/SVG.
+  --root DIR  serve DIR instead of this checkout (e.g. another worktree).
 """
-import http.server, socketserver, sys, os
+import argparse, email.utils, gzip, http.server, os
 
-ARGS = [a for a in sys.argv[1:] if not a.startswith('--')]
-PUBLIC = '--public' in sys.argv[1:]
-PORT = int(ARGS[0]) if ARGS else 8642
+DEFAULT_ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+ap = argparse.ArgumentParser(description='THE LAST HOOLIGAN dev server')
+ap.add_argument('port', nargs='?', type=int, default=8642)
+ap.add_argument('--public', action='store_true')
+ap.add_argument('--root', default=DEFAULT_ROOT)
+OPTS = ap.parse_args()
+
+PORT = OPTS.port
+PUBLIC = OPTS.public
 HOST = '0.0.0.0' if PUBLIC else '127.0.0.1'
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+ROOT = os.path.abspath(OPTS.root)
+
+GZIP_EXT = {'.js', '.mjs', '.json', '.glb', '.gltf', '.bin', '.html', '.css', '.svg', '.txt'}
+_gz_cache = {}  # abs path -> (mtime_ns, gzipped bytes)
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *a, **kw):
         super().__init__(*a, directory=ROOT, **kw)
     def end_headers(self):
-        self.send_header('Cache-Control', 'no-store, must-revalidate')
+        # public: cache but always revalidate (cheap 304s); local: never cache
+        self.send_header('Cache-Control', 'no-cache' if PUBLIC else 'no-store, must-revalidate')
         super().end_headers()
     def log_message(self, *a):
         pass
@@ -31,11 +44,51 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self._hidden(): self.send_error(404); return
+        if PUBLIC and self._send_gzipped(): return
         super().do_GET()
 
     def do_HEAD(self):
         if self._hidden(): self.send_error(404); return
         super().do_HEAD()
+
+    def _send_gzipped(self):
+        """Serve a compressible file gzipped (with 304 support). False = let the stock handler do it."""
+        if 'gzip' not in self.headers.get('Accept-Encoding', ''):
+            return False
+        path = self.translate_path(self.path)
+        if os.path.isdir(path):
+            if not self.path.split('?', 1)[0].endswith('/'):
+                return False  # stock handler sends the trailing-slash redirect
+            path = os.path.join(path, 'index.html')
+        if os.path.splitext(path)[1].lower() not in GZIP_EXT or not os.path.isfile(path):
+            return False
+        st = os.stat(path)
+        ims = self.headers.get('If-Modified-Since')
+        if ims and 'If-None-Match' not in self.headers:
+            try:
+                if int(st.st_mtime) <= email.utils.parsedate_to_datetime(ims).timestamp():
+                    self.send_response(304)
+                    self.send_header('Last-Modified', self.date_time_string(st.st_mtime))
+                    self.send_header('Vary', 'Accept-Encoding')
+                    self.end_headers()
+                    return True
+            except (TypeError, ValueError, OverflowError):
+                pass
+        cached = _gz_cache.get(path)
+        if not cached or cached[0] != st.st_mtime_ns:
+            with open(path, 'rb') as f:
+                cached = (st.st_mtime_ns, gzip.compress(f.read(), 6))
+            _gz_cache[path] = cached
+        body = cached[1]
+        self.send_response(200)
+        self.send_header('Content-Type', self.guess_type(path))
+        self.send_header('Content-Encoding', 'gzip')
+        self.send_header('Content-Length', str(len(body)))
+        self.send_header('Last-Modified', self.date_time_string(st.st_mtime))
+        self.send_header('Vary', 'Accept-Encoding')
+        self.end_headers()
+        self.wfile.write(body)
+        return True
 
     # dev helper: POST a PNG data URL to /__shot?name=foo -> build/shots/foo.png (localhost only)
     def do_POST(self):
@@ -56,5 +109,7 @@ class Server(http.server.ThreadingHTTPServer):
     request_queue_size = 256
 
 with Server((HOST, PORT), Handler) as httpd:
-    print(f'THE LAST HOOLIGAN dev server on http://localhost:{PORT}' + (' (public: all interfaces)' if PUBLIC else ''))
+    print(f'THE LAST HOOLIGAN dev server on http://localhost:{PORT}'
+          + (' (public: all interfaces, cached + gzip)' if PUBLIC else '')
+          + (f'  root={ROOT}' if ROOT != DEFAULT_ROOT else ''))
     httpd.serve_forever()
