@@ -6,6 +6,7 @@
   "description": "THE LAST HOOLIGAN - retro isometric beat 'em up (HTML5 Canvas, no build step)",
   "scripts": {
     "start": "python3 scripts/serve.py 8642",
+    "start:public": "python3 scripts/serve.py 8642 --public",
     "check": "node scripts/check.mjs"
   }
 }
