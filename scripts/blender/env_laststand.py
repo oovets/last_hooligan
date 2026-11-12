@@ -1109,8 +1109,8 @@ PIECES = [
     dict(kind='wall', id='laststand_planter', heights=[0.9], variants=3, build=planter, padX=4, padBottom=4, extraTop=24),
     dict(kind='wall', id='laststand_hoarding', heights=[3], variants=6, build=hoarding, padX=4, padBottom=4),
 
-    dict(kind='prop', id='laststand_policevan', size=(2, 2, 1.4), build=p_policevan, pad=10, variants=[{'dir': 'x'}, {'dir': 'y'}]),
-    dict(kind='prop', id='laststand_burntcar', size=(2, 1, 1.1), build=p_burntcar, pad=10),
+    # dict(kind='prop', id='laststand_policevan', size=(2, 2, 1.4), build=p_policevan, pad=10, variants=[{'dir': 'x'}, {'dir': 'y'}]),   # -> moved to env_vehicles.py (full scale)
+    # dict(kind='prop', id='laststand_burntcar', size=(2, 1, 1.1), build=p_burntcar, pad=10),   # -> moved to env_vehicles.py (full scale)
     dict(kind='prop', id='laststand_floodlight', size=(1, 1, 7.0), build=p_floodlight, pad=30),
     dict(kind='prop', id='laststand_flarepot', size=(1, 1, 0.6), build=p_flarepot, pad=6),
     dict(kind='prop', id='laststand_statue', size=(1, 1, 1.5), build=p_statue, pad=8),

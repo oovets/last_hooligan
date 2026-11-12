@@ -292,6 +292,8 @@ def render_prop(sc, cam, ctx, piece, index):
     for vi, var in enumerate(vars_ if not PREVIEW else vars_[:1]):
         clear_objects(sc)
         piece['build'](ctx, var)
+        w, d, hmax = piece.get('size', (1, 1, 2))
+        if piece.get('rotates') and var.get('dir') == 'y': w, d = d, w   # footprint turns with the prop
         # bounding projection of the footprint box
         corners = [G(x, y, z) for x in (0, w) for y in (0, d) for z in (0, hmax)]
         anchor = G(0, 0, 0)

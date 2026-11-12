@@ -2577,94 +2577,6 @@
 }
 ]
 },
-"car": {
-"variants": [
-{
-"file": "props/car_0.png",
-"ax": 40.0,
-"ay": 56.0,
-"color": "#8a2020",
-"dir": "x"
-},
-{
-"file": "props/car_1.png",
-"ax": 40.0,
-"ay": 56.0,
-"color": "#203a8a",
-"dir": "x"
-},
-{
-"file": "props/car_2.png",
-"ax": 40.0,
-"ay": 56.0,
-"color": "#d8d8d0",
-"dir": "x"
-},
-{
-"file": "props/car_3.png",
-"ax": 40.0,
-"ay": 56.0,
-"color": "#2a6a3a",
-"dir": "x"
-},
-{
-"file": "props/car_4.png",
-"ax": 40.0,
-"ay": 56.0,
-"color": "#d8b020",
-"dir": "x"
-},
-{
-"file": "props/car_5.png",
-"ax": 40.0,
-"ay": 56.0,
-"color": "#1a1a1e",
-"dir": "x"
-},
-{
-"file": "props/car_6.png",
-"ax": 40.0,
-"ay": 56.0,
-"color": "#8a2020",
-"dir": "y"
-},
-{
-"file": "props/car_7.png",
-"ax": 40.0,
-"ay": 56.0,
-"color": "#203a8a",
-"dir": "y"
-},
-{
-"file": "props/car_8.png",
-"ax": 40.0,
-"ay": 56.0,
-"color": "#d8d8d0",
-"dir": "y"
-},
-{
-"file": "props/car_9.png",
-"ax": 40.0,
-"ay": 56.0,
-"color": "#2a6a3a",
-"dir": "y"
-},
-{
-"file": "props/car_10.png",
-"ax": 40.0,
-"ay": 56.0,
-"color": "#d8b020",
-"dir": "y"
-},
-{
-"file": "props/car_11.png",
-"ax": 40.0,
-"ay": 56.0,
-"color": "#1a1a1e",
-"dir": "y"
-}
-]
-},
 "bench": {
 "variants": [
 {
@@ -3635,31 +3547,6 @@
 }
 ]
 },
-"laststand_policevan": {
-"variants": [
-{
-"file": "props/laststand_policevan_0.png",
-"ax": 74.0,
-"ay": 66.0,
-"dir": "x"
-},
-{
-"file": "props/laststand_policevan_1.png",
-"ax": 74.0,
-"ay": 66.0,
-"dir": "y"
-}
-]
-},
-"laststand_burntcar": {
-"variants": [
-{
-"file": "props/laststand_burntcar_0.png",
-"ax": 42.0,
-"ay": 54.0
-}
-]
-},
 "laststand_floodlight": {
 "variants": [
 {
@@ -4371,6 +4258,370 @@
 "file": "props/underground_trolley_0.png",
 "ax": 40.0,
 "ay": 48.0
+}
+]
+},
+"car": {
+"variants": [
+{
+"file": "props/car_0.png",
+"ax": 78.0,
+"ay": 94.0,
+"color": "#8a2020",
+"dir": "x",
+"rev": 0
+},
+{
+"file": "props/car_1.png",
+"ax": 78.0,
+"ay": 94.0,
+"color": "#8a2020",
+"dir": "x",
+"rev": 1
+},
+{
+"file": "props/car_2.png",
+"ax": 78.0,
+"ay": 94.0,
+"color": "#203a8a",
+"dir": "x",
+"rev": 0
+},
+{
+"file": "props/car_3.png",
+"ax": 78.0,
+"ay": 94.0,
+"color": "#203a8a",
+"dir": "x",
+"rev": 1
+},
+{
+"file": "props/car_4.png",
+"ax": 78.0,
+"ay": 94.0,
+"color": "#d8d8d0",
+"dir": "x",
+"rev": 0
+},
+{
+"file": "props/car_5.png",
+"ax": 78.0,
+"ay": 94.0,
+"color": "#d8d8d0",
+"dir": "x",
+"rev": 1
+},
+{
+"file": "props/car_6.png",
+"ax": 78.0,
+"ay": 94.0,
+"color": "#2a6a3a",
+"dir": "x",
+"rev": 0
+},
+{
+"file": "props/car_7.png",
+"ax": 78.0,
+"ay": 94.0,
+"color": "#2a6a3a",
+"dir": "x",
+"rev": 1
+},
+{
+"file": "props/car_8.png",
+"ax": 78.0,
+"ay": 94.0,
+"color": "#d8b020",
+"dir": "x",
+"rev": 0
+},
+{
+"file": "props/car_9.png",
+"ax": 78.0,
+"ay": 94.0,
+"color": "#d8b020",
+"dir": "x",
+"rev": 1
+},
+{
+"file": "props/car_10.png",
+"ax": 78.0,
+"ay": 94.0,
+"color": "#1a1a1e",
+"dir": "x",
+"rev": 0
+},
+{
+"file": "props/car_11.png",
+"ax": 78.0,
+"ay": 94.0,
+"color": "#1a1a1e",
+"dir": "x",
+"rev": 1
+},
+{
+"file": "props/car_12.png",
+"ax": 78.0,
+"ay": 94.0,
+"color": "#5a2a6a",
+"dir": "x",
+"rev": 0
+},
+{
+"file": "props/car_13.png",
+"ax": 78.0,
+"ay": 94.0,
+"color": "#5a2a6a",
+"dir": "x",
+"rev": 1
+},
+{
+"file": "props/car_14.png",
+"ax": 78.0,
+"ay": 94.0,
+"color": "#3a3a44",
+"dir": "x",
+"rev": 0
+},
+{
+"file": "props/car_15.png",
+"ax": 78.0,
+"ay": 94.0,
+"color": "#3a3a44",
+"dir": "x",
+"rev": 1
+},
+{
+"file": "props/car_16.png",
+"ax": 174.0,
+"ay": 94.0,
+"color": "#8a2020",
+"dir": "y",
+"rev": 0
+},
+{
+"file": "props/car_17.png",
+"ax": 174.0,
+"ay": 94.0,
+"color": "#8a2020",
+"dir": "y",
+"rev": 1
+},
+{
+"file": "props/car_18.png",
+"ax": 174.0,
+"ay": 94.0,
+"color": "#203a8a",
+"dir": "y",
+"rev": 0
+},
+{
+"file": "props/car_19.png",
+"ax": 174.0,
+"ay": 94.0,
+"color": "#203a8a",
+"dir": "y",
+"rev": 1
+},
+{
+"file": "props/car_20.png",
+"ax": 174.0,
+"ay": 94.0,
+"color": "#d8d8d0",
+"dir": "y",
+"rev": 0
+},
+{
+"file": "props/car_21.png",
+"ax": 174.0,
+"ay": 94.0,
+"color": "#d8d8d0",
+"dir": "y",
+"rev": 1
+},
+{
+"file": "props/car_22.png",
+"ax": 174.0,
+"ay": 94.0,
+"color": "#2a6a3a",
+"dir": "y",
+"rev": 0
+},
+{
+"file": "props/car_23.png",
+"ax": 174.0,
+"ay": 94.0,
+"color": "#2a6a3a",
+"dir": "y",
+"rev": 1
+},
+{
+"file": "props/car_24.png",
+"ax": 174.0,
+"ay": 94.0,
+"color": "#d8b020",
+"dir": "y",
+"rev": 0
+},
+{
+"file": "props/car_25.png",
+"ax": 174.0,
+"ay": 94.0,
+"color": "#d8b020",
+"dir": "y",
+"rev": 1
+},
+{
+"file": "props/car_26.png",
+"ax": 174.0,
+"ay": 94.0,
+"color": "#1a1a1e",
+"dir": "y",
+"rev": 0
+},
+{
+"file": "props/car_27.png",
+"ax": 174.0,
+"ay": 94.0,
+"color": "#1a1a1e",
+"dir": "y",
+"rev": 1
+},
+{
+"file": "props/car_28.png",
+"ax": 174.0,
+"ay": 94.0,
+"color": "#5a2a6a",
+"dir": "y",
+"rev": 0
+},
+{
+"file": "props/car_29.png",
+"ax": 174.0,
+"ay": 94.0,
+"color": "#5a2a6a",
+"dir": "y",
+"rev": 1
+},
+{
+"file": "props/car_30.png",
+"ax": 174.0,
+"ay": 94.0,
+"color": "#3a3a44",
+"dir": "y",
+"rev": 0
+},
+{
+"file": "props/car_31.png",
+"ax": 174.0,
+"ay": 94.0,
+"color": "#3a3a44",
+"dir": "y",
+"rev": 1
+}
+]
+},
+"laststand_policevan": {
+"variants": [
+{
+"file": "props/laststand_policevan_0.png",
+"ax": 78.0,
+"ay": 118.0,
+"dir": "x"
+},
+{
+"file": "props/laststand_policevan_1.png",
+"ax": 174.0,
+"ay": 118.0,
+"dir": "y"
+}
+]
+},
+"laststand_burntcar": {
+"variants": [
+{
+"file": "props/laststand_burntcar_0.png",
+"ax": 78.0,
+"ay": 86.0,
+"dir": "x"
+},
+{
+"file": "props/laststand_burntcar_1.png",
+"ax": 174.0,
+"ay": 86.0,
+"dir": "y"
+}
+]
+},
+"city_taxi": {
+"variants": [
+{
+"file": "props/city_taxi_0.png",
+"ax": 78.0,
+"ay": 94.0,
+"dir": "x",
+"color": "#e8b818",
+"rev": 0
+},
+{
+"file": "props/city_taxi_1.png",
+"ax": 78.0,
+"ay": 94.0,
+"dir": "x",
+"color": "#e8b818",
+"rev": 1
+},
+{
+"file": "props/city_taxi_2.png",
+"ax": 174.0,
+"ay": 94.0,
+"dir": "y",
+"color": "#e8b818",
+"rev": 0
+},
+{
+"file": "props/city_taxi_3.png",
+"ax": 174.0,
+"ay": 94.0,
+"dir": "y",
+"color": "#e8b818",
+"rev": 1
+}
+]
+},
+"bus": {
+"variants": [
+{
+"file": "props/bus_0.png",
+"ax": 80.0,
+"ay": 140.0,
+"dir": "x",
+"color": "#2a6a4a",
+"rev": 0
+},
+{
+"file": "props/bus_1.png",
+"ax": 80.0,
+"ay": 140.0,
+"dir": "x",
+"color": "#2a6a4a",
+"rev": 1
+},
+{
+"file": "props/bus_2.png",
+"ax": 304.0,
+"ay": 140.0,
+"dir": "y",
+"color": "#2a6a4a",
+"rev": 0
+},
+{
+"file": "props/bus_3.png",
+"ax": 304.0,
+"ay": 140.0,
+"dir": "y",
+"color": "#2a6a4a",
+"rev": 1
 }
 ]
 }

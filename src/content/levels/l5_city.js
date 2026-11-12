@@ -201,7 +201,7 @@ const L = {
     { type: 'bottle', x: 20.5, y: 14.5 },
     { type: 'city_neon', x: 31.5, y: 8.5 },
     { type: 'city_champagne', x: 61.5, y: 25.5, z: 0.05 },
-    { type: 'pipe', x: 56.5, y: 39.5 },
+    { type: 'pipe', x: 56.5, y: 40.6 },
     { type: 'pipe', x: 49.5, y: 49.5 },
     { type: 'brick', x: 12.5, y: 44.5 },
     { type: 'umbrella', x: 30.5, y: 46.5 },
@@ -244,8 +244,7 @@ const L = {
     { type: 'chairProp', x: 29, y: 6 },
     // fountain square preview + boundary planters
     // ---------------- B: taxi rank & bus stop
-    { type: 'city_taxi', x: 46, y: 3 }, { type: 'city_taxi', x: 46, y: 5, signOff: true }, { type: 'city_taxi', x: 46, y: 7 },
-    { type: 'city_taxi', x: 46, y: 13, signOff: true }, { type: 'city_taxi', x: 46, y: 15 },
+    { type: 'city_taxi', x: 46, y: 3 },                       // full-scale taxi (2 x 5) at the head of the rank
     { type: 'city_pelican', x: 46, y: 9, onOpen: pelican, openMsg: 'BEEP BEEP BEEP - CROSS NOW!' },
     { type: 'city_taxiSign', x: 48, y: 9 },
     { type: 'city_busShelter', x: 49, y: 13 },
@@ -280,8 +279,8 @@ const L = {
     { type: 'city_fireDoor', x: 52, y: 36, key: 'city_never', lockedMsg: 'FIRE EXIT ALARMED. CLEAR THE CLUB FIRST.' },
     { type: 'city_fireDoor', x: 53, y: 36, key: 'city_never', lockedMsg: 'FIRE EXIT ALARMED. CLEAR THE CLUB FIRST.' },
     // ---------------- D: car park
-    { type: 'car', x: 48, y: 38, color: '#5a2a6a' }, { type: 'car', x: 52, y: 38, color: '#d8d8d0' }, { type: 'car', x: 58, y: 38, color: '#203a8a' },
-    { type: 'car', x: 52, y: 43, color: '#8a2020' }, { type: 'car', x: 58, y: 43, color: '#3a3a44', alarm: true },
+    { type: 'car', x: 48, y: 38, color: '#5a2a6a' }, { type: 'car', x: 55, y: 38, color: '#d8d8d0' },
+    { type: 'car', x: 52, y: 42, color: '#8a2020' }, { type: 'car', x: 58, y: 42, color: '#3a3a44', alarm: true },
     { type: 'car', x: 48, y: 52, color: '#2a6a3a' }, { type: 'car', x: 56, y: 52, color: '#d8b020', alarm: true },
     { type: 'city_payMachine', x: 61, y: 46 },
     { type: 'cone', x: 54, y: 48 }, { type: 'cone', x: 55, y: 49 }, { type: 'barrier', x: 61, y: 49, dir: 'y' },
@@ -366,10 +365,12 @@ const L = {
     { x: 3.5, y: 27, z: 1, r: 2.4, color: '#ffffff', intensity: 0.4 },
   ],
   hazards: [
-    { type: 'traffic', lane: [{ x: 40.5, y: -5 }, { x: 40.5, y: 60 }], interval: [11, 19], speed: 7.5, offset: 3, vehicleStyle: 'bus', colors: ['#2a6a4a'], halfLen: 2.2, halfWidth: 0.55, dmg: 28, draw: drawCityVehicle },
-    { type: 'traffic', lane: [{ x: 41.5, y: -3 }, { x: 41.5, y: 58 }], interval: [5, 10], speed: 9, offset: 6, vehicleStyle: 'taxi', colors: ['#e8b818'], halfLen: 1.0, halfWidth: 0.55, dmg: 22, draw: drawCityVehicle },
-    { type: 'traffic', lane: [{ x: 43.5, y: 58 }, { x: 43.5, y: -3 }], interval: [4, 9], speed: 9.5, offset: 1, vehicleStyle: 'car', colors: CARS, halfLen: 1.0, halfWidth: 0.55, dmg: 22, draw: drawCityVehicle },
-    { type: 'traffic', lane: [{ x: 44.5, y: 60 }, { x: 44.5, y: -5 }], interval: [12, 20], speed: 7, offset: 9, vehicleStyle: 'bus', colors: ['#2a6a4a'], halfLen: 2.2, halfWidth: 0.55, dmg: 28, draw: drawCityVehicle },
+    // two full-width lanes (vehicles are 2 tiles wide): southbound on x 41.5, northbound on x 43.5.
+    // One stream per lane mixing buses / taxis / cars at one speed, so vehicles never run into each other.
+    { type: 'traffic', lane: [{ x: 41.5, y: -7 }, { x: 41.5, y: 62 }], interval: [4, 9], speed: 8.5, offset: 2, dmg: 24, draw: drawCityVehicle,
+      mix: [{ style: 'bus', colors: ['#2a6a4a'], weight: 1, dmg: 28 }, { style: 'taxi', colors: ['#e8b818'], weight: 2 }, { style: 'car', colors: CARS, weight: 2 }] },
+    { type: 'traffic', lane: [{ x: 43.5, y: 62 }, { x: 43.5, y: -7 }], interval: [4, 9], speed: 9, offset: 6, dmg: 24, draw: drawCityVehicle,
+      mix: [{ style: 'bus', colors: ['#2a6a4a'], weight: 1, dmg: 28 }, { style: 'car', colors: CARS, weight: 3 }, { style: 'taxi', colors: ['#e8b818'], weight: 1 }] },
   ],
   triggers: [
     { area: { x: 1, y: 8, w: 4, h: 8 }, msg: 'DOWNTOWN NORDHAMN', sub: 'EVERY GANG IN TOWN IS OUT TONIGHT', dur: 3, color: NEON.pink },

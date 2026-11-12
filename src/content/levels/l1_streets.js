@@ -106,18 +106,18 @@ export default {
     '                 Bx...b           RRRRRRRRRRGGRR',
     '       SHHHHHHHHHH....HHHHHHHHHHHHbppppppppppppb',
     '       ScWWcccccccccccccccccccccccbpJppppppppp4b',
-    '       ScccccccccccccccccccccccmccbppKpppMpppppb',
+    '       ScccccccccccccccccccccccmccbpppKppppppppb',
     '       SccccIcccccccccccccccIcccccbppppppppppppb',
     '       SccccccccccccNccccccccccccccppppppppppppb',
     '       Sccccccccccgggggccccccccccccppppppppppppb',
-    '       ScccccccccNggTggccccccccccccpppppppppKppb',
-    '       SccccccccccgggggNcccccccccccppppppppppppb',
+    '       ScccccccccNggTggccccccccccccpMppppppppppb',
+    '       SccccccccccgggggNcccccccccccpppppppKppppb',
     '       SccccccccccgTgggcccccccccccbpppppJppppppb',
     '       Scccccccmccccccccccccccccccbppppppppppppb',
-    '       SccccccccccccccccccXcccccccbppKpppppppZpb',
+    '       SccccccccccccccccccXcccccccbppppppppppZpb',
     '       SccccIcccccccccccccccIcccccbppppppppppppb',
     '       ScQccccccccccccccccccccDcccbppppppppppppb',
-    '       S3cccccccccccccccccccccccccbpppppppMppppb',
+    '       S3cccccccccccccccccccccccccbpppppMppppppb',
     '       bbbbbbbbbbbbbbbbbbbbbbbbbbbbppppppppppppb',
     '                                  bpdppppppppJpb',
     '                                  bppppYpppppppb',
@@ -151,8 +151,8 @@ export default {
     { x: 14, y: 19, z: 1, r: 2.5, color: '#c0d0ff', intensity: 0.5 },
   ],
   hazards: [
-    { type: 'traffic', lane: [{ x: -3, y: 6.5 }, { x: 35, y: 6.5 }], interval: [7, 13], speed: 9, offset: 3, dmg: 14 },
-    { type: 'traffic', lane: [{ x: 35, y: 8.5 }, { x: -3, y: 8.5 }], interval: [8, 14], speed: 8, offset: 7, dmg: 14 },
+    // one-way backstreet: full-size cars (2 tiles wide) use the whole 3-tile road, eastbound only
+    { type: 'traffic', lane: [{ x: -6, y: 7.5 }, { x: 38, y: 7.5 }], interval: [6, 12], speed: 8.5, offset: 3, dmg: 14 },
   ],
   triggers: [
     { area: { x: 1, y: 3, w: 5, h: 8 }, msg: 'J  K  = PUNCH    L = KICK', sub: 'SPACE JUMP  SHIFT BLOCK  O DODGE  I GRAB', dur: 5, color: '#ffe14a' },
@@ -200,7 +200,7 @@ export default {
   boss: {
     type: 'bigtel', x: 41.5, y: 36.5, title: 'BIG TEL', intro: 'KING OF THE CAR PARK',
     area: { x: 35.2, y: 26, w: 12, h: 18 }, lockArea: { x: 35, y: 26, w: 12, h: 18 },
-    minions: [{ type: 'rival', x: 38.5, y: 31.5 }, { type: 'rival', x: 44.5, y: 40.5 }],
+    minions: [{ type: 'rival', x: 38.5, y: 30.5 }, { type: 'rival', x: 45.5, y: 38.5 }],
   },
   onBossDefeated(world) {
     for (const p of world.props) if (p.type === 'gate') p.open = true;

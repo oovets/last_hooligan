@@ -75,7 +75,9 @@ function checkLevel(L) {
   for (const p of props) {
     const d = PROPS[p.type];
     if (!d) { err(L, `unknown prop '${p.type}' at ${p.x},${p.y}`); continue; }
-    const w = p.w ?? d.w, dd = p.d ?? d.d, h = (p.h ?? d.h) + ((p.h ?? d.h) > 0 ? (p.base || 0) : 0);
+    let w = p.w ?? d.w, dd = p.d ?? d.d;
+    if (d.rotates && (p.dir ?? d.defaultDir ?? 'x') === 'y' && p.w === undefined && p.d === undefined) { const t = w; w = dd; dd = t; }
+    const _unused = 0, h = (p.h ?? d.h) + ((p.h ?? d.h) > 0 ? (p.base || 0) : 0);
     const solid = (p.solid ?? d.solid) && h > 0;
     for (let y = p.y; y < p.y + dd; y++) for (let x = p.x; x < p.x + w; x++) {
       if (!map.inBounds(x, y)) { err(L, `prop '${p.type}' at ${p.x},${p.y} extends out of the map`); continue; }

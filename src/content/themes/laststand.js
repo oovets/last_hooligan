@@ -353,7 +353,7 @@ function findLight(p, world) {
 
 // ---- police van: white with blue/yellow checks, roof light bar. Roof (h 1.2) can be jumped onto.
 registerProp('laststand_policevan', {
-  w: 2, d: 1, h: 1.2,
+  w: 5, d: 2, h: 2.2, rotates: true,   // full-scale panel van (Blender sprite in env_vehicles.py)
   light: { z: 1.5, r: 3.2, color: '#3a5aff', intensity: 0.8 },
   update(p, world) {
     const L = findLight(p, world);
@@ -416,7 +416,7 @@ registerProp('laststand_policevan', {
 
 // ---- burnt-out car: charred shell, embers, smoke
 registerProp('laststand_burntcar', {
-  w: 2, d: 1, h: 0.9,
+  w: 5, d: 2, h: 1.3, rotates: true,
   light: { z: 0.8, r: 2.8, color: '#ff6a20', intensity: 0.6, flicker: true },
   update(p, world, dt) {
     p.smokeT = (p.smokeT || 0) - dt;

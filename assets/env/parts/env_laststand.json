@@ -158,31 +158,6 @@
 }
 },
 "props": {
-"laststand_policevan": {
-"variants": [
-{
-"file": "props/laststand_policevan_0.png",
-"ax": 74.0,
-"ay": 66.0,
-"dir": "x"
-},
-{
-"file": "props/laststand_policevan_1.png",
-"ax": 74.0,
-"ay": 66.0,
-"dir": "y"
-}
-]
-},
-"laststand_burntcar": {
-"variants": [
-{
-"file": "props/laststand_burntcar_0.png",
-"ax": 42.0,
-"ay": 54.0
-}
-]
-},
 "laststand_floodlight": {
 "variants": [
 {

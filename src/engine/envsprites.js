@@ -73,6 +73,7 @@ export function envProp(type, o = {}) {
     if (o.dir !== undefined || v.dir !== undefined) s += (v.dir || 'x') === (o.dir || 'x') ? 4 : -10;
     if (v.color && o.color) s += v.color.toLowerCase() === String(o.color).toLowerCase() ? 3 : 0;
     if (!!v.fire === !!o.fire) s += 2;
+    if (!!v.rev === !!o.rev) s += 5;          // vehicles: which way the front faces
     if (s > bs) { bs = s; best = v; }
   }
   if ((best.dir || 'x') !== (o.dir || 'x') && (o.dir !== undefined || best.dir !== undefined)) return null;

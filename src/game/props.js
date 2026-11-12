@@ -42,6 +42,9 @@ export class Prop {
     this.o = spec;
     this.x = spec.x; this.y = spec.y;
     this.w = spec.w ?? this.def.w; this.d = spec.d ?? this.def.d;
+    // rotating props (vehicles): def footprint is for dir 'x'; dir 'y' turns it
+    this.dir = spec.dir ?? this.def.defaultDir ?? 'x';
+    if (this.def.rotates && this.dir === 'y' && spec.w === undefined && spec.d === undefined) { const t = this.w; this.w = this.d; this.d = t; }
     this.base = spec.base || 0;
     this.h = spec.h ?? this.def.h;
     this.solid = (spec.solid ?? this.def.solid) && this.h > 0;
@@ -354,7 +357,8 @@ registerProp('fence', { // steel mesh fence panel
 // ---- car: detailed 80s/90s hatchback. opts: color, dir:'x'|'y', alarm, broken, plate
 function drawCar(ctx, ax, ay, c, alongX, t, o) {
   // local frame: a = along the car (0..2, front at a=2), b = across (0..1); visible long side at b = 1
-  const P = alongX ? (a, b, z) => proj(ax, ay, a, b, z) : (a, b, z) => proj(ax, ay, b, a, z);
+  const [SA, SB, SZ] = (o && o.scale) || [1, 1, 1];
+  const P = alongX ? (a, b, z) => proj(ax, ay, a * SA, b * SB, z * SZ) : (a, b, z) => proj(ax, ay, b * SB, a * SA, z * SZ);
   const Q = (pts, col) => fillPoly(ctx, pts.map(q => P(q[0], q[1], q[2])), col);
   const sideLit = alongX; // +y face is the lit (left) face
   const sideC = sideLit ? c : shade(c, -0.3), endC = sideLit ? shade(c, -0.3) : c;
@@ -415,9 +419,9 @@ function drawCar(ctx, ax, ay, c, alongX, t, o) {
   }
 }
 registerProp('car', {
-  w: 2, d: 1, h: 1.1,
+  w: 5, d: 2, h: 1.6, rotates: true,   // full-scale saloon (5 x 2 tiles); Blender sprite in env_vehicles.py
   draw(ctx, ax, ay, p) {
-    drawCar(ctx, ax, ay, p.o.color || '#8a2020', p.o.dir !== 'y', p.t, p.o);
+    drawCar(ctx, ax, ay, p.o.color || '#8a2020', p.dir !== 'y', p.t, { ...p.o, scale: [2.5, 2, 1.4] });
   },
 });
 export { drawCar };

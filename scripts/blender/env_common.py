@@ -196,26 +196,91 @@ def p_barrel(ctx, var):
         ctx.cyl(0.5, 0.5, 0.98, 0.25, 0.04, ctx.mat('embers', _h('#401000'), 0.9, 0, emit=_h('#ff6a10'), emit_strength=6), 16)
 
 def p_car(ctx, var):
+    """Saloon car at a believable scale next to the characters: footprint 4 x 2 tiles, ~1.6 units tall.
+    Local frame: a = along the car (0..4, front at a=4), b = across (0..2)."""
+    import bpy, bmesh
     c = _h(var.get('color', '#8a2020'))
-    paint = ctx.mat('carpaint' + str(c), c, 0.25, 0.4)
-    glass = ctx.mat('carglass', _h('#3a5068'), 0.05, 0.3)
-    tyre = ctx.mat('tyre', _h('#0c0c0e'), 0.8)
+    paint = ctx.mat('carpaint' + str(c), c, 0.22, 0.45)
+    paint_d = ctx.mat('carpaintD' + str(c), tuple(x * 0.72 for x in c), 0.3, 0.4)
+    glass = ctx.mat('carglass2', _h('#22303e'), 0.04, 0.6)
+    tyre = ctx.mat('tyre2', _h('#0e0e10'), 0.85)
+    rim = ctx.mat('rim', _h('#9aa0a8'), 0.25, 0.9)
     chrome = ctx.mat('chrome', _h('#c8c8d0'), 0.15, 1.0)
+    black = ctx.mat('trimBlack', _h('#141418'), 0.6, 0.1)
+    head = ctx.mat('headl2', _h('#fff8d8'), 0.15, 0, emit=_h('#fff0c0'), emit_strength=4)
+    tail = ctx.mat('taill2', _h('#c01414'), 0.3, 0, emit=_h('#ff2020'), emit_strength=2.5)
+    plate = ctx.mat('plate', _h('#e8e0b0'), 0.6)
     alongX = var.get('dir', 'x') == 'x'
-    def B(x, y, z, w, d, h, m, bev=0.0):
-        if alongX: ctx.box(x, y, z, w, d, h, m, bevel=bev)
-        else: ctx.box(y, x, z, d, w, h, m, bevel=bev)
-    def C(x, y, z, r, h, m):
-        if alongX: ctx.cyl(x, y, z, r, h, m, 12)
-        else: ctx.cyl(y, x, z, r, h, m, 12)
-    for wx in (0.38, 1.6):
-        for wy in (0.12, 0.88): C(wx, wy, 0, 0.17, 0.33, tyre)
-    B(0.05, 0.1, 0.18, 1.9, 0.8, 0.45, paint, 0.05)
-    B(0.5, 0.14, 0.6, 1.0, 0.72, 0.42, glass, 0.05)
-    B(0.56, 0.16, 0.98, 0.88, 0.68, 0.06, paint, 0.02)
-    B(1.94, 0.15, 0.3, 0.04, 0.7, 0.08, chrome)
-    for wy in (0.18, 0.72): B(1.95, wy, 0.42, 0.03, 0.1, 0.08, ctx.mat('headl', _h('#fff8d0'), 0.2, 0, emit=_h('#fff0c0'), emit_strength=3))
-    for wy in (0.18, 0.72): B(0.03, wy, 0.42, 0.03, 0.1, 0.08, ctx.mat('taill', _h('#ff2020'), 0.3, 0, emit=_h('#ff2020'), emit_strength=2))
+    U = ctx.UNIT
+
+    def B(a, b, z, la, lb, h, m, bev=0.0):
+        if alongX: return ctx.box(a, b, z, la, lb, h, m, bevel=bev)
+        return ctx.box(b, a, z, lb, la, h, m, bevel=bev)
+
+    def wheel(a, b):
+        # cylinder lying across the car: build vertical then rotate 90 deg about the along axis
+        o = ctx.cyl(0, 0, 0, 0.33, 0.24 / U, tyre, 18)
+        r = ctx.cyl(0, 0, 0, 0.2, 0.25 / U, rim, 12)
+        for ob in (o, r):
+            if alongX:
+                ob.rotation_euler = (math.radians(90), 0, 0)      # cylinder axis along Blender Y? -> across = game y = Blender X
+                ob.rotation_euler = (0, math.radians(90), 0)
+                ob.location = ctx.G(a, b, 0.33 / U) + __import__('mathutils').Vector((-0.12, 0, 0))
+            else:
+                ob.rotation_euler = (math.radians(90), 0, 0)
+                ob.location = ctx.G(b, a, 0.33 / U) + __import__('mathutils').Vector((0, 0.12, 0))
+
+    # wheels (inset under the arches)
+    for a in (0.85, 3.15):
+        for b in (0.22, 1.78):
+            wheel(a, b)
+    # lower body / sills
+    B(0.1, 0.12, 0.2 / U, 3.8, 1.76, 0.42 / U, paint, 0.06)
+    # bonnet (front, slightly lower) and boot
+    B(2.75, 0.14, 0.6 / U, 1.2, 1.72, 0.16 / U, paint, 0.05)
+    B(0.12, 0.14, 0.6 / U, 0.85, 1.72, 0.2 / U, paint, 0.05)
+    # cabin: glass greenhouse + roof
+    B(0.95, 0.2, 0.62 / U, 1.85, 1.6, 0.5 / U, glass, 0.06)
+    B(1.15, 0.24, 1.1 / U, 1.45, 1.52, 0.1 / U, paint, 0.04)
+    # pillars
+    for a in (0.98, 1.85, 2.72):
+        for b in (0.2, 1.72):
+            B(a, b, 0.62 / U, 0.08, 0.08, 0.5 / U, paint_d)
+    # bumpers
+    B(3.88, 0.1, 0.18 / U, 0.14, 1.8, 0.16 / U, black, 0.03)
+    B(-0.02, 0.1, 0.18 / U, 0.14, 1.8, 0.16 / U, black, 0.03)
+    # side rubbing strips + door shut lines + handles
+    for b in (0.1, 1.86):
+        B(0.3, b, 0.42 / U, 3.4, 0.04, 0.05 / U, black)
+        for a in (1.55, 2.45):
+            B(a, b - 0.005, 0.24 / U, 0.02, 0.05, 0.36 / U, paint_d)
+        B(1.95, b - 0.01, 0.55 / U, 0.14, 0.06, 0.03 / U, chrome)
+        B(2.85, b - 0.01, 0.55 / U, 0.14, 0.06, 0.03 / U, chrome)
+    # mirrors
+    for b in (0.0, 1.88):
+        B(2.6, b, 0.72 / U, 0.14, 0.12, 0.1 / U, paint_d)
+    # front: grille + headlights + plate ; rear: tail lights + plate
+    B(3.98, 0.65, 0.42 / U, 0.04, 0.7, 0.14 / U, black)
+    for b in (0.22, 1.42):
+        B(3.97, b, 0.42 / U, 0.05, 0.36, 0.14 / U, head)
+        B(0.0, b, 0.46 / U, 0.05, 0.36, 0.12 / U, tail)
+    B(3.99, 0.78, 0.24 / U, 0.03, 0.44, 0.1 / U, plate)
+    B(-0.01, 0.78, 0.3 / U, 0.03, 0.44, 0.1 / U, plate)
+    # wheel arches (dark lips over the tyres)
+    for a in (0.85, 3.15):
+        for b in (0.1, 1.86):
+            B(a - 0.42, b, 0.5 / U, 0.84, 0.05, 0.08 / U, black)
+    # scale the whole car up to read right next to the (stylised, ~2.3-unit-tall) characters:
+    # join everything into one mesh, then stretch along the car and upwards about the footprint origin
+    SA, SZ = 1.25, 1.32
+    obs = [o for o in bpy.context.scene.collection.objects if o.type == 'MESH']
+    for o in obs: o.select_set(True)
+    bpy.context.view_layer.objects.active = obs[0]
+    bpy.ops.object.join()
+    car = bpy.context.view_layer.objects.active
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    car.scale = (1.0, SA, SZ) if alongX else (SA, 1.0, SZ)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
 
 def p_phonebox(ctx, var):
     red = ctx.mat('phonered', _h('#b01818'), 0.45)
@@ -316,7 +381,7 @@ PIECES = [
     dict(kind='prop', id='bin', size=(1, 1, 1.1), build=p_bin, variants=[{'color': '#2a5a30'}]),
     dict(kind='prop', id='crate', size=(1, 1, 1), build=p_crate),
     dict(kind='prop', id='barrel', size=(1, 1, 1.1), build=p_barrel, variants=[{}, {'fire': 1}]),
-    dict(kind='prop', id='car', size=(2, 1, 1.2), build=p_car, variants=[{'color': c, 'dir': d} for d in ('x', 'y') for c in ('#8a2020', '#203a8a', '#d8d8d0', '#2a6a3a', '#d8b020', '#1a1a1e')]),
+    # car: moved to env_vehicles.py (full-scale vehicles)
     dict(kind='prop', id='phonebox', size=(1, 1, 3), build=p_phonebox),
     dict(kind='prop', id='postbox', size=(1, 1, 1.5), build=p_postbox),
     dict(kind='prop', id='tree', size=(1, 1, 3.2), build=p_tree, pad=24),

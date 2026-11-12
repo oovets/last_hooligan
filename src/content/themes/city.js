@@ -16,6 +16,7 @@
 // Also exports drawCityVehicle(ctx, v, world) used by the level's traffic lanes (custom vehicle draw).
 
 import { registerFloor, registerWall } from '../../engine/tiles.js';
+import { VEHICLE_SIZE, drawVehicleSprite } from '../../game/vehicles.js';
 import { registerProp } from '../../game/props.js';
 import { registerItem } from '../../game/items.js';
 import { isoBox, isoPanel, fillPoly, ellipse, line, thick, proj, shadow } from '../../engine/gfx.js';
@@ -634,8 +635,8 @@ export function setTunnel(y0, y1) { TUNNEL.y0 = y0; TUNNEL.y1 = y1; }
 // Custom vehicle renderer for traffic hazards (hazard.draw). Vehicles drive along world y.
 export function drawCityVehicle(ctx, v, world) {
   if (v.y > TUNNEL.y0 + 1.5 && v.y < TUNNEL.y1 - 1.5) return; // fully inside the tunnel
-  const style = v.def.vehicleStyle || 'car';
-  const len = style === 'bus' ? 4.4 : 2;
+  const style = v.vstyle || v.def.vehicleStyle || 'car';
+  const len = (VEHICLE_SIZE[style] || VEHICLE_SIZE.car).L;
   const front = v.dy > 0 ? 1 : -1;
   const s = toScreen(v.x - 0.5, v.y - len / 2, 0);
   // clip away the part that is inside the tunnel (vertical screen line through the portal plane)
@@ -647,7 +648,8 @@ export function drawCityVehicle(ctx, v, world) {
   ctx.clip();
   const g = toScreen(v.x, v.y, 0);
   shadow(ctx, g.x, g.y, style === 'bus' ? 30 : 16, style === 'bus' ? 16 : 9, 0.4);
-  if (style === 'bus') drawBus(ctx, Math.round(s.x), Math.round(s.y), false, len, front, world.time);
+  if (drawVehicleSprite(ctx, v, style)) { /* full-scale Blender vehicle */ }
+  else if (style === 'bus') drawBus(ctx, Math.round(s.x), Math.round(s.y), false, len, front, world.time);
   else drawCar(ctx, Math.round(s.x), Math.round(s.y), false, { color: v.color, len, front, roofSign: style === 'taxi', chequer: style === 'taxi' });
   ctx.restore();
   world.lightsDynamic = world.lightsDynamic || [];
@@ -656,10 +658,10 @@ export function drawCityVehicle(ctx, v, world) {
 }
 
 // ====================================================================== props
-registerProp('city_taxi', { // parked taxi; dir 'y' (default) = long along world y
-  w: 1, d: 2, h: 1.1,
+registerProp('city_taxi', { // parked taxi; dir 'y' (default) = long along world y. Full scale: 5 x 2 tiles
+  w: 5, d: 2, h: 1.6, rotates: true, defaultDir: 'y',
   draw(ctx, ax, ay, p) {
-    const alongX = p.o.dir === 'x';
+    const alongX = p.dir === 'x';
     const s = proj(ax, ay, alongX ? 1 : 0.5, alongX ? 0.5 : 1, 0);
     shadow(ctx, s.x, s.y, 18, 9, 0.4);
     drawCar(ctx, ax, ay, alongX, { color: p.o.color || '#e8b818', len: 2, front: 1, roofSign: true, chequer: true, signOff: p.o.signOff });

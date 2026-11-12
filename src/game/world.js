@@ -19,6 +19,25 @@ import { audio } from '../audio/audio.js';
 import { save } from '../save.js';
 import { isoBox } from '../engine/gfx.js';
 import { envProp } from '../engine/envsprites.js';
+import { VEHICLE_SIZE, drawVehicleSprite } from './vehicles.js';
+
+// Clip to the screen region of the vertical prism above footprint [x0,x0+w] x [y0,y0+d] from height z0 up to z0+h.
+function clipPrism(ctx, x0, y0, w, d, h, z0 = 0) {
+  const pts = [];
+  for (const [x, y] of [[x0, y0], [x0 + w, y0], [x0 + w, y0 + d], [x0, y0 + d]]) { pts.push(toScreen(x, y, z0)); pts.push(toScreen(x, y, z0 + h)); }
+  // convex hull (monotone chain) of the 8 projected corners
+  pts.sort((a, b) => a.x - b.x || a.y - b.y);
+  const cross = (o, a, b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+  const lo = [], up = [];
+  for (const p of pts) { while (lo.length >= 2 && cross(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+  for (let i = pts.length - 1; i >= 0; i--) { const p = pts[i]; while (up.length >= 2 && cross(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+  const hull = lo.slice(0, -1).concat(up.slice(0, -1));
+  ctx.beginPath();
+  hull.forEach((p, i) => (i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+  ctx.closePath();
+  ctx.clip();
+}
+
 
 const DIFF = {
   easy: { tokens: 1, dmg: 0.7, hp: 0.85 },
@@ -944,7 +963,14 @@ export class World {
           h.t = iv[0] + Math.random() * (iv[1] - iv[0]);
           const [a, b] = h.lane;
           const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy);
-          this.vehicles.push({ kind: 'vehicle', def: h, x: a.x, y: a.y, dx: dx / len, dy: dy / len, len, dist: 0, speed: h.speed || 8, color: h.colors ? h.colors[Math.floor(Math.random() * h.colors.length)] : ['#8a2020', '#203a8a', '#d8d8d0', '#2a6a3a', '#d8b020'][Math.floor(Math.random() * 5)], style: h.vehicle || 'car', hit: new Set(), honk: false, dmg: h.dmg || 22 });
+          this.vehicles.push({ kind: 'vehicle', def: h, x: a.x, y: a.y, dx: dx / len, dy: dy / len, len, dist: 0, speed: h.speed || 8, color: h.colors ? h.colors[Math.floor(Math.random() * h.colors.length)] : ['#8a2020', '#203a8a', '#d8d8d0', '#2a6a3a', '#d8b020'][Math.floor(Math.random() * 5)], style: h.vehicle || h.vehicleStyle || 'car', hit: new Set(), honk: false, dmg: h.dmg || 22 });
+          if (h.mix) {   // mixed stream: { style, colors, weight, dmg }
+            const tot = h.mix.reduce((n, m) => n + (m.weight || 1), 0);
+            let r = Math.random() * tot, m = h.mix[0];
+            for (const q of h.mix) { r -= q.weight || 1; if (r <= 0) { m = q; break; } }
+            const v = this.vehicles[this.vehicles.length - 1];
+            v.style = v.vstyle = m.style; v.color = m.colors[Math.floor(Math.random() * m.colors.length)]; if (m.dmg) v.dmg = m.dmg;
+          }
         }
       } else if (h.type === 'zone') {
         h.timer -= dt;
@@ -977,7 +1003,8 @@ export class World {
         if (!f.alive || v.hit.has(f) || f.z > 0.9 || f.invuln > 0) continue;
         const rx = f.x - v.x, ry = f.y - v.y;
         const along = rx * v.dx + ry * v.dy, across = Math.abs(-rx * v.dy + ry * v.dx);
-        const hl = v.def.halfLen ?? 1.1, hw = v.def.halfWidth ?? 0.65;
+        const vs = VEHICLE_SIZE[v.style] || VEHICLE_SIZE.car;
+        const hl = v.def.halfLen ?? vs.hl, hw = v.def.halfWidth ?? vs.hw;
         if (along > -hl && along < hl && across < hw + f.r) {
           v.hit.add(f);
           const res = f.takeHit({ attacker: null, def: { hz: 1, sfx: 'carHit' }, dmg: v.dmg, dir: { x: v.dx * 0.6 + (-v.dy) * Math.sign(-rx * v.dy + ry * v.dx || 1) * 0.8, y: v.dy * 0.6 + v.dx * Math.sign(-rx * v.dy + ry * v.dx || 1) * 0.8 }, kb: 7, stun: 0.6, knockdown: true, launch: 5, unblockable: true, guardDmg: 0 }, this);
@@ -1035,12 +1062,30 @@ export class World {
     for (const pr of this.props) {
       const s = toScreen(pr.cx, pr.cy);
       if (s.x < vx0 - 40 || s.x > vx1 + 40 || s.y < vy0 || s.y > vy1) continue;
+      // long props with a Blender sprite (vehicles, lorries...) are drawn as 1-tile slices so they sort correctly
+      const spr = (pr.w > 1 || pr.d > 1) && !pr.open && !pr.o.noSprite && !pr.def.noSlice ? envProp(pr.type, pr.def.rotates ? { ...pr.o, dir: pr.dir } : pr.o) : null;
+      if (spr) {
+        const alongX = pr.w >= pr.d, n = alongX ? pr.w : pr.d;
+        for (let i = 0; i < n; i++) {
+          const d = alongX ? (pr.x + i + 0.5) + (pr.y + pr.d / 2) : (pr.x + pr.w / 2) + (pr.y + i + 0.5);
+          list.push({ d: d + (pr.def.depthBias || 0) + (pr.o.depthBias || 0), z: 0, slice: { p: pr, spr, i, n, alongX } });
+        }
+        continue;
+      }
       list.push({ d: pr.depth(), z: 0, e: pr });
     }
     for (const f of this.fighters) list.push({ d: f.x + f.y + (f.isDown ? -0.15 : 0), z: f.z, e: f });
     for (const it of this.items) list.push({ d: it.x + it.y, z: it.z, e: it });
     for (const pr of this.projectiles) list.push({ d: pr.x + pr.y, z: pr.z, e: pr });
-    for (const v of this.vehicles) list.push({ d: v.x + v.y, z: 0, veh: v });
+    for (const v of this.vehicles) {
+      const sz = VEHICLE_SIZE[v.style] || VEHICLE_SIZE.car;
+      const alongX = Math.abs(v.dx) > Math.abs(v.dy);
+      const n = Math.ceil(sz.L);
+      for (let i = 0; i < n; i++) {
+        const t = -sz.L / 2 + i + 0.5;
+        list.push({ d: alongX ? (v.x + t) + v.y : v.x + (v.y + t), z: 0, veh: v, vs: { i, n, alongX, L: sz.L, W: sz.W } });
+      }
+    }
     for (const a of this.actors) {
       if (!a.draw) continue;
       if (!a.noCull) { const s = toScreen(a.x, a.y, 0); if (s.x < vx0 - 120 || s.x > vx1 + 120 || s.y < vy0 - 60 || s.y > vy1 + 60) continue; }
@@ -1058,7 +1103,16 @@ export class World {
           if (x1 > pb.x0 && x0 < pb.x1 && y1 > pb.y0 + 4 && y0 < pb.y1) alpha = 0.42;
         }
         drawWallBlock(ctx, w.w.style, w.w.h, w.w.variant, w.sx, w.sy, alpha);
-      } else if (o.veh) this.drawVehicle(ctx, o.veh);
+      } else if (o.slice) this.drawPropSlice(ctx, o.slice);
+      else if (o.veh) {
+        // vehicle slice: clip to the prism above this 1-tile section of its footprint, draw the whole vehicle
+        const v = o.veh, q = o.vs;
+        const x0 = q.alongX ? v.x - q.L / 2 + q.i : v.x - q.W / 2, y0 = q.alongX ? v.y - q.W / 2 : v.y - q.L / 2 + q.i;
+        const w = q.alongX ? 1 : q.W, d = q.alongX ? q.W : 1;
+        ctx.save(); clipPrism(ctx, x0 - (q.i === 0 && q.alongX ? 2 : 0), y0 - (q.i === 0 && !q.alongX ? 2 : 0), w + (q.alongX && (q.i === 0 || q.i === q.n - 1) ? 2 : 0), d + (!q.alongX && (q.i === 0 || q.i === q.n - 1) ? 2 : 0), 8);
+        if (q.i === q.n - 1) this.drawVehicle(ctx, v); else this.drawVehicle(ctx, v, true);
+        ctx.restore();
+      }
       else if (o.e.kind === 'prop') this.drawProp(ctx, o.e);
       else o.e.draw(ctx, this);
     }
@@ -1105,8 +1159,25 @@ export class World {
   }
 
   // Props use a Blender sprite when one exists for their type/variant (and they aren't open/animated specials).
+  drawPropSlice(ctx, q) {
+    const p = q.p, spr = q.spr;
+    const a = toScreen(p.x, p.y, p.base);
+    const x0 = q.alongX ? p.x + q.i : p.x, y0 = q.alongX ? p.y : p.y + q.i;
+    const w = q.alongX ? 1 : p.w, d = q.alongX ? p.d : 1;
+    // end slices also take the sprite's padding beyond the footprint (bumpers, mirrors, shadows)
+    const ex0 = q.i === 0 ? 1.5 : 0, ex1 = q.i === q.n - 1 ? 1.5 : 0;
+    ctx.save();
+    clipPrism(ctx, q.alongX ? x0 - ex0 : x0 - 0.6, q.alongX ? y0 - 0.6 : y0 - ex0, q.alongX ? w + ex0 + ex1 : w + 1.2, q.alongX ? d + 1.2 : d + ex0 + ex1, 8, p.base);
+    const prev = ctx.globalAlpha;
+    if (p.flash > 0) ctx.globalAlpha = prev * 0.6;
+    ctx.drawImage(spr.img, Math.round(a.x) - spr.ax / 2, Math.round(a.y) - spr.ay / 2, spr.img.width / 2, spr.img.height / 2);
+    ctx.globalAlpha = prev;
+    ctx.restore();
+    if (q.i === q.n - 1 && p.def.overlay) p.def.overlay(ctx, Math.round(a.x), Math.round(a.y), p, p.t, this);
+  }
+
   drawProp(ctx, p) {
-    const spr = !p.open && !p.o.noSprite ? envProp(p.type, p.o) : null;
+    const spr = !p.open && !p.o.noSprite ? envProp(p.type, p.def.rotates ? { ...p.o, dir: p.dir } : p.o) : null;
     if (!spr) { p.draw(ctx, this); return; }
     const a = toScreen(p.x, p.y, p.base);
     const prev = ctx.globalAlpha;
@@ -1116,38 +1187,24 @@ export class World {
     if (p.def.overlay) p.def.overlay(ctx, Math.round(a.x), Math.round(a.y), p, p.t, this);
   }
 
-  drawVehicle(ctx, v) {
-    if (v.def && v.def.draw) { v.def.draw(ctx, v, this); return; }
-    const s = toScreen(v.x, v.y, 0);
-    if (v.style !== 'bus') {
-      const alongX0 = Math.abs(v.dx) > Math.abs(v.dy);
-      const spr = envProp('car', { color: v.color, dir: alongX0 ? 'x' : 'y' });
-      if (spr && spr.color && spr.color.toLowerCase() === String(v.color).toLowerCase()) {
-        // car sprite footprint is 2x1 (along x) or 1x2: anchor = north corner of the footprint
-        const W = alongX0 ? 2 : 1, D = alongX0 ? 1 : 2;
-        const a = toScreen(v.x - W / 2, v.y - D / 2, 0);
-        const flipX = alongX0 ? v.dx < 0 : v.dy < 0;
-        ctx.drawImage(spr.img, Math.round(a.x) - spr.ax / 2, Math.round(a.y) - spr.ay / 2, spr.img.width / 2, spr.img.height / 2);
-        this.addFrameLight({ x: v.x + v.dx * 1.2, y: v.y + v.dy * 1.2, z: 0.4, r: 3.5, color: '#fff0c0', intensity: 0.8 });
-        return;
-      }
+  // Traffic: full-scale Blender vehicle sprites (scripts/blender/env_vehicles.py), drawn centred on the vehicle.
+  // Sprite ids: car (coloured saloon), city_taxi, bus. Procedural boxes only if the sprites aren't built.
+  drawVehicle(ctx, v, noLight = false) {
+    if (v.def && v.def.draw) { const L = this.lightsDynamic ? this.lightsDynamic.length : 0; v.def.draw(ctx, v, this); if (noLight && this.lightsDynamic) this.lightsDynamic.length = L; return; }
+    if (drawVehicleSprite(ctx, v, v.style)) {
+      if (!noLight) this.addFrameLight({ x: v.x + v.dx * 3, y: v.y + v.dy * 3, z: 0.4, r: 4, color: '#fff0c0', intensity: 0.8 });
+      return;
     }
+    const sz = VEHICLE_SIZE[v.style] || VEHICLE_SIZE.car;
     const alongX = Math.abs(v.dx) > Math.abs(v.dy);
-    const W = alongX ? 2 : 1, D = alongX ? 1 : 2;
-    const ax = s.x - (W / 2 - D / 2) * HALF_W, ay = s.y - (W / 2 + D / 2) * HALF_H;
-    const c = v.color;
-    const OL = '#120c14';
-    if (v.style === 'bus') {
-      isoBox(ctx, ax, ay, 0, 0, 0.15, W, D, 1.9, { color: c, outline: OL });
-      isoBox(ctx, ax, ay, 0.05, 0.05, 1.1, W - 0.1, D - 0.1, 0.5, { top: shade(c, 0.1), left: '#9ab8d0', right: '#6a88a0' });
-    } else {
-      isoBox(ctx, ax, ay, 0.05, 0.1, 0.2, W - 0.1, D - 0.2, 0.5, { color: c, outline: OL });
-      const cab = alongX ? [0.5, 0.15, 1.0, 0.7] : [0.15, 0.5, 0.7, 1.0];
-      isoBox(ctx, ax, ay, cab[0], cab[1], 0.7, cab[2], cab[3], 0.4, { top: shade(c, 0.1), left: '#9ab8d0', right: '#6a88a0', outline: OL });
-    }
-    this.lightsDynamic = this.lightsDynamic || [];
-    this.lightsDynamic.push({ x: v.x + v.dx * 1.2, y: v.y + v.dy * 1.2, z: 0.4, r: 3.5, color: '#fff0c0', intensity: 0.8 });
+    const W = alongX ? sz.L : sz.W, D = alongX ? sz.W : sz.L;
+    const a = toScreen(v.x - W / 2, v.y - D / 2, 0);
+    const c = v.color, OL = '#120c14';
+    isoBox(ctx, a.x, a.y, 0.05, 0.05, 0.25, W - 0.1, D - 0.1, sz.H * 0.5, { color: c, outline: OL });
+    isoBox(ctx, a.x, a.y, alongX ? W * 0.25 : 0.15, alongX ? 0.15 : D * 0.25, 0.25 + sz.H * 0.5, alongX ? W * 0.45 : W - 0.3, alongX ? D - 0.3 : D * 0.45, sz.H * 0.4, { top: shade(c, 0.1), left: '#9ab8d0', right: '#6a88a0', outline: OL });
+    this.addFrameLight({ x: v.x + v.dx * 3, y: v.y + v.dy * 3, z: 0.4, r: 4, color: '#fff0c0', intensity: 0.8 });
   }
+
 
   drawGoArrow(ctx) {
     if (!this.goArrow) return;
