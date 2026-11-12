@@ -1,0 +1,551 @@
+{
+"walls": {
+"advert": {
+"heights": {
+"0.8": {
+"files": [
+"walls/advert_h0p8_0.png",
+"walls/advert_h0p8_1.png",
+"walls/advert_h0p8_2.png",
+"walls/advert_h0p8_3.png",
+"walls/advert_h0p8_4.png",
+"walls/advert_h0p8_5.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"1": {
+"files": [
+"walls/advert_h1_0.png",
+"walls/advert_h1_1.png",
+"walls/advert_h1_2.png",
+"walls/advert_h1_3.png",
+"walls/advert_h1_4.png",
+"walls/advert_h1_5.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"1.2": {
+"files": [
+"walls/advert_h1p2_0.png",
+"walls/advert_h1p2_1.png",
+"walls/advert_h1p2_2.png",
+"walls/advert_h1p2_3.png",
+"walls/advert_h1p2_4.png",
+"walls/advert_h1p2_5.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"0.9": {
+"files": [
+"walls/advert_h0p9_0.png",
+"walls/advert_h0p9_1.png",
+"walls/advert_h0p9_2.png",
+"walls/advert_h0p9_3.png",
+"walls/advert_h0p9_4.png",
+"walls/advert_h0p9_5.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"crateStack": {
+"heights": {
+"1": {
+"files": [
+"walls/crateStack_h1_0.png",
+"walls/crateStack_h1_1.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"2": {
+"files": [
+"walls/crateStack_h2_0.png",
+"walls/crateStack_h2_1.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"3": {
+"files": [
+"walls/crateStack_h3_0.png",
+"walls/crateStack_h3_1.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"1.2": {
+"files": [
+"walls/crateStack_h1p2_0.png",
+"walls/crateStack_h1p2_1.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"1.8": {
+"files": [
+"walls/crateStack_h1p8_0.png",
+"walls/crateStack_h1p8_1.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"awayend_stadiumwall": {
+"heights": {
+"3.5": {
+"files": [
+"walls/awayend_stadiumwall_h3p5_0.png",
+"walls/awayend_stadiumwall_h3p5_1.png",
+"walls/awayend_stadiumwall_h3p5_2.png",
+"walls/awayend_stadiumwall_h3p5_3.png",
+"walls/awayend_stadiumwall_h3p5_4.png",
+"walls/awayend_stadiumwall_h3p5_5.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"awayend_turnstilewall": {
+"heights": {
+"2.6": {
+"files": [
+"walls/awayend_turnstilewall_h2p6_0.png",
+"walls/awayend_turnstilewall_h2p6_1.png",
+"walls/awayend_turnstilewall_h2p6_2.png",
+"walls/awayend_turnstilewall_h2p6_3.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"awayend_standback": {
+"heights": {
+"3.6": {
+"files": [
+"walls/awayend_standback_h3p6_0.png",
+"walls/awayend_standback_h3p6_1.png",
+"walls/awayend_standback_h3p6_2.png",
+"walls/awayend_standback_h3p6_3.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"awayend_blockwork": {
+"heights": {
+"1.7": {
+"files": [
+"walls/awayend_blockwork_h1p7_0.png",
+"walls/awayend_blockwork_h1p7_1.png",
+"walls/awayend_blockwork_h1p7_2.png",
+"walls/awayend_blockwork_h1p7_3.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"3": {
+"files": [
+"walls/awayend_blockwork_h3_0.png",
+"walls/awayend_blockwork_h3_1.png",
+"walls/awayend_blockwork_h3_2.png",
+"walls/awayend_blockwork_h3_3.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"awayend_pillar": {
+"heights": {
+"4": {
+"files": [
+"walls/awayend_pillar_h4_0.png",
+"walls/awayend_pillar_h4_1.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"awayend_kioskwall": {
+"heights": {
+"2.4": {
+"files": [
+"walls/awayend_kioskwall_h2p4_0.png",
+"walls/awayend_kioskwall_h2p4_1.png",
+"walls/awayend_kioskwall_h2p4_2.png",
+"walls/awayend_kioskwall_h2p4_3.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"awayend_toiletwall": {
+"heights": {
+"2.5": {
+"files": [
+"walls/awayend_toiletwall_h2p5_0.png",
+"walls/awayend_toiletwall_h2p5_1.png",
+"walls/awayend_toiletwall_h2p5_2.png",
+"walls/awayend_toiletwall_h2p5_3.png",
+"walls/awayend_toiletwall_h2p5_4.png",
+"walls/awayend_toiletwall_h2p5_5.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"awayend_fenceY": {
+"heights": {
+"2.2": {
+"files": [
+"walls/awayend_fenceY_h2p2_0.png",
+"walls/awayend_fenceY_h2p2_1.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"awayend_fenceX": {
+"heights": {
+"2.2": {
+"files": [
+"walls/awayend_fenceX_h2p2_0.png",
+"walls/awayend_fenceX_h2p2_1.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"awayend_farstand": {
+"heights": {
+"6": {
+"files": [
+"walls/awayend_farstand_h6_0.png",
+"walls/awayend_farstand_h6_1.png",
+"walls/awayend_farstand_h6_2.png",
+"walls/awayend_farstand_h6_3.png",
+"walls/awayend_farstand_h6_4.png",
+"walls/awayend_farstand_h6_5.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+}
+},
+"floors": {
+"awayend_terrace": {
+"n": 4,
+"file": "floors/awayend_terrace.png"
+},
+"awayend_aisle": {
+"n": 4,
+"file": "floors/awayend_aisle.png"
+},
+"awayend_concourse": {
+"n": 4,
+"file": "floors/awayend_concourse.png"
+},
+"awayend_stairs": {
+"n": 2,
+"file": "floors/awayend_stairs.png"
+},
+"awayend_stairsY": {
+"n": 2,
+"file": "floors/awayend_stairsY.png"
+},
+"awayend_grate": {
+"n": 2,
+"file": "floors/awayend_grate.png"
+},
+"awayend_wettiles": {
+"n": 4,
+"file": "floors/awayend_wettiles.png"
+},
+"awayend_corridor": {
+"n": 4,
+"file": "floors/awayend_corridor.png"
+},
+"awayend_corridorLine": {
+"n": 4,
+"file": "floors/awayend_corridorLine.png"
+},
+"awayend_track": {
+"n": 6,
+"file": "floors/awayend_track.png"
+},
+"awayend_moat": {
+"n": 4,
+"file": "floors/awayend_moat.png"
+},
+"awayend_forecourt": {
+"n": 4,
+"file": "floors/awayend_forecourt.png"
+},
+"pitch": {
+"n": 4,
+"file": "floors/pitch.png"
+},
+"pitchLineY": {
+"n": 4,
+"file": "floors/pitchLineY.png"
+}
+},
+"props": {
+"awayend_turnstile": {
+"variants": [
+{
+"file": "props/awayend_turnstile_0.png",
+"ax": 40.0,
+"ay": 56.0
+}
+]
+},
+"awayend_burgervan": {
+"variants": [
+{
+"file": "props/awayend_burgervan_0.png",
+"ax": 44.0,
+"ay": 100.0
+}
+]
+},
+"awayend_kiosk": {
+"variants": [
+{
+"file": "props/awayend_kiosk_0.png",
+"ax": 42.0,
+"ay": 62.0
+}
+]
+},
+"awayend_counter": {
+"variants": [
+{
+"file": "props/awayend_counter_0.png",
+"ax": 40.0,
+"ay": 80.0
+},
+{
+"file": "props/awayend_counter_1.png",
+"ax": 40.0,
+"ay": 80.0,
+"part": "urn"
+},
+{
+"file": "props/awayend_counter_2.png",
+"ax": 40.0,
+"ay": 80.0,
+"part": "warmer"
+}
+]
+},
+"awayend_crushbarrier": {
+"variants": [
+{
+"file": "props/awayend_crushbarrier_0.png",
+"ax": 40.0,
+"ay": 52.0
+},
+{
+"file": "props/awayend_crushbarrier_1.png",
+"ax": 40.0,
+"ay": 52.0,
+"dir": "x"
+}
+]
+},
+"awayend_tv": {
+"variants": [
+{
+"file": "props/awayend_tv_0.png",
+"ax": 52.0,
+"ay": 100.0
+},
+{
+"file": "props/awayend_tv_1.png",
+"ax": 52.0,
+"ay": 100.0,
+"side": "left"
+},
+{
+"file": "props/awayend_tv_2.png",
+"ax": 52.0,
+"ay": 100.0,
+"side": "right"
+}
+]
+},
+"awayend_cctv": {
+"variants": [
+{
+"file": "props/awayend_cctv_0.png",
+"ax": 52.0,
+"ay": 100.0
+},
+{
+"file": "props/awayend_cctv_1.png",
+"ax": 52.0,
+"ay": 100.0,
+"side": "left"
+},
+{
+"file": "props/awayend_cctv_2.png",
+"ax": 52.0,
+"ay": 100.0,
+"side": "right"
+}
+]
+},
+"awayend_walllamp": {
+"variants": [
+{
+"file": "props/awayend_walllamp_0.png",
+"ax": 48.0,
+"ay": 96.0
+},
+{
+"file": "props/awayend_walllamp_1.png",
+"ax": 48.0,
+"ay": 96.0,
+"side": "left",
+"lit": 1
+},
+{
+"file": "props/awayend_walllamp_2.png",
+"ax": 48.0,
+"ay": 96.0,
+"side": "left",
+"lit": 0
+},
+{
+"file": "props/awayend_walllamp_3.png",
+"ax": 48.0,
+"ay": 96.0,
+"side": "right",
+"lit": 1
+},
+{
+"file": "props/awayend_walllamp_4.png",
+"ax": 48.0,
+"ay": 96.0,
+"side": "right",
+"lit": 0
+}
+]
+},
+"awayend_vending": {
+"variants": [
+{
+"file": "props/awayend_vending_0.png",
+"ax": 40.0,
+"ay": 84.0
+}
+]
+},
+"awayend_urinal": {
+"variants": [
+{
+"file": "props/awayend_urinal_0.png",
+"ax": 40.0,
+"ay": 72.0
+}
+]
+},
+"awayend_sink": {
+"variants": [
+{
+"file": "props/awayend_sink_0.png",
+"ax": 40.0,
+"ay": 96.0
+}
+]
+},
+"awayend_cubicle": {
+"variants": [
+{
+"file": "props/awayend_cubicle_0.png",
+"ax": 40.0,
+"ay": 96.0
+}
+]
+},
+"awayend_boiler": {
+"variants": [
+{
+"file": "props/awayend_boiler_0.png",
+"ax": 40.0,
+"ay": 140.0
+}
+]
+},
+"awayend_floodlight": {
+"variants": [
+{
+"file": "props/awayend_floodlight_0.png",
+"ax": 68.0,
+"ay": 539.99
+},
+{
+"file": "props/awayend_floodlight_1.png",
+"ax": 68.0,
+"ay": 539.99,
+"height": 9
+},
+{
+"file": "props/awayend_floodlight_2.png",
+"ax": 68.0,
+"ay": 539.99,
+"height": 10
+},
+{
+"file": "props/awayend_floodlight_3.png",
+"ax": 68.0,
+"ay": 539.99,
+"height": 11
+}
+]
+},
+"awayend_dugout": {
+"variants": [
+{
+"file": "props/awayend_dugout_0.png",
+"ax": 40.0,
+"ay": 68.0
+}
+]
+},
+"awayend_amnesty": {
+"variants": [
+{
+"file": "props/awayend_amnesty_0.png",
+"ax": 40.0,
+"ay": 50.0
+}
+]
+},
+"awayend_hamper": {
+"variants": [
+{
+"file": "props/awayend_hamper_0.png",
+"ax": 40.0,
+"ay": 46.0
+}
+]
+}
+}
+}

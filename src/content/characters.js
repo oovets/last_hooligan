@@ -1,0 +1,148 @@
+// Playable characters (character select). Each has stats, a signature move set tweak and a fixed look
+// (THE LAST HOOLIGAN uses the wardrobe outfit instead).
+//
+// CHARACTER: {
+//   id, name, nick, tagline, bio: [lines],
+//   stats: { power, speed, toughness, technique } (1..5, for the select screen bars),
+//   fighter: { hp, speed, runSpeed, power, defense, weight, guard, superArmor, reachMul }   (overrides PLAYER_BASE)
+//   moves: { punchL?, punchR?, kick?, run?, air? }  opening-attack overrides (attack ids in combat.js / registered below)
+//   kickMul / punchMul: damage multipliers by limb
+//   look: doll LOOK (null = wardrobe outfit)
+//   unlock: null | { completed: true } | { level: n }
+// }
+import { registerAttack } from '../game/combat.js';
+import { registerAttackPose, registerAnim, ATTACK_POSES } from '../game/poses.js';
+
+// ---- signature moves
+registerAttack('mo_hammer', { pose: 'haymaker', startup: 0.2, active: 0.1, recovery: 0.28, dmg: 13, reach: 1.15, arc: 0.8, kb: 4, stun: 0.5, knockdown: true, launch: 2, sfx: 'hitHeavy', whiff: 'whooshBig', hz: 1.6, hitstop: 0.09, shake: 5, score: 45, next: { punchL: 'jab', kick: 'kick' } });
+registerAttack('mo_charge', { pose: 'bodySlam', startup: 0.12, active: 0.28, recovery: 0.35, dmg: 14, reach: 1.1, arc: 0.9, kb: 6, stun: 0.6, knockdown: true, launch: 3, lunge: 6.5, sfx: 'hitHeavy', whiff: 'whooshBig', hz: 1.1, hitstop: 0.1, shake: 6, score: 60 });
+registerAttack('stig_flurry', { pose: 'jab', startup: 0.03, active: 0.05, recovery: 0.08, dmg: 3, reach: 0.95, arc: 0.75, kb: 0.8, stun: 0.24, sfx: 'punch', whiff: 'whooshLight', hz: 1.6, score: 8, next: { punchL: 'stig_flurry2', punchR: 'cross', kick: 'lowKick' } });
+registerAttack('stig_flurry2', { pose: 'hook', startup: 0.03, active: 0.05, recovery: 0.09, dmg: 3, reach: 0.95, arc: 0.85, kb: 0.8, stun: 0.24, sfx: 'punch', whiff: 'whooshLight', hz: 1.6, score: 8, next: { punchL: 'stig_flurry', punchR: 'uppercut', kick: 'spinKick' } });
+registerAttack('stig_slide', { pose: 'flyingKick', startup: 0.04, active: 0.32, recovery: 0.22, dmg: 9, reach: 1.1, arc: 0.7, kb: 4, stun: 0.5, knockdown: true, launch: 1, lunge: 8, sfx: 'kick', whiff: 'whoosh', hz: 0.5, hitstop: 0.06, shake: 3, score: 45 });
+registerAttack('tina_axe', { pose: 'tina_axe', startup: 0.14, active: 0.1, recovery: 0.24, dmg: 12, reach: 1.35, arc: 0.6, kb: 3, stun: 0.55, knockdown: true, launch: 0, sfx: 'hitHeavy', whiff: 'whooshBig', hz: 1.8, hitstop: 0.08, shake: 4, score: 45, next: { kick: 'spinKick', punchL: 'jab' } });
+registerAttack('tina_snap', { pose: 'kick', startup: 0.06, active: 0.08, recovery: 0.14, dmg: 7, reach: 1.4, arc: 0.55, kb: 2.4, stun: 0.34, sfx: 'kick', whiff: 'whoosh', hz: 1.0, score: 15, next: { kick: 'tina_axe', punchR: 'cross', punchL: 'jab' } });
+registerAttack('old_headbutt', { pose: 'headbutt', startup: 0.12, active: 0.08, recovery: 0.22, dmg: 11, reach: 0.9, arc: 0.7, kb: 2.5, stun: 0.6, sfx: 'hitHeavy', whiff: 'whoosh', hz: 1.8, hitstop: 0.08, shake: 3, score: 35, next: { punchL: 'jab', kick: 'kick' } });
+// Fat Vic: STRYPGREPP (chokehold) specialist. Grab -> two-handed chokehold that lifts the victim off the ground and
+// strangles them continuously (damage every tick); J/K = TIGHTEN (burst damage, keeps the hold locked);
+// 3rd tighten = CHOKESLAM (hoists them overhead and slams them down, shockwave floors everyone close).
+// RUN + GRAB = lunging grab for the throat. When he wins a fight he asks: "VILL DU DÖ ELLER?"
+registerAttack('vic_tighten', { pose: 'vic_tighten', startup: 0.06, active: 0.1, recovery: 0.16, dmg: 6, reach: 1.1, arc: 1.4, kb: 0, stun: 0.6, grab: true, choke: true, sfx: 'grunt', hz: 1.8, hitstop: 0.05, shake: 2, score: 30 });
+registerAttack('vic_chokeslam', { pose: 'vic_chokeslam', startup: 0.42, active: 0.12, recovery: 0.45, dmg: 18, reach: 1.7, arc: Math.PI, kb: 5, stun: 0.6, knockdown: true, launch: 1.5, chokeLift: true, sfx: 'hitHeavy', whiff: 'whooshBig', hz: 0.4, hitstop: 0.14, shake: 8, score: 150 });
+registerAttack('vic_lunge', { pose: 'vic_lunge', startup: 0.08, active: 0.3, recovery: 0.3, dmg: 3, reach: 1.0, arc: 0.8, kb: 0.4, stun: 0.5, lunge: 6.5, grabOnHit: true, sfx: 'grab', whiff: 'whoosh', hz: 1.7, score: 30 });
+// Vic: both arms straight out, hands locked round the throat at shoulder height, leaning in
+registerAnim('choking', { loop: true, frames: [
+  [0.18, { lean: 0.12, dy: 1, thN: 0.4, knN: 0.45, thF: -0.32, knF: 0.35, uaN: 1.62, faN: 0.25, uaF: 1.7, faF: 0.2, head: 0.1 }],
+  [0.18, { lean: 0.18, dy: 2, thN: 0.42, knN: 0.5, thF: -0.34, knF: 0.38, uaN: 1.68, faN: 0.18, uaF: 1.76, faF: 0.14, head: 0.18 }],
+] });
+// victim: hauled up by the throat, clawing at the hands, legs kicking
+registerAnim('choked', { loop: true, frames: [
+  [0.12, { lean: -0.28, head: -0.45, thN: 0.35, knN: 0.9, thF: -0.15, knF: 0.4, uaN: 1.2, faN: 1.9, uaF: 1.35, faF: 1.8 }],
+  [0.12, { lean: -0.32, head: -0.5, thN: -0.1, knN: 0.4, thF: 0.3, knF: 1.0, uaN: 1.3, faN: 1.8, uaF: 1.25, faF: 1.95 }],
+] });
+if (!ATTACK_POSES.vic_tighten) registerAttackPose('vic_tighten', {
+  windup: { lean: 0.1, dy: 1, thN: 0.4, knN: 0.45, thF: -0.32, knF: 0.35, uaN: 1.55, faN: 0.35, uaF: 1.62, faF: 0.3, head: 0.05 },
+  hit: { lean: 0.3, dy: 3, thN: 0.5, knN: 0.6, thF: -0.4, knF: 0.45, uaN: 1.75, faN: 0.05, uaF: 1.82, faF: 0.02, head: 0.3 },
+});
+if (!ATTACK_POSES.vic_chokeslam) registerAttackPose('vic_chokeslam', {
+  windup: { lean: -0.3, dy: -2, thN: 0.2, knN: 0.2, thF: -0.2, knF: 0.2, uaN: 2.9, faN: 0.1, uaF: 2.95, faF: 0.05, head: -0.3 },
+  hit: { lean: 0.85, dy: 7, dx: 4, thN: 0.9, knN: 1.4, thF: -0.6, knF: 0.9, uaN: 1.1, faN: 0.0, uaF: 1.15, faF: 0.0, head: 0.4 },
+});
+if (!ATTACK_POSES.vic_lunge) registerAttackPose('vic_lunge', {
+  windup: { lean: 0.35, dy: 2, thN: 0.6, knN: 0.6, thF: -0.5, knF: 0.6, uaN: 1.2, faN: 0.6, uaF: 1.3, faF: 0.5 },
+  hit: { lean: 0.6, dy: 3, dx: 4, thN: 0.8, knN: 0.4, thF: -0.7, knF: 0.4, uaN: 1.65, faN: 0.15, uaF: 1.72, faF: 0.1 },
+});
+if (!ATTACK_POSES.tina_axe) registerAttackPose('tina_axe', {
+  windup: { lean: -0.35, thN: 2.4, knN: 0.2, thF: -0.05, knF: 0.1, uaN: 0.6, faN: 1.9, uaF: 0.8, faF: 1.7 },
+  hit: { lean: 0.2, dx: 2, thN: 1.0, knN: 0.0, thF: -0.1, knF: 0.15, uaN: 0.4, faN: 1.8, uaF: 0.6, faF: 1.6 },
+});
+
+export const CHARACTERS = [
+  {
+    id: 'hooligan', name: 'THE LAST HOOLIGAN', nick: 'DEZ', tagline: 'ALL-ROUNDER. DRESS HIM UP IN THE WARDROBE.',
+    bio: ['TWENTY YEARS ON THE TERRACES.', 'NEVER MISSED A HOME GAME.', 'NOBODY KNOWS HIS SURNAME.'],
+    stats: { power: 3, speed: 3, toughness: 3, technique: 4 },
+    fighter: {}, moves: {}, look: null, unlock: null,
+  },
+  {
+    id: 'mo', name: 'BIG MO', nick: 'THE FRIDGE', tagline: 'SLOW. HUGE. SHRUGS OFF JABS.',
+    bio: ['EX-DOORMAN AT THE ANCHOR.', 'BANNED FROM THREE COUNTIES', 'AND ONE ALL-YOU-CAN-EAT BUFFET.'],
+    stats: { power: 5, speed: 1, toughness: 5, technique: 2 },
+    fighter: { hp: 140, speed: 2.55, runSpeed: 4.6, power: 1.3, defense: 0.75, weight: 1.7, guard: 60, superArmor: 4 },
+    moves: { punchR: 'mo_hammer', run: 'mo_charge' },
+    look: {
+      skin: '#d49a6a', hair: { style: 'skinhead', color: '#2a1a10' }, facial: 'beard',
+      jacket: { style: 'bomber', color: '#1c1c22', trim: '#0e0e12', lining: '#e07020' }, shirt: '#c8102e',
+      pants: { style: 'jeans', color: '#2a3a5a' }, shoes: { color: '#5a1418', sole: '#d8c060' },
+      scarf: { a: '#c8102e', b: '#f4f1e8' }, build: 1.5, height: 1.14,
+    },
+    unlock: null,
+  },
+  {
+    id: 'stig', name: 'LITTLE STIG', nick: 'THE TERRACE RAT', tagline: 'FAST HANDS, FASTER FEET. A BIT FRAGILE.',
+    bio: ['MOVED FROM GOTHENBURG FOR THE FOOTBALL.', 'STAYED FOR THE FIGHTING.', 'WEIGHS LESS THAN HIS PARKA.'],
+    stats: { power: 2, speed: 5, toughness: 2, technique: 5 },
+    fighter: { hp: 85, speed: 3.6, runSpeed: 6.5, power: 0.85, defense: 1.05, weight: 0.85, guard: 34 },
+    moves: { punchL: 'stig_flurry', runKick: 'stig_slide' },
+    look: {
+      skin: '#f0c098', hair: { style: 'mod', color: '#e8d27a' }, facial: 'none',
+      jacket: { style: 'parka', color: '#4e5536' }, shirt: '#1f3f8f',
+      pants: { style: 'jeans', color: '#7d97bf' }, shoes: { color: '#2d5bb3', sole: '#e8e0d0' },
+      scarf: { a: '#c8102e', b: '#f4f1e8' }, build: 0.92, height: 0.94,
+    },
+    unlock: null,
+  },
+  {
+    id: 'tina', name: 'TERRACE TINA', nick: 'THE BOOT', tagline: 'LONG LEGS, LONGER MEMORY. LETHAL KICKS.',
+    bio: ['ANCHORS SEASON TICKET SINCE 1986.', 'RUNS THE SUPPORTERS CLUB RAFFLE.', 'NOBODY EVER WINS IT BUT TINA.'],
+    stats: { power: 3, speed: 4, toughness: 3, technique: 4 },
+    fighter: { hp: 95, speed: 3.35, runSpeed: 6.0, power: 1.0, defense: 0.95, guard: 40, reachMul: 1.08 },
+    moves: { kick: 'tina_snap' }, kickMul: 1.25, punchMul: 0.85,
+    look: {
+      female: true, skin: '#e8b090', hair: { style: 'ponytail', color: '#b4521c' }, facial: 'none',
+      jacket: { style: 'harrington', color: '#1d2742', trim: '#141a2e', lining: '#c8102e' }, shirt: '#f4f1e8',
+      pants: { style: 'jeans', color: '#1e1e26' }, shoes: { color: '#f2f2ee', sole: '#c49a5a' },
+      scarf: { a: '#c8102e', b: '#f4f1e8' }, build: 0.95, height: 0.97,
+    },
+    unlock: null,
+  },
+  {
+    id: 'vic', name: 'FAT VIC', nick: 'THE PYTHON', tagline: 'STRYPGREPP SPECIALIST. ONCE HE HAS YOUR THROAT, IT IS OVER.',
+    bio: ['THIRTY STONE OF TERRACE LOVE.', 'NOBODY HAS EVER GOT OUT OF HIS GRIP.', 'HE ALWAYS ASKS THE SAME QUESTION.'],
+    stats: { power: 4, speed: 2, toughness: 5, technique: 3 },
+    fighter: { hp: 135, speed: 2.7, runSpeed: 4.8, power: 1.1, defense: 0.8, weight: 1.8, guard: 55, superArmor: 3 },
+    moves: { runGrab: 'vic_lunge' },
+    grab: { range: 1.35, hold: 3.6, any: true, choke: true, tick: 0.45, tickDmg: 3, squeeze: 'vic_tighten', finisher: 'vic_chokeslam', hits: 3 },
+    winLine: 'VILL DU DÖ ELLER?',
+    look: {
+      skin: '#f0c098', hair: { style: 'skinhead', color: '#6a4a2a' }, facial: 'none',
+      jacket: { style: 'track', color: '#1d2742', trim: '#f4f1e8' }, shirt: '#f4f1e8',
+      pants: { style: 'jeans', color: '#7d97bf' }, shoes: { color: '#f8f8f4', sole: '#e8e4dc' },
+      scarf: null, build: 1.65, height: 1.08,
+    },
+    unlock: null,
+  },
+  {
+    id: 'oldboy', name: 'THE OLD BOY', nick: 'GRANDAD', tagline: 'SEEN IT ALL SINCE THE SEVENTIES. HEADBUTTS FIRST.',
+    bio: ['STOOD ON THE NORTH BANK IN 1974.', 'STILL HAS THE SCAR.', 'STILL HAS THE BOOTS.'],
+    stats: { power: 4, speed: 2, toughness: 4, technique: 3 },
+    fighter: { hp: 115, speed: 2.9, runSpeed: 5.0, power: 1.15, defense: 0.85, weight: 1.2, guard: 50 },
+    moves: { punchR: 'old_headbutt' },
+    look: {
+      skin: '#e2a97a', hair: { style: 'shaved', color: '#9a9a9a' }, facial: 'tache',
+      hat: { style: 'cap', color: '#6a5a40' },
+      jacket: { style: 'harrington', color: '#b5a98a', trim: '#8a7e62', lining: '#c8102e' }, shirt: '#f0ece0',
+      pants: { style: 'cargo', color: '#4a4030' }, shoes: { color: '#5a1418', sole: '#d8c060' },
+      scarf: { a: '#f4f1e8', b: '#c8102e' }, build: 1.15, height: 1.0,
+    },
+    unlock: { completed: true },
+  },
+];
+
+export function characterById(id) { return CHARACTERS.find(c => c.id === id) || CHARACTERS[0]; }
+
+export function isCharacterUnlocked(c, data) {
+  if (!c.unlock) return true;
+  if (c.unlock.completed) return !!data.completed;
+  if (c.unlock.level) return (data.unlocked || 1) >= c.unlock.level;
+  return true;
+}

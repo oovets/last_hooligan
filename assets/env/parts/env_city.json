@@ -1,0 +1,74 @@
+{
+"walls": {},
+"floors": {
+"city_wetPave": {
+"n": 4,
+"file": "floors/city_wetPave.png"
+},
+"city_wetRoad": {
+"n": 4,
+"file": "floors/city_wetRoad.png"
+},
+"city_zebra": {
+"n": 4,
+"file": "floors/city_zebra.png"
+},
+"city_tactile": {
+"n": 4,
+"file": "floors/city_tactile.png"
+},
+"city_brickPave": {
+"n": 4,
+"file": "floors/city_brickPave.png"
+},
+"city_roadLineY": {
+"n": 4,
+"file": "floors/city_roadLineY.png"
+},
+"city_busLane": {
+"n": 4,
+"file": "floors/city_busLane.png"
+},
+"city_taxiBay": {
+"n": 6,
+"file": "floors/city_taxiBay.png"
+},
+"city_marketCobble": {
+"n": 4,
+"file": "floors/city_marketCobble.png"
+},
+"city_deck": {
+"n": 4,
+"file": "floors/city_deck.png"
+},
+"city_bay": {
+"n": 4,
+"file": "floors/city_bay.png"
+},
+"city_clubFloor": {
+"n": 4,
+"file": "floors/city_clubFloor.png"
+},
+"city_dance": {
+"n": 6,
+"file": "floors/city_dance.png"
+},
+"city_kebabTiles": {
+"n": 4,
+"file": "floors/city_kebabTiles.png"
+},
+"city_water": {
+"n": 4,
+"file": "floors/city_water.png"
+},
+"city_arcadeCarpet": {
+"n": 4,
+"file": "floors/city_arcadeCarpet.png"
+},
+"city_plaza": {
+"n": 40,
+"file": "floors/city_plaza.png"
+}
+},
+"props": {}
+}

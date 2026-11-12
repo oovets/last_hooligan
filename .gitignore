@@ -1,0 +1,8 @@
+# render intermediates / local previews
+build/
+build_preview.png
+build_sprites.log
+*.log
+.DS_Store
+node_modules/
+__pycache__/

@@ -1,0 +1,53 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Sprite Viewer</title>
+<style>body{margin:0;background:#1a1822;color:#ccc;font:12px monospace}canvas{image-rendering:pixelated;display:block}#ui{padding:6px}</style></head>
+<body><div id="ui">model <input id="model" value="m_jacket" size="12"> clip <select id="clip"></select> <span id="info"></span></div>
+<canvas id="c"></canvas>
+<script type="module">
+import { loadModel, drawCharacter, specForLook, SPRITE_MODELS } from '../src/game/sprites.js';
+const cv = document.getElementById('c');
+const W = 640, H = 330, S = 2;
+cv.width = W * S; cv.height = H * S; cv.style.width = W * 2 + 'px'; cv.style.height = H * 2 + 'px';
+const ctx = cv.getContext('2d');
+const qp = new URLSearchParams(location.search);
+const modelIn = document.getElementById('model'), clipSel = document.getElementById('clip');
+if (qp.get('model')) modelIn.value = qp.get('model');
+const LOOKS = [
+  { skin: '#e2a97a', hair: { style: 'crop', color: '#3a2717' }, jacket: { style: 'harrington', color: '#2b3a2a', trim: '#1c261c', lining: '#b8302a' }, shirt: '#e8e4dc', pants: { style: 'jeans', color: '#34507a' }, shoes: { color: '#f2f2ee', sole: '#b9a27a' }, scarf: { a: '#c8102e', b: '#f4f1e8' } },
+  { skin: '#b87a50', hair: { style: 'mohawk', color: '#141016' }, jacket: { style: 'track', color: '#1f4fb4', trim: '#f2efe6' }, shirt: '#ffffff', pants: { style: 'trackies', color: '#1e1e26' }, shoes: { color: '#121214', sole: '#c49a5a' }, scarf: { a: '#1f4fb4', b: '#f2f2f2' }, hat: { style: 'cap', color: '#3a3a3a' } },
+  { skin: '#f0c098', hair: { style: 'curtains', color: '#e8d27a' }, facial: 'beard', shades: true, jacket: { style: 'bomber', color: '#3d4a2c', trim: '#252d1a', lining: '#e07020' }, shirt: '#8a1a1a', pants: { style: 'jeans', color: '#1e1e26' }, shoes: { color: '#2d5bb3', sole: '#e8e0d0' }, scarf: null },
+];
+let M = null, specs = [];
+async function load() {
+  const name = modelIn.value;
+  M = await loadModel(name);
+  if (!M) { document.getElementById('info').textContent = 'not found: ' + name; return; }
+  clipSel.innerHTML = Object.keys(M.meta.clips).map(c => `<option>${c}</option>`).join('');
+  clipSel.value = qp.get('clip') || 'walk';
+  specs = LOOKS.map(L => { const s = specForLook(L); s.model = name; s.layers = s.layers.filter(l => M.meta.layers[l] || M.meta.layers[l.replace(':', '_')]).map(l => M.meta.layers[l] ? l : l.replace(':', '_')); s.key += name + s.layers; return s; });
+  document.getElementById('info').textContent = `atlas ${M.meta.atlas} layers ${Object.keys(M.meta.layers).join(' ')}`;
+}
+modelIn.onchange = load;
+await load();
+const DIRV = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
+let t = 0;
+function frame() {
+  t += 1 / 60;
+  ctx.setTransform(S, 0, 0, S, 0, 0);
+  ctx.fillStyle = '#3a3846'; ctx.fillRect(0, 0, W, H);
+  // ground diamonds
+  ctx.fillStyle = '#44424f';
+  for (let y = 0; y < H; y += 16) for (let x = (y / 16 % 2) * 16; x < W; x += 32) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 16, y + 8); ctx.lineTo(x, y + 16); ctx.lineTo(x - 16, y + 8); ctx.fill(); }
+  if (M) {
+    const C = M.meta.clips[clipSel.value];
+    const fr = C.kind === 'loop' ? Math.floor((t % C.dur) / C.dur * C.n) : Math.floor((t * 6) % (C.n + 2)) % C.n;
+    specs.forEach((sp, r) => DIRV.forEach(([fx, fy], i) => {
+      const x = 40 + i * 76, y = 95 + r * 105;
+      ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.ellipse(x, y, 9, 4, 0, 0, 7); ctx.fill();
+      drawCharacter(ctx, x, y, sp, clipSel.value, fr, fx, fy);
+    }));
+  }
+  requestAnimationFrame(frame);
+}
+frame();
+</script></body></html>

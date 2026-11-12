@@ -1,0 +1,54 @@
+# Art pipeline: Blender → recolourable sprites
+
+The game's logical resolution is 640×360. The canvas backing store is **2×** (1280×720, set in `src/main.js`).
+Procedural pixel art is drawn through a 2× transform, so it keeps its chunky look. Blender sprites are rendered at
+2× and blitted at half size, so they show full detail.
+
+## Characters (`scripts/build_sprites.py`)
+
+1. `node scripts/export_poses.mjs` imports **all** content, including animations and attack poses registered by
+   levels, bosses and characters. It samples every animation into discrete clips: `assets/sprites/clips.json`.
+2. `scripts/blender/render_char.py` builds a stylised character from meshes on a joint rig
+   (hip, torso, head, shoulders, elbows, hips, knees, ankles). Rotations come straight from the 2D pose angles
+   (sagittal plane; `N` limbs = the character's right side).
+   - Each frame is rendered in 5 directions: game-world facings 0, 1, 5, 6 and 7. The runtime mirrors these to 8.
+   - Each frame gets two passes:
+     - **ID pass** (Workbench, flat, no AA): every material outputs `id * 10` in the red channel.
+     - **Light pass** (Eevee, white override material): key light from the upper-left, rim light and AO.
+   - **Body variants:** `<build>_<torso>`. Builds are `m` normal, `h` heavy and `f` female. Torsos are
+     jacket, parka, tee and hivis.
+   - **Accessory variants** (hair, hats, beard, tache, shades, scarf) are rendered once per build on the
+     `<build>_jacket` model, as body+accessory renders.
+3. `scripts/pack_sprites.py` trims every frame and keeps only the accessory's own material IDs for accessory
+   layers, so occlusion by arms and hands is baked in. It packs everything into `assets/sprites/<model>.png` +
+   `.json`. Pixel encoding: R = light, G = id×8, A = mask.
+4. A `handsOnly` pass bakes the projected weapon-hand and elbow positions to `assets/sprites/hands_<build>.json`,
+   so held weapons follow the fist.
+
+At runtime, `src/game/sprites.js`:
+- maps a doll LOOK to a model, accessory layers and a palette;
+- composes body + layers, then recolours with a 6-band toon ramp, adds 1 px outlines and material-boundary
+  darkening;
+- caches composed frames (LRU);
+- maps Fighter state and time to a clip frame.
+
+If no atlas is loaded, `src/game/doll.js` (procedural) is the fallback.
+
+Material IDs: 1 skin, 2 hair, 3 jacket, 4 trim, 5 lining, 6 shirt, 7 pants, 8 pantsTrim, 9 shoes, 10 sole,
+11/12 scarf, 13 eye, 14/15 hat, 16 glove, 17 band, 18 facial, 19 shades, 20 mouth, 21 belt, 22 stripe.
+
+## Environment (`scripts/blender/render_env.py`)
+
+Piece modules (`scripts/blender/env_<theme>.py`) define `PIECES`. Each piece is a wall (per style × height ×
+variant), a floor patch (n×n tiles, seamless) or a prop (per variant). The camera matches the game's 2:1
+projection exactly: 1 tile = 1 m and 1 height unit = 1.0206 m.
+
+Output goes to `assets/env/{walls,floors,props}/`. Each module writes `assets/env/parts/<module>.json`, and
+`assets/env/index.json` is rebuilt from all parts.
+
+At runtime, `src/engine/envsprites.js` loads everything at boot:
+- `drawWallBlock` uses the wall sprite;
+- `renderFloor` samples floor patches into a 2× floor bake;
+- `World.drawProp` uses prop sprites (plus an optional `def.overlay` for animated details).
+
+Anything missing falls back to the procedural styles. `node scripts/env_coverage.mjs --missing` lists the gaps.

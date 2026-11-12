@@ -1,0 +1,11 @@
+{
+  "name": "the-last-hooligan",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "THE LAST HOOLIGAN - retro isometric beat 'em up (HTML5 Canvas, no build step)",
+  "scripts": {
+    "start": "python3 scripts/serve.py 8642",
+    "check": "node scripts/check.mjs"
+  }
+}

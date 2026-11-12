@@ -1,0 +1,405 @@
+{
+"walls": {
+"tiledWall": {
+"heights": {
+"3": {
+"files": [
+"walls/tiledWall_h3_0.png",
+"walls/tiledWall_h3_1.png",
+"walls/tiledWall_h3_2.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"4": {
+"files": [
+"walls/tiledWall_h4_0.png",
+"walls/tiledWall_h4_1.png",
+"walls/tiledWall_h4_2.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"5": {
+"files": [
+"walls/tiledWall_h5_0.png",
+"walls/tiledWall_h5_1.png",
+"walls/tiledWall_h5_2.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"1.2": {
+"files": [
+"walls/tiledWall_h1p2_0.png",
+"walls/tiledWall_h1p2_1.png",
+"walls/tiledWall_h1p2_2.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"2.4": {
+"files": [
+"walls/tiledWall_h2p4_0.png",
+"walls/tiledWall_h2p4_1.png",
+"walls/tiledWall_h2p4_2.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"derby_facade": {
+"heights": {
+"2.2": {
+"files": [
+"walls/derby_facade_h2p2_0.png",
+"walls/derby_facade_h2p2_1.png",
+"walls/derby_facade_h2p2_2.png",
+"walls/derby_facade_h2p2_3.png",
+"walls/derby_facade_h2p2_4.png",
+"walls/derby_facade_h2p2_5.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"derby_standWall": {
+"heights": {
+"1.2": {
+"files": [
+"walls/derby_standWall_h1p2_0.png",
+"walls/derby_standWall_h1p2_1.png",
+"walls/derby_standWall_h1p2_2.png",
+"walls/derby_standWall_h1p2_3.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"2": {
+"files": [
+"walls/derby_standWall_h2_0.png",
+"walls/derby_standWall_h2_1.png",
+"walls/derby_standWall_h2_2.png",
+"walls/derby_standWall_h2_3.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"3.5": {
+"files": [
+"walls/derby_standWall_h3p5_0.png",
+"walls/derby_standWall_h3p5_1.png",
+"walls/derby_standWall_h3p5_2.png",
+"walls/derby_standWall_h3p5_3.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"derby_tunnelWall": {
+"heights": {
+"1.2": {
+"files": [
+"walls/derby_tunnelWall_h1p2_0.png",
+"walls/derby_tunnelWall_h1p2_1.png",
+"walls/derby_tunnelWall_h1p2_2.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"2": {
+"files": [
+"walls/derby_tunnelWall_h2_0.png",
+"walls/derby_tunnelWall_h2_1.png",
+"walls/derby_tunnelWall_h2_2.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"derby_perimeter": {
+"heights": {
+"1.1": {
+"files": [
+"walls/derby_perimeter_h1p1_0.png",
+"walls/derby_perimeter_h1p1_1.png",
+"walls/derby_perimeter_h1p1_2.png",
+"walls/derby_perimeter_h1p1_3.png",
+"walls/derby_perimeter_h1p1_4.png",
+"walls/derby_perimeter_h1p1_5.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"derby_awayFence": {
+"heights": {
+"1.2": {
+"files": [
+"walls/derby_awayFence_h1p2_0.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"derby_awayStand": {
+"heights": {
+"3.2": {
+"files": [
+"walls/derby_awayStand_h3p2_0.png",
+"walls/derby_awayStand_h3p2_1.png",
+"walls/derby_awayStand_h3p2_2.png",
+"walls/derby_awayStand_h3p2_3.png"
+],
+"extraTop": 0,
+"padX": 6
+}
+}
+}
+},
+"floors": {
+"derby_concourse": {
+"n": 9,
+"file": "floors/derby_concourse.png"
+},
+"derby_terrace": {
+"n": 4,
+"file": "floors/derby_terrace.png"
+},
+"derby_awayTerrace": {
+"n": 4,
+"file": "floors/derby_awayTerrace.png"
+},
+"derby_track": {
+"n": 4,
+"file": "floors/derby_track.png"
+},
+"derby_pitch": {
+"n": 10,
+"file": "floors/derby_pitch.png"
+},
+"derby_tunnel": {
+"n": 4,
+"file": "floors/derby_tunnel.png"
+},
+"derby_dressing": {
+"n": 6,
+"file": "floors/derby_dressing.png"
+},
+"tiles": {
+"n": 4,
+"file": "floors/tiles.png"
+}
+},
+"props": {
+"derby_flagpole": {
+"variants": [
+{
+"file": "props/derby_flagpole_0.png",
+"ax": 40.0,
+"ay": 184.0
+}
+]
+},
+"derby_stall": {
+"variants": [
+{
+"file": "props/derby_stall_0.png",
+"ax": 44.0,
+"ay": 104.0
+}
+]
+},
+"derby_burgerVan": {
+"variants": [
+{
+"file": "props/derby_burgerVan_0.png",
+"ax": 44.0,
+"ay": 92.0
+}
+]
+},
+"derby_turnstile": {
+"variants": [
+{
+"file": "props/derby_turnstile_0.png",
+"ax": 40.0,
+"ay": 100.0
+}
+]
+},
+"derby_coach": {
+"variants": [
+{
+"file": "props/derby_coach_0.png",
+"ax": 40.0,
+"ay": 92.0,
+"color": "#1f4fb4",
+"trim": "#f4f1e8"
+},
+{
+"file": "props/derby_coach_1.png",
+"ax": 40.0,
+"ay": 92.0,
+"color": "#d8b020",
+"trim": "#141414"
+}
+]
+},
+"derby_kiosk": {
+"variants": [
+{
+"file": "props/derby_kiosk_0.png",
+"ax": 40.0,
+"ay": 100.0
+}
+]
+},
+"derby_pillar": {
+"variants": [
+{
+"file": "props/derby_pillar_0.png",
+"ax": 40.0,
+"ay": 156.0
+}
+]
+},
+"derby_crushBarrier": {
+"variants": [
+{
+"file": "props/derby_crushBarrier_0.png",
+"ax": 40.0,
+"ay": 48.0,
+"dir": "x"
+},
+{
+"file": "props/derby_crushBarrier_1.png",
+"ax": 40.0,
+"ay": 48.0,
+"dir": "y"
+}
+]
+},
+"derby_flare": {
+"variants": [
+{
+"file": "props/derby_flare_0.png",
+"ax": 40.0,
+"ay": 28.0
+}
+]
+},
+"derby_goal": {
+"variants": [
+{
+"file": "props/derby_goal_0.png",
+"ax": 72.0,
+"ay": 92.0
+}
+]
+},
+"derby_cornerFlag": {
+"variants": [
+{
+"file": "props/derby_cornerFlag_0.png",
+"ax": 40.0,
+"ay": 80.0
+}
+]
+},
+"derby_dugout": {
+"variants": [
+{
+"file": "props/derby_dugout_0.png",
+"ax": 40.0,
+"ay": 76.0
+}
+]
+},
+"derby_tannoy": {
+"variants": [
+{
+"file": "props/derby_tannoy_0.png",
+"ax": 44.0,
+"ay": 128.0
+}
+]
+},
+"derby_ballBag": {
+"variants": [
+{
+"file": "props/derby_ballBag_0.png",
+"ax": 40.0,
+"ay": 44.0
+}
+]
+},
+"derby_kitBasket": {
+"variants": [
+{
+"file": "props/derby_kitBasket_0.png",
+"ax": 40.0,
+"ay": 48.0
+}
+]
+},
+"derby_merchBox": {
+"variants": [
+{
+"file": "props/derby_merchBox_0.png",
+"ax": 40.0,
+"ay": 64.0
+}
+]
+},
+"derby_floodlight": {
+"variants": [
+{
+"file": "props/derby_floodlight_0.png",
+"ax": 42.0,
+"ay": 401.99
+}
+]
+},
+"derby_seats": {
+"variants": [
+{
+"file": "props/derby_seats_0.png",
+"ax": 40.0,
+"ay": 40.0,
+"color": "#f0c020"
+},
+{
+"file": "props/derby_seats_1.png",
+"ax": 40.0,
+"ay": 40.0,
+"color": "#141414"
+}
+]
+},
+"derby_physio": {
+"variants": [
+{
+"file": "props/derby_physio_0.png",
+"ax": 40.0,
+"ay": 48.0
+}
+]
+},
+"derby_urinal": {
+"variants": [
+{
+"file": "props/derby_urinal_0.png",
+"ax": 40.0,
+"ay": 68.0
+}
+]
+}
+}
+}

@@ -1,0 +1,539 @@
+{
+"walls": {
+"underground_tiles": {
+"heights": {
+"1.2": {
+"files": [
+"walls/underground_tiles_h1p2_0.png",
+"walls/underground_tiles_h1p2_1.png",
+"walls/underground_tiles_h1p2_2.png",
+"walls/underground_tiles_h1p2_3.png",
+"walls/underground_tiles_h1p2_4.png",
+"walls/underground_tiles_h1p2_5.png"
+],
+"extraTop": 0,
+"padX": 6
+},
+"3": {
+"files": [
+"walls/underground_tiles_h3_0.png",
+"walls/underground_tiles_h3_1.png",
+"walls/underground_tiles_h3_2.png",
+"walls/underground_tiles_h3_3.png",
+"walls/underground_tiles_h3_4.png",
+"walls/underground_tiles_h3_5.png"
+],
+"extraTop": 0,
+"padX": 6
+},
+"4": {
+"files": [
+"walls/underground_tiles_h4_0.png",
+"walls/underground_tiles_h4_1.png",
+"walls/underground_tiles_h4_2.png",
+"walls/underground_tiles_h4_3.png",
+"walls/underground_tiles_h4_4.png",
+"walls/underground_tiles_h4_5.png"
+],
+"extraTop": 0,
+"padX": 6
+}
+}
+},
+"railing": {
+"heights": {
+"1": {
+"files": [
+"walls/railing_h1_0.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"1.2": {
+"files": [
+"walls/railing_h1p2_0.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"1.5": {
+"files": [
+"walls/railing_h1p5_0.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"2": {
+"files": [
+"walls/railing_h2_0.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"1.1": {
+"files": [
+"walls/railing_h1p1_0.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"underground_tilesGrim": {
+"heights": {
+"3": {
+"files": [
+"walls/underground_tilesGrim_h3_0.png",
+"walls/underground_tilesGrim_h3_1.png",
+"walls/underground_tilesGrim_h3_2.png",
+"walls/underground_tilesGrim_h3_3.png",
+"walls/underground_tilesGrim_h3_4.png",
+"walls/underground_tilesGrim_h3_5.png"
+],
+"extraTop": 0,
+"padX": 6
+}
+}
+},
+"underground_ticketWindow": {
+"heights": {
+"4": {
+"files": [
+"walls/underground_ticketWindow_h4_0.png",
+"walls/underground_ticketWindow_h4_1.png"
+],
+"extraTop": 0,
+"padX": 6
+}
+}
+},
+"underground_gateline": {
+"heights": {
+"1": {
+"files": [
+"walls/underground_gateline_h1_0.png"
+],
+"extraTop": 0,
+"padX": 4
+}
+}
+},
+"underground_counter": {
+"heights": {
+"1.1": {
+"files": [
+"walls/underground_counter_h1p1_0.png",
+"walls/underground_counter_h1p1_1.png",
+"walls/underground_counter_h1p1_2.png"
+],
+"extraTop": 0,
+"padX": 6
+}
+}
+},
+"underground_lockers": {
+"heights": {
+"2.2": {
+"files": [
+"walls/underground_lockers_h2p2_0.png",
+"walls/underground_lockers_h2p2_1.png",
+"walls/underground_lockers_h2p2_2.png"
+],
+"extraTop": 0,
+"padX": 4
+}
+}
+},
+"underground_duct": {
+"heights": {
+"1.6": {
+"files": [
+"walls/underground_duct_h1p6_0.png"
+],
+"extraTop": 0,
+"padX": 4
+}
+}
+},
+"underground_tunnel": {
+"heights": {
+"1.2": {
+"files": [
+"walls/underground_tunnel_h1p2_0.png",
+"walls/underground_tunnel_h1p2_1.png",
+"walls/underground_tunnel_h1p2_2.png",
+"walls/underground_tunnel_h1p2_3.png"
+],
+"extraTop": 0,
+"padX": 8
+},
+"3": {
+"files": [
+"walls/underground_tunnel_h3_0.png",
+"walls/underground_tunnel_h3_1.png",
+"walls/underground_tunnel_h3_2.png",
+"walls/underground_tunnel_h3_3.png"
+],
+"extraTop": 0,
+"padX": 8
+}
+}
+},
+"underground_hazard": {
+"heights": {
+"1.2": {
+"files": [
+"walls/underground_hazard_h1p2_0.png",
+"walls/underground_hazard_h1p2_1.png",
+"walls/underground_hazard_h1p2_2.png",
+"walls/underground_hazard_h1p2_3.png"
+],
+"extraTop": 0,
+"padX": 8
+},
+"3.2": {
+"files": [
+"walls/underground_hazard_h3p2_0.png",
+"walls/underground_hazard_h3p2_1.png",
+"walls/underground_hazard_h3p2_2.png",
+"walls/underground_hazard_h3p2_3.png"
+],
+"extraTop": 0,
+"padX": 8
+}
+}
+},
+"underground_brickSoot": {
+"heights": {
+"1.2": {
+"files": [
+"walls/underground_brickSoot_h1p2_0.png",
+"walls/underground_brickSoot_h1p2_1.png",
+"walls/underground_brickSoot_h1p2_2.png",
+"walls/underground_brickSoot_h1p2_3.png"
+],
+"extraTop": 0,
+"padX": 6
+},
+"3.5": {
+"files": [
+"walls/underground_brickSoot_h3p5_0.png",
+"walls/underground_brickSoot_h3p5_1.png",
+"walls/underground_brickSoot_h3p5_2.png",
+"walls/underground_brickSoot_h3p5_3.png"
+],
+"extraTop": 0,
+"padX": 6
+}
+}
+},
+"underground_brickBlocked": {
+"heights": {
+"3.5": {
+"files": [
+"walls/underground_brickBlocked_h3p5_0.png",
+"walls/underground_brickBlocked_h3p5_1.png"
+],
+"extraTop": 0,
+"padX": 4
+},
+"4": {
+"files": [
+"walls/underground_brickBlocked_h4_0.png",
+"walls/underground_brickBlocked_h4_1.png"
+],
+"extraTop": 0,
+"padX": 4
+}
+}
+}
+},
+"floors": {
+"underground_terrazzo": {
+"n": 4,
+"file": "floors/underground_terrazzo.png"
+},
+"underground_corridor": {
+"n": 4,
+"file": "floors/underground_corridor.png"
+},
+"underground_platform": {
+"n": 4,
+"file": "floors/underground_platform.png"
+},
+"underground_edgeS": {
+"n": 4,
+"file": "floors/underground_edgeS.png"
+},
+"underground_edgeN": {
+"n": 4,
+"file": "floors/underground_edgeN.png"
+},
+"underground_trackA": {
+"n": 4,
+"file": "floors/underground_trackA.png"
+},
+"underground_trackB": {
+"n": 4,
+"file": "floors/underground_trackB.png"
+},
+"underground_crossA": {
+"n": 4,
+"file": "floors/underground_crossA.png"
+},
+"underground_crossB": {
+"n": 4,
+"file": "floors/underground_crossB.png"
+},
+"underground_deadTrackA": {
+"n": 4,
+"file": "floors/underground_deadTrackA.png"
+},
+"underground_deadTrackB": {
+"n": 4,
+"file": "floors/underground_deadTrackB.png"
+},
+"underground_stairs": {
+"n": 4,
+"file": "floors/underground_stairs.png"
+},
+"underground_stairsUp": {
+"n": 4,
+"file": "floors/underground_stairsUp.png"
+},
+"underground_ballast": {
+"n": 4,
+"file": "floors/underground_ballast.png"
+},
+"underground_depot": {
+"n": 4,
+"file": "floors/underground_depot.png"
+},
+"underground_hatch": {
+"n": 4,
+"file": "floors/underground_hatch.png"
+},
+"underground_lino": {
+"n": 4,
+"file": "floors/underground_lino.png"
+},
+"underground_dusty": {
+"n": 4,
+"file": "floors/underground_dusty.png"
+},
+"underground_dustEdge": {
+"n": 4,
+"file": "floors/underground_dustEdge.png"
+},
+"underground_anchor": {
+"n": 2,
+"file": "floors/underground_anchor.png"
+}
+},
+"props": {
+"underground_ticketMachine": {
+"variants": [
+{
+"file": "props/underground_ticketMachine_0.png",
+"ax": 40.0,
+"ay": 86.0,
+"color": "#a8202a"
+},
+{
+"file": "props/underground_ticketMachine_1.png",
+"ax": 40.0,
+"ay": 86.0,
+"color": "#1f4fb4"
+}
+]
+},
+"underground_striplight": {
+"variants": [
+{
+"file": "props/underground_striplight_0.png",
+"ax": 40.0,
+"ay": 158.0
+}
+]
+},
+"underground_worklight": {
+"variants": [
+{
+"file": "props/underground_worklight_0.png",
+"ax": 40.0,
+"ay": 80.0
+}
+]
+},
+"underground_cableDrum": {
+"variants": [
+{
+"file": "props/underground_cableDrum_0.png",
+"ax": 40.0,
+"ay": 48.0
+}
+]
+},
+"underground_gatePaddle": {
+"variants": [
+{
+"file": "props/underground_gatePaddle_0.png",
+"ax": 38.0,
+"ay": 46.0
+}
+]
+},
+"underground_signal": {
+"variants": [
+{
+"file": "props/underground_signal_0.png",
+"ax": 40.0,
+"ay": 112.0
+}
+]
+},
+"underground_departures": {
+"variants": [
+{
+"file": "props/underground_departures_0.png",
+"ax": 72.0,
+"ay": 212.0
+}
+]
+},
+"rubble": {
+"variants": [
+{
+"file": "props/rubble_0.png",
+"ax": 40.0,
+"ay": 28.0
+}
+]
+},
+"underground_hoarding": {
+"variants": [
+{
+"file": "props/underground_hoarding_0.png",
+"ax": 38.0,
+"ay": 98.0
+}
+]
+},
+"underground_rope": {
+"variants": [
+{
+"file": "props/underground_rope_0.png",
+"ax": 38.0,
+"ay": 46.0
+}
+]
+},
+"door": {
+"variants": [
+{
+"file": "props/door_0.png",
+"ax": 38.0,
+"ay": 114.0,
+"dir": "x",
+"color": "#3a2a1a"
+},
+{
+"file": "props/door_1.png",
+"ax": 38.0,
+"ay": 114.0,
+"dir": "x",
+"color": "#5a6a64",
+"key": "staff"
+},
+{
+"file": "props/door_2.png",
+"ax": 38.0,
+"ay": 114.0,
+"dir": "y",
+"color": "#4a2a18"
+}
+]
+},
+"underground_vending": {
+"variants": [
+{
+"file": "props/underground_vending_0.png",
+"ax": 38.0,
+"ay": 82.0
+}
+]
+},
+"underground_sleepers": {
+"variants": [
+{
+"file": "props/underground_sleepers_0.png",
+"ax": 40.0,
+"ay": 36.0
+}
+]
+},
+"underground_kiosk": {
+"variants": [
+{
+"file": "props/underground_kiosk_0.png",
+"ax": 74.0,
+"ay": 102.0
+}
+]
+},
+"underground_metroSign": {
+"variants": [
+{
+"file": "props/underground_metroSign_0.png",
+"ax": 46.0,
+"ay": 134.0
+}
+]
+},
+"underground_escalator": {
+"variants": [
+{
+"file": "props/underground_escalator_0.png",
+"ax": 264.0,
+"ay": 40.0
+}
+]
+},
+"underground_guitarCase": {
+"variants": [
+{
+"file": "props/underground_guitarCase_0.png",
+"ax": 38.0,
+"ay": 26.0
+}
+]
+},
+"underground_controlDesk": {
+"variants": [
+{
+"file": "props/underground_controlDesk_0.png",
+"ax": 40.0,
+"ay": 72.0
+}
+]
+},
+"underground_lever": {
+"variants": [
+{
+"file": "props/underground_lever_0.png",
+"ax": 40.0,
+"ay": 52.0
+}
+]
+},
+"underground_trolley": {
+"variants": [
+{
+"file": "props/underground_trolley_0.png",
+"ax": 40.0,
+"ay": 48.0
+}
+]
+}
+}
+}

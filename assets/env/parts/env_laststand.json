@@ -1,0 +1,293 @@
+{
+"walls": {
+"laststand_facade": {
+"heights": {
+"5": {
+"files": [
+"walls/laststand_facade_h5_0.png",
+"walls/laststand_facade_h5_1.png",
+"walls/laststand_facade_h5_2.png",
+"walls/laststand_facade_h5_3.png",
+"walls/laststand_facade_h5_4.png",
+"walls/laststand_facade_h5_5.png"
+],
+"extraTop": 0,
+"padX": 10
+}
+}
+},
+"laststand_stand": {
+"heights": {
+"5": {
+"files": [
+"walls/laststand_stand_h5_0.png",
+"walls/laststand_stand_h5_1.png",
+"walls/laststand_stand_h5_2.png",
+"walls/laststand_stand_h5_3.png"
+],
+"extraTop": 0,
+"padX": 4
+}
+}
+},
+"laststand_balustrade": {
+"heights": {
+"1": {
+"files": [
+"walls/laststand_balustrade_h1_0.png"
+],
+"extraTop": 0,
+"padX": 0
+}
+}
+},
+"laststand_officewall": {
+"heights": {
+"2.6": {
+"files": [
+"walls/laststand_officewall_h2p6_0.png",
+"walls/laststand_officewall_h2p6_1.png",
+"walls/laststand_officewall_h2p6_2.png",
+"walls/laststand_officewall_h2p6_3.png"
+],
+"extraTop": 0,
+"padX": 6
+}
+}
+},
+"laststand_ticketfront": {
+"heights": {
+"2.6": {
+"files": [
+"walls/laststand_ticketfront_h2p6_0.png",
+"walls/laststand_ticketfront_h2p6_1.png",
+"walls/laststand_ticketfront_h2p6_2.png",
+"walls/laststand_ticketfront_h2p6_3.png"
+],
+"extraTop": 0,
+"padX": 4
+}
+}
+},
+"laststand_counter": {
+"heights": {
+"1.1": {
+"files": [
+"walls/laststand_counter_h1p1_0.png",
+"walls/laststand_counter_h1p1_1.png"
+],
+"extraTop": 0,
+"padX": 4
+}
+}
+},
+"laststand_basin": {
+"heights": {
+"0.6": {
+"files": [
+"walls/laststand_basin_h0p6_0.png",
+"walls/laststand_basin_h0p6_1.png"
+],
+"extraTop": 0,
+"padX": 4
+}
+}
+},
+"laststand_planter": {
+"heights": {
+"0.9": {
+"files": [
+"walls/laststand_planter_h0p9_0.png",
+"walls/laststand_planter_h0p9_1.png",
+"walls/laststand_planter_h0p9_2.png"
+],
+"extraTop": 24,
+"padX": 4
+}
+}
+},
+"laststand_hoarding": {
+"heights": {
+"3": {
+"files": [
+"walls/laststand_hoarding_h3_0.png",
+"walls/laststand_hoarding_h3_1.png",
+"walls/laststand_hoarding_h3_2.png",
+"walls/laststand_hoarding_h3_3.png",
+"walls/laststand_hoarding_h3_4.png",
+"walls/laststand_hoarding_h3_5.png"
+],
+"extraTop": 0,
+"padX": 4
+}
+}
+}
+},
+"floors": {
+"laststand_plaza": {
+"n": 12,
+"file": "floors/laststand_plaza.png"
+},
+"laststand_crest": {
+"n": 24,
+"file": "floors/laststand_crest.png"
+},
+"laststand_granite": {
+"n": 4,
+"file": "floors/laststand_granite.png"
+},
+"laststand_steps": {
+"n": 12,
+"file": "floors/laststand_steps.png"
+},
+"laststand_tunnel": {
+"n": 4,
+"file": "floors/laststand_tunnel.png"
+},
+"laststand_lino": {
+"n": 4,
+"file": "floors/laststand_lino.png"
+},
+"laststand_scorched": {
+"n": 4,
+"file": "floors/laststand_scorched.png"
+},
+"laststand_water": {
+"n": 4,
+"file": "floors/laststand_water.png"
+}
+},
+"props": {
+"laststand_policevan": {
+"variants": [
+{
+"file": "props/laststand_policevan_0.png",
+"ax": 74.0,
+"ay": 66.0,
+"dir": "x"
+},
+{
+"file": "props/laststand_policevan_1.png",
+"ax": 74.0,
+"ay": 66.0,
+"dir": "y"
+}
+]
+},
+"laststand_burntcar": {
+"variants": [
+{
+"file": "props/laststand_burntcar_0.png",
+"ax": 42.0,
+"ay": 54.0
+}
+]
+},
+"laststand_floodlight": {
+"variants": [
+{
+"file": "props/laststand_floodlight_0.png",
+"ax": 62.0,
+"ay": 309.99
+}
+]
+},
+"laststand_flarepot": {
+"variants": [
+{
+"file": "props/laststand_flarepot_0.png",
+"ax": 38.0,
+"ay": 30.0
+}
+]
+},
+"laststand_statue": {
+"variants": [
+{
+"file": "props/laststand_statue_0.png",
+"ax": 40.0,
+"ay": 68.0
+}
+]
+},
+"laststand_fountainjet": {
+"variants": [
+{
+"file": "props/laststand_fountainjet_0.png",
+"ax": 50.0,
+"ay": 94.0
+}
+]
+},
+"laststand_fireworks": {
+"variants": [
+{
+"file": "props/laststand_fireworks_0.png",
+"ax": 40.0,
+"ay": 48.0
+}
+]
+},
+"laststand_turnstile": {
+"variants": [
+{
+"file": "props/laststand_turnstile_0.png",
+"ax": 40.0,
+"ay": 52.0
+}
+]
+},
+"laststand_cabinet": {
+"variants": [
+{
+"file": "props/laststand_cabinet_0.png",
+"ax": 38.0,
+"ay": 50.0,
+"color": "#6e727a"
+},
+{
+"file": "props/laststand_cabinet_1.png",
+"ax": 38.0,
+"ay": 50.0,
+"color": "#5a6a5e"
+}
+]
+},
+"laststand_stall": {
+"variants": [
+{
+"file": "props/laststand_stall_0.png",
+"ax": 42.0,
+"ay": 94.0
+}
+]
+},
+"laststand_arenagate": {
+"variants": [
+{
+"file": "props/laststand_arenagate_0.png",
+"ax": 72.0,
+"ay": 208.0
+}
+]
+},
+"laststand_boards": {
+"variants": [
+{
+"file": "props/laststand_boards_0.png",
+"ax": 40.0,
+"ay": 208.0
+}
+]
+},
+"laststand_flagpole": {
+"variants": [
+{
+"file": "props/laststand_flagpole_0.png",
+"ax": 40.0,
+"ay": 208.0
+}
+]
+}
+}
+}

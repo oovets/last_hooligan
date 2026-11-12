@@ -1,0 +1,1002 @@
+{
+"walls": {
+"industrial_containerRed": {
+"heights": {
+"2.4": {
+"files": [
+"walls/industrial_containerRed_h2p4_0.png",
+"walls/industrial_containerRed_h2p4_1.png",
+"walls/industrial_containerRed_h2p4_2.png",
+"walls/industrial_containerRed_h2p4_3.png",
+"walls/industrial_containerRed_h2p4_4.png",
+"walls/industrial_containerRed_h2p4_5.png"
+],
+"extraTop": 0,
+"padX": 2
+}
+}
+},
+"industrial_cladding": {
+"heights": {
+"3": {
+"files": [
+"walls/industrial_cladding_h3_0.png",
+"walls/industrial_cladding_h3_1.png",
+"walls/industrial_cladding_h3_2.png",
+"walls/industrial_cladding_h3_3.png",
+"walls/industrial_cladding_h3_4.png",
+"walls/industrial_cladding_h3_5.png"
+],
+"extraTop": 0,
+"padX": 4
+},
+"4.5": {
+"files": [
+"walls/industrial_cladding_h4p5_0.png",
+"walls/industrial_cladding_h4p5_1.png",
+"walls/industrial_cladding_h4p5_2.png",
+"walls/industrial_cladding_h4p5_3.png",
+"walls/industrial_cladding_h4p5_4.png",
+"walls/industrial_cladding_h4p5_5.png"
+],
+"extraTop": 0,
+"padX": 4
+}
+}
+},
+"industrial_factoryBrick": {
+"heights": {
+"3": {
+"files": [
+"walls/industrial_factoryBrick_h3_0.png",
+"walls/industrial_factoryBrick_h3_1.png",
+"walls/industrial_factoryBrick_h3_2.png",
+"walls/industrial_factoryBrick_h3_3.png",
+"walls/industrial_factoryBrick_h3_4.png",
+"walls/industrial_factoryBrick_h3_5.png",
+"walls/industrial_factoryBrick_h3_6.png",
+"walls/industrial_factoryBrick_h3_7.png"
+],
+"extraTop": 0,
+"padX": 6
+},
+"4.5": {
+"files": [
+"walls/industrial_factoryBrick_h4p5_0.png",
+"walls/industrial_factoryBrick_h4p5_1.png",
+"walls/industrial_factoryBrick_h4p5_2.png",
+"walls/industrial_factoryBrick_h4p5_3.png",
+"walls/industrial_factoryBrick_h4p5_4.png",
+"walls/industrial_factoryBrick_h4p5_5.png",
+"walls/industrial_factoryBrick_h4p5_6.png",
+"walls/industrial_factoryBrick_h4p5_7.png"
+],
+"extraTop": 0,
+"padX": 6
+}
+}
+},
+"industrial_shelf": {
+"heights": {
+"2.6": {
+"files": [
+"walls/industrial_shelf_h2p6_0.png",
+"walls/industrial_shelf_h2p6_1.png",
+"walls/industrial_shelf_h2p6_2.png",
+"walls/industrial_shelf_h2p6_3.png",
+"walls/industrial_shelf_h2p6_4.png",
+"walls/industrial_shelf_h2p6_5.png"
+],
+"extraTop": 0,
+"padX": 2
+}
+}
+},
+"industrial_meshY": {
+"heights": {
+"2.4": {
+"files": [
+"walls/industrial_meshY_h2p4_0.png",
+"walls/industrial_meshY_h2p4_1.png"
+],
+"extraTop": 0,
+"padX": 12
+}
+}
+},
+"crateStack": {
+"heights": {
+"1": {
+"files": [
+"walls/crateStack_h1_0.png",
+"walls/crateStack_h1_1.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"2": {
+"files": [
+"walls/crateStack_h2_0.png",
+"walls/crateStack_h2_1.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"3": {
+"files": [
+"walls/crateStack_h3_0.png",
+"walls/crateStack_h3_1.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"1.2": {
+"files": [
+"walls/crateStack_h1p2_0.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"1.8": {
+"files": [
+"walls/crateStack_h1p8_0.png",
+"walls/crateStack_h1p8_1.png"
+],
+"extraTop": 0,
+"padX": 0
+},
+"1.1": {
+"files": [
+"walls/crateStack_h1p1_0.png",
+"walls/crateStack_h1p1_1.png"
+],
+"extraTop": 0,
+"padX": 2
+}
+}
+},
+"industrial_containerBlue": {
+"heights": {
+"2.4": {
+"files": [
+"walls/industrial_containerBlue_h2p4_0.png",
+"walls/industrial_containerBlue_h2p4_1.png",
+"walls/industrial_containerBlue_h2p4_2.png",
+"walls/industrial_containerBlue_h2p4_3.png",
+"walls/industrial_containerBlue_h2p4_4.png",
+"walls/industrial_containerBlue_h2p4_5.png"
+],
+"extraTop": 0,
+"padX": 2
+}
+}
+},
+"industrial_containerGreen": {
+"heights": {
+"2.4": {
+"files": [
+"walls/industrial_containerGreen_h2p4_0.png",
+"walls/industrial_containerGreen_h2p4_1.png",
+"walls/industrial_containerGreen_h2p4_2.png",
+"walls/industrial_containerGreen_h2p4_3.png",
+"walls/industrial_containerGreen_h2p4_4.png",
+"walls/industrial_containerGreen_h2p4_5.png"
+],
+"extraTop": 0,
+"padX": 2
+}
+}
+},
+"industrial_containerGrey": {
+"heights": {
+"2.4": {
+"files": [
+"walls/industrial_containerGrey_h2p4_0.png",
+"walls/industrial_containerGrey_h2p4_1.png",
+"walls/industrial_containerGrey_h2p4_2.png",
+"walls/industrial_containerGrey_h2p4_3.png",
+"walls/industrial_containerGrey_h2p4_4.png",
+"walls/industrial_containerGrey_h2p4_5.png"
+],
+"extraTop": 0,
+"padX": 2
+}
+}
+},
+"industrial_containerOrange": {
+"heights": {
+"2.4": {
+"files": [
+"walls/industrial_containerOrange_h2p4_0.png",
+"walls/industrial_containerOrange_h2p4_1.png",
+"walls/industrial_containerOrange_h2p4_2.png",
+"walls/industrial_containerOrange_h2p4_3.png",
+"walls/industrial_containerOrange_h2p4_4.png",
+"walls/industrial_containerOrange_h2p4_5.png"
+],
+"extraTop": 0,
+"padX": 2
+}
+}
+},
+"industrial_stackA": {
+"heights": {
+"5": {
+"files": [
+"walls/industrial_stackA_h5_0.png",
+"walls/industrial_stackA_h5_1.png",
+"walls/industrial_stackA_h5_2.png",
+"walls/industrial_stackA_h5_3.png",
+"walls/industrial_stackA_h5_4.png",
+"walls/industrial_stackA_h5_5.png"
+],
+"extraTop": 0,
+"padX": 2
+}
+}
+},
+"industrial_stackB": {
+"heights": {
+"5": {
+"files": [
+"walls/industrial_stackB_h5_0.png",
+"walls/industrial_stackB_h5_1.png",
+"walls/industrial_stackB_h5_2.png",
+"walls/industrial_stackB_h5_3.png",
+"walls/industrial_stackB_h5_4.png",
+"walls/industrial_stackB_h5_5.png"
+],
+"extraTop": 0,
+"padX": 2
+}
+}
+},
+"industrial_shutter": {
+"heights": {
+"3": {
+"files": [
+"walls/industrial_shutter_h3_0.png",
+"walls/industrial_shutter_h3_1.png"
+],
+"extraTop": 0,
+"padX": 6
+}
+}
+},
+"industrial_hut": {
+"heights": {
+"2.4": {
+"files": [
+"walls/industrial_hut_h2p4_0.png",
+"walls/industrial_hut_h2p4_1.png",
+"walls/industrial_hut_h2p4_2.png",
+"walls/industrial_hut_h2p4_3.png"
+],
+"extraTop": 4,
+"padX": 12
+}
+}
+},
+"industrial_kabin": {
+"heights": {
+"2.4": {
+"files": [
+"walls/industrial_kabin_h2p4_0.png",
+"walls/industrial_kabin_h2p4_1.png",
+"walls/industrial_kabin_h2p4_2.png",
+"walls/industrial_kabin_h2p4_3.png"
+],
+"extraTop": 0,
+"padX": 6
+}
+}
+},
+"industrial_partition": {
+"heights": {
+"3.4": {
+"files": [
+"walls/industrial_partition_h3p4_0.png",
+"walls/industrial_partition_h3p4_1.png"
+],
+"extraTop": 0,
+"padX": 2
+}
+}
+},
+"industrial_mezz": {
+"heights": {
+"1.2": {
+"files": [
+"walls/industrial_mezz_h1p2_0.png"
+],
+"extraTop": 0,
+"padX": 2
+}
+}
+},
+"industrial_step": {
+"heights": {
+"0.3": {
+"files": [
+"walls/industrial_step_h0p3_0.png"
+],
+"extraTop": 0,
+"padX": 2
+},
+"0.6": {
+"files": [
+"walls/industrial_step_h0p6_0.png"
+],
+"extraTop": 0,
+"padX": 2
+},
+"0.9": {
+"files": [
+"walls/industrial_step_h0p9_0.png"
+],
+"extraTop": 0,
+"padX": 2
+}
+}
+}
+},
+"floors": {
+"industrial_yard": {
+"n": 8,
+"file": "floors/industrial_yard.png"
+},
+"industrial_yardLineX": {
+"n": 8,
+"file": "floors/industrial_yardLineX.png"
+},
+"industrial_hatch": {
+"n": 4,
+"file": "floors/industrial_hatch.png"
+},
+"industrial_slab": {
+"n": 4,
+"file": "floors/industrial_slab.png"
+},
+"industrial_slabLineX": {
+"n": 4,
+"file": "floors/industrial_slabLineX.png"
+},
+"industrial_factory": {
+"n": 4,
+"file": "floors/industrial_factory.png"
+},
+"industrial_factoryLineX": {
+"n": 4,
+"file": "floors/industrial_factoryLineX.png"
+},
+"industrial_factoryLineY": {
+"n": 4,
+"file": "floors/industrial_factoryLineY.png"
+},
+"industrial_lino": {
+"n": 4,
+"file": "floors/industrial_lino.png"
+},
+"industrial_quay": {
+"n": 4,
+"file": "floors/industrial_quay.png"
+},
+"industrial_quayEdge": {
+"n": 4,
+"file": "floors/industrial_quayEdge.png"
+},
+"industrial_water": {
+"n": 4,
+"file": "floors/industrial_water.png"
+},
+"industrial_beltXp": {
+"n": 4,
+"file": "floors/industrial_beltXp.png"
+},
+"industrial_beltYn": {
+"n": 4,
+"file": "floors/industrial_beltYn.png"
+},
+"industrial_ramp": {
+"n": 4,
+"file": "floors/industrial_ramp.png"
+},
+"rail": {
+"n": 4,
+"file": "floors/rail.png"
+}
+},
+"props": {
+"industrial_palletBoxes": {
+"variants": [
+{
+"file": "props/industrial_palletBoxes_0.png",
+"ax": 38.0,
+"ay": 42.0
+},
+{
+"file": "props/industrial_palletBoxes_1.png",
+"ax": 38.0,
+"ay": 42.0,
+"color": "#9aa0a8"
+}
+]
+},
+"industrial_drum": {
+"variants": [
+{
+"file": "props/industrial_drum_0.png",
+"ax": 38.0,
+"ay": 48.0
+},
+{
+"file": "props/industrial_drum_1.png",
+"ax": 38.0,
+"ay": 48.0,
+"color": "#8a3324"
+},
+{
+"file": "props/industrial_drum_2.png",
+"ax": 38.0,
+"ay": 48.0,
+"color": "#3c6a3c"
+},
+{
+"file": "props/industrial_drum_3.png",
+"ax": 38.0,
+"ay": 48.0,
+"color": "#d8b020"
+},
+{
+"file": "props/industrial_drum_4.png",
+"ax": 38.0,
+"ay": 48.0,
+"color": "#2a4d7a"
+}
+]
+},
+"industrial_tyres": {
+"variants": [
+{
+"file": "props/industrial_tyres_0.png",
+"ax": 38.0,
+"ay": 44.0
+}
+]
+},
+"industrial_bollard": {
+"variants": [
+{
+"file": "props/industrial_bollard_0.png",
+"ax": 38.0,
+"ay": 32.0
+}
+]
+},
+"industrial_lamp": {
+"variants": [
+{
+"file": "props/industrial_lamp_0.png",
+"ax": 56.0,
+"ay": 200.0
+},
+{
+"file": "props/industrial_lamp_1.png",
+"ax": 56.0,
+"ay": 200.0,
+"part": "off"
+}
+]
+},
+"industrial_wallLamp": {
+"variants": [
+{
+"file": "props/industrial_wallLamp_0.png",
+"ax": 38.0,
+"ay": 46.0,
+"part": "blank"
+},
+{
+"file": "props/industrial_wallLamp_1.png",
+"ax": 38.0,
+"ay": 46.0,
+"part": "left"
+},
+{
+"file": "props/industrial_wallLamp_2.png",
+"ax": 38.0,
+"ay": 46.0,
+"part": "right"
+},
+{
+"file": "props/industrial_wallLamp_3.png",
+"ax": 38.0,
+"ay": 46.0,
+"part": "leftwhite"
+},
+{
+"file": "props/industrial_wallLamp_4.png",
+"ax": 38.0,
+"ay": 46.0,
+"part": "rightwhite"
+}
+]
+},
+"industrial_gate": {
+"variants": [
+{
+"file": "props/industrial_gate_0.png",
+"ax": 38.0,
+"ay": 122.0,
+"dir": "y"
+},
+{
+"file": "props/industrial_gate_1.png",
+"ax": 38.0,
+"ay": 122.0,
+"dir": "x"
+},
+{
+"file": "props/industrial_gate_2.png",
+"ax": 38.0,
+"ay": 122.0,
+"dir": "y",
+"part": "sign"
+},
+{
+"file": "props/industrial_gate_3.png",
+"ax": 38.0,
+"ay": 122.0,
+"dir": "x",
+"part": "sign"
+}
+]
+},
+"industrial_cabinet": {
+"variants": [
+{
+"file": "props/industrial_cabinet_0.png",
+"ax": 38.0,
+"ay": 78.0,
+"part": "blank"
+},
+{
+"file": "props/industrial_cabinet_1.png",
+"ax": 38.0,
+"ay": 78.0,
+"part": "body"
+}
+]
+},
+"industrial_desk": {
+"variants": [
+{
+"file": "props/industrial_desk_0.png",
+"ax": 38.0,
+"ay": 56.0,
+"part": "blank"
+},
+{
+"file": "props/industrial_desk_1.png",
+"ax": 38.0,
+"ay": 56.0,
+"part": "body"
+}
+]
+},
+"industrial_workbench": {
+"variants": [
+{
+"file": "props/industrial_workbench_0.png",
+"ax": 38.0,
+"ay": 74.0
+}
+]
+},
+"industrial_boiler": {
+"variants": [
+{
+"file": "props/industrial_boiler_0.png",
+"ax": 40.0,
+"ay": 172.0
+},
+{
+"file": "props/industrial_boiler_1.png",
+"ax": 40.0,
+"ay": 172.0,
+"color": "#4a5a6a"
+}
+]
+},
+"industrial_press": {
+"variants": [
+{
+"file": "props/industrial_press_0.png",
+"ax": 40.0,
+"ay": 126.0,
+"ram": 1.35,
+"part": "f0"
+},
+{
+"file": "props/industrial_press_1.png",
+"ax": 40.0,
+"ay": 126.0,
+"ram": 1.4416666666666669,
+"part": "f1"
+},
+{
+"file": "props/industrial_press_2.png",
+"ax": 40.0,
+"ay": 126.0,
+"ram": 1.5333333333333334,
+"part": "f2"
+},
+{
+"file": "props/industrial_press_3.png",
+"ax": 40.0,
+"ay": 126.0,
+"ram": 1.625,
+"part": "f3"
+},
+{
+"file": "props/industrial_press_4.png",
+"ax": 40.0,
+"ay": 126.0,
+"ram": 1.7166666666666668,
+"part": "f4"
+},
+{
+"file": "props/industrial_press_5.png",
+"ax": 40.0,
+"ay": 126.0,
+"ram": 1.8083333333333333,
+"part": "f5"
+},
+{
+"file": "props/industrial_press_6.png",
+"ax": 40.0,
+"ay": 126.0,
+"ram": 1.9000000000000001,
+"part": "f6"
+}
+]
+},
+"industrial_lever": {
+"variants": [
+{
+"file": "props/industrial_lever_0.png",
+"ax": 40.0,
+"ay": 72.0
+},
+{
+"file": "props/industrial_lever_1.png",
+"ax": 40.0,
+"ay": 72.0,
+"part": "pulled"
+}
+]
+},
+"industrial_cage": {
+"variants": [
+{
+"file": "props/industrial_cage_0.png",
+"ax": 38.0,
+"ay": 86.0
+}
+]
+},
+"industrial_postSign": {
+"variants": [
+{
+"file": "props/industrial_postSign_0.png",
+"ax": 76.0,
+"ay": 136.0,
+"bg": "#d8b020",
+"wpx": 71
+},
+{
+"file": "props/industrial_postSign_1.png",
+"ax": 76.0,
+"ay": 136.0,
+"bg": "#2a4a8a",
+"wpx": 43,
+"color": "#ffffff"
+}
+]
+},
+"industrial_vent": {
+"variants": [
+{
+"file": "props/industrial_vent_0.png",
+"ax": 38.0,
+"ay": 46.0
+}
+]
+},
+"pallet": {
+"variants": [
+{
+"file": "props/pallet_0.png",
+"ax": 38.0,
+"ay": 22.0
+}
+]
+},
+"industrial_lorry": {
+"variants": [
+{
+"file": "props/industrial_lorry_0.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "blank"
+},
+{
+"file": "props/industrial_lorry_1.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "blank",
+"color": "#c8c4b8"
+},
+{
+"file": "props/industrial_lorry_2.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "blank",
+"color": "#3a4a6a"
+},
+{
+"file": "props/industrial_lorry_3.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 0,
+"j": 0,
+"color": "#c8c4b8"
+},
+{
+"file": "props/industrial_lorry_4.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 1,
+"j": 0,
+"color": "#c8c4b8"
+},
+{
+"file": "props/industrial_lorry_5.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 0,
+"j": 1,
+"color": "#c8c4b8"
+},
+{
+"file": "props/industrial_lorry_6.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 1,
+"j": 1,
+"color": "#c8c4b8"
+},
+{
+"file": "props/industrial_lorry_7.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 0,
+"j": 2,
+"color": "#c8c4b8"
+},
+{
+"file": "props/industrial_lorry_8.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 1,
+"j": 2,
+"color": "#c8c4b8"
+},
+{
+"file": "props/industrial_lorry_9.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 0,
+"j": 3,
+"color": "#c8c4b8"
+},
+{
+"file": "props/industrial_lorry_10.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 1,
+"j": 3,
+"color": "#c8c4b8"
+},
+{
+"file": "props/industrial_lorry_11.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 0,
+"j": 4,
+"color": "#c8c4b8"
+},
+{
+"file": "props/industrial_lorry_12.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 1,
+"j": 4,
+"color": "#c8c4b8"
+},
+{
+"file": "props/industrial_lorry_13.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 0,
+"j": 0,
+"color": "#3a4a6a"
+},
+{
+"file": "props/industrial_lorry_14.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 1,
+"j": 0,
+"color": "#3a4a6a"
+},
+{
+"file": "props/industrial_lorry_15.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 0,
+"j": 1,
+"color": "#3a4a6a"
+},
+{
+"file": "props/industrial_lorry_16.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 1,
+"j": 1,
+"color": "#3a4a6a"
+},
+{
+"file": "props/industrial_lorry_17.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 0,
+"j": 2,
+"color": "#3a4a6a"
+},
+{
+"file": "props/industrial_lorry_18.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 1,
+"j": 2,
+"color": "#3a4a6a"
+},
+{
+"file": "props/industrial_lorry_19.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 0,
+"j": 3,
+"color": "#3a4a6a"
+},
+{
+"file": "props/industrial_lorry_20.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 1,
+"j": 3,
+"color": "#3a4a6a"
+},
+{
+"file": "props/industrial_lorry_21.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 0,
+"j": 4,
+"color": "#3a4a6a"
+},
+{
+"file": "props/industrial_lorry_22.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "trailer",
+"i": 1,
+"j": 4,
+"color": "#3a4a6a"
+},
+{
+"file": "props/industrial_lorry_23.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "cab",
+"i": 0,
+"j": 0,
+"cabColor": "#b02020"
+},
+{
+"file": "props/industrial_lorry_24.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "cab",
+"i": 1,
+"j": 0,
+"cabColor": "#b02020"
+},
+{
+"file": "props/industrial_lorry_25.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "cab",
+"i": 0,
+"j": 1,
+"cabColor": "#b02020"
+},
+{
+"file": "props/industrial_lorry_26.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "cab",
+"i": 1,
+"j": 1,
+"cabColor": "#b02020"
+},
+{
+"file": "props/industrial_lorry_27.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "cab",
+"i": 0,
+"j": 0,
+"cabColor": "#e8e4d8"
+},
+{
+"file": "props/industrial_lorry_28.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "cab",
+"i": 1,
+"j": 0,
+"cabColor": "#e8e4d8"
+},
+{
+"file": "props/industrial_lorry_29.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "cab",
+"i": 0,
+"j": 1,
+"cabColor": "#e8e4d8"
+},
+{
+"file": "props/industrial_lorry_30.png",
+"ax": 38.0,
+"ay": 116.0,
+"part": "cab",
+"i": 1,
+"j": 1,
+"cabColor": "#e8e4d8"
+}
+]
+}
+}
+}
