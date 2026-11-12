@@ -37,6 +37,15 @@ If no atlas is loaded, `src/game/doll.js` (procedural) is the fallback.
 Material IDs: 1 skin, 2 hair, 3 jacket, 4 trim, 5 lining, 6 shirt, 7 pants, 8 pantsTrim, 9 shoes, 10 sole,
 11/12 scarf, 13 eye, 14/15 hat, 16 glove, 17 band, 18 facial, 19 shades, 20 mouth, 21 belt, 22 stripe.
 
+## 3D characters (`scripts/build_models.py`)
+
+The 3D renderer (`?renderer=3d`) uses the same character builder. `python3 scripts/build_models.py [--only m_jacket]`
+runs `render_char.py` with `{"model": {...}, "export": "assets/models/<model>.glb"}`. That writes the rigged character
+in its bind pose, with every accessory included and joints as plain glTF nodes, and updates `assets/models/index.json`.
+`src/render3d/characters.js` poses the joints every frame from `Fighter.getPose()`, using the same conversion as
+`set_pose()` (rotation about Blender +Y by a = rotation about three +Z by −a). It shows accessories by their
+`acc:<layer>` extras and recolours by material name (`ID_<n>` → palette from `specForLook`).
+
 ## Environment (`scripts/blender/render_env.py`)
 
 Piece modules (`scripts/blender/env_<theme>.py`) define `PIECES`. Each piece is a wall (per style × height ×

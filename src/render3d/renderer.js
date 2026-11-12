@@ -10,8 +10,9 @@
 // Phase A content mapping:
 //   floors  -> one top-down texture baked from the floor styles (and Blender floor patches) on a ground plane
 //   walls   -> instanced boxes per (style, height, variant) with textures from the wall style's face()/top()
-//   props, fighters, items, projectiles, vehicles -> camera-facing vertical "billboards" that reuse the existing
-//              2D drawing code (Blender sprites + procedural art) until they get real 3D models (phase B/F)
+//   fighters -> rigged 3D characters posed live from the pose library (characters.js, phase B); billboard fallback
+//   props, items, projectiles, vehicles -> camera-facing vertical "billboards" that reuse the existing
+//              2D drawing code (Blender sprites + procedural art) until they get real 3D models (phase F)
 //   lights  -> hemisphere + shadow-casting directional light from level.ambient, a pool of point lights for level lights
 //   walls in front of the player are dithered away (see-through) instead of the 2D alpha fade
 
@@ -22,6 +23,10 @@ import { FLOORS, WALLS } from '../engine/tiles.js';
 import { envFloor } from '../engine/envsprites.js';
 import { hash2 } from '../engine/rng.js';
 import { hexToRgb } from '../engine/color.js';
+import { setQuant } from '../game/poses.js';
+import { CHAR, Character3D, modelFor, loadCharacterModels } from './characters.js';
+
+export { loadCharacterModels };
 
 const ELEV = Math.PI / 6;                         // camera elevation (30°) -> 2:1 dimetric
 const K = HALF_W * Math.SQRT2;                    // screen px per world unit across the screen (22.63)
@@ -55,7 +60,8 @@ export class Renderer3D {
     this.frame = 0;
     // see-through uniforms shared by every wall material
     this.see = { uSeePos: { value: new THREE.Vector2(-1e5, -1e5) }, uSeeDepth: { value: 0 }, uSeeR: { value: new THREE.Vector2(50, 80) } };
-    this.stats = { boards: 0, redraws: 0, ms: 0 };
+    this.stats = { boards: 0, redraws: 0, ms: 0, chars: 0 };
+    setQuant(0);   // smooth (unquantised) pose sampling: the 3D characters are posed every frame
   }
 
   // ------------------------------------------------------------------ lifecycle
@@ -71,6 +77,7 @@ export class Renderer3D {
     this.buildWalls(world);
     this.buildLights(world);
     this.boards = new Map();          // entity -> board
+    this.chars = new Map();           // fighter -> Character3D
     this.gl.style.display = 'block';
     this.c2d.style.background = 'transparent';
   }
@@ -78,6 +85,8 @@ export class Renderer3D {
   end() {
     if (!this.world) return;
     for (const b of this.boards.values()) this.disposeBoard(b);
+    for (const c of this.chars.values()) this.disposeChar(c);
+    this.chars = null;
     for (const d of this.disposables) d.dispose();
     this.boards = null; this.scene = null; this.world = null;
     this.gl.style.display = 'none';
@@ -307,6 +316,7 @@ export class Renderer3D {
   }
 
   disposeBoard(b) {
+    if (!b.mesh) return;   // empty prop (draws nothing)
     if (this.scene) this.scene.remove(b.mesh);
     b.tex.dispose(); b.mat.dispose();
   }
@@ -389,8 +399,8 @@ export class Renderer3D {
       let b = boards.get(p);
       const vis = near(p.cx, p.cy);
       if (!b) { if (!vis) continue; b = this.propBoard(p); boards.set(p, b); b.sig = sigOf(p); }
-      if (b.empty) continue;
       b.seen = F;
+      if (b.empty) continue;
       if (!vis) { b.mesh.visible = false; continue; }
       // repaint: state changes immediately, otherwise animated props at ~15 fps (staggered)
       const sig = sigOf(p);
@@ -402,6 +412,7 @@ export class Renderer3D {
     world.overheadQueue = [];
     for (const f of world.fighters) {
       if (f.removed) continue;
+      if (CHAR.ready && modelFor(f.look)) { this.syncChar(f, world, F, near(f.x, f.y)); continue; }
       if (!near(f.x, f.y)) { const b0 = boards.get(f); if (b0) { b0.seen = F; b0.mesh.visible = false; } continue; }
       const sc = Math.max(1, (f.look && f.look.height) || 1) * (f.spriteScale || 1);
       let b = boards.get(f);
@@ -437,7 +448,33 @@ export class Renderer3D {
     }
     // drop boards whose entity is gone or was not seen this frame
     for (const [e, b] of boards) if (b.seen !== F) { this.disposeBoard(b); boards.delete(e); }
+    for (const [f, c] of this.chars) if (c.seen !== F) { this.disposeChar(c); this.chars.delete(f); }
     this.stats.boards = boards.size;
+    this.stats.chars = this.chars.size;
+  }
+
+  // ------------------------------------------------------------------ 3D characters
+  syncChar(f, world, F, vis) {
+    let c = this.chars.get(f);
+    if (!c) { c = new Character3D(f.look); this.chars.set(f, c); this.scene.add(c.group, c.blob); }
+    c.seen = F;
+    f._char3d = true;
+    c.group.visible = c.blob.visible = vis;
+    if (!vis) return;
+    c.update(f, world);
+    c.pose(f.getPose(), f.fx, f.fy);
+    c.group.position.set(f.x, f.z * ZS, f.y);
+    const g = world.groundHeight(f.x, f.y, f.z);
+    const air = Math.max(0, f.z - g);
+    const s = ((f.look && f.look.height) || 1) * Math.max(0.8, Math.min(1.6, (f.look && f.look.build) || 1)) / (1 + air * 0.35);
+    c.blob.position.set(f.x, g * ZS + 0.015, f.y);
+    c.blob.scale.setScalar(s);
+    c.blob.visible = c.group.visible;
+  }
+
+  disposeChar(c) {
+    if (this.scene) this.scene.remove(c.group, c.blob);
+    c.dispose();
   }
 
   // ------------------------------------------------------------------ frame
@@ -450,6 +487,10 @@ export class Renderer3D {
     const cx = VIEW_W / 2 - cam.tx, cy = VIEW_H / 2 - cam.ty;
     const gx = (cx / HALF_W + cy / HALF_H) / 2, gy = (cy / HALF_H - cx / HALF_W) / 2;
     const target = new THREE.Vector3(gx, 0, gy);
+    // zoom > 1 frames the player closer (2D overlays are only aligned at zoom 1; used for close-ups/duels later)
+    const z = this.zoom || 1;
+    if (z !== 1) target.lerp(v3(world.player.x, world.player.y, world.player.z + 0.8), 1 - 1 / z);
+    if (this.camera.zoom !== z) { this.camera.zoom = z; this.camera.updateProjectionMatrix(); }
     this.camera.position.copy(target).addScaledVector(VIEW_DIR, 300);
     this.camera.lookAt(target);
     this.camera.updateMatrixWorld();

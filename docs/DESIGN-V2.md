@@ -117,6 +117,17 @@ Varje fas ska vara spelbar och klara `check.mjs --sim` innan nästa börjar.
 **Fas B — Karaktärer i 3D.** Riggade glTF-karaktärer exporteras från Blender med animationer från poslibraryt och omfärgning per material-ID. Spelaren, fienderna och bossarna i bana 1–2 använder dem.
 *Klart när:* alla attacker och tillstånd i `Fighter` har en animation och wardrobe-färgerna syns.
 
+> **Status fas B (2026-11-12): klar** på grenen `phase-b-3d-chars`. `python3 scripts/build_models.py` exporterar de
+> 9 karaktärsmodellerna (m/h/f × jacket/parka/tee/hivis) som glTF från samma Blender-byggare som sprites
+> (`render_char.py` i läget `"export"`), till `assets/models/`. Varje modell tar 0,7 s och alla tillsammans är 2,1 MB.
+> I spelet poseras lederna varje bildruta direkt från `Fighter.getPose()` via `src/render3d/characters.js`. Det behövs
+> inga bakade klipp, så alla tillstånd, attacker och bossrörelser som finns i 2D animeras automatiskt (och mjukt,
+> eftersom kvantiseringen är avslagen i 3D). Färger, tillbehör och val av modell kommer från samma LOOK-data som
+> wardrobe (`specForLook`), och renderingen använder toon-shading med fyra toner. Figurerna kastar riktiga skuggor och
+> har en mjuk kontaktskugga. Mätt: 3,9 ms per bildruta med 4 figurer (389 draw calls).
+> Kvar till senare: riktiga 3D-vapen (just nu syns föremålets ikon i handen), sammanslagning av mesher per figur för
+> färre draw calls, ansiktsuttryck och kontur.
+
 **Fas C — Firman i striden.** Lagmedveten AI, 2–4 grabbar som följer med, kommandoläget, snabbordrar och moral, testat på THE STREETS och THE PUB.
 *Klart när:* simuleringen klarar banorna med grabbar, och en headless-test visar att grabbarna lyder alla order.
 

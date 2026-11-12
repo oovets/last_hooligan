@@ -1047,7 +1047,10 @@ export class World {
     this.drawGoArrow(ctx);
     for (const f of this.fighters) {
       if (f.removed || !f.drawOverhead) continue;
-      f.drawOverhead(ctx, this, toScreen(f.x, f.y, f.z), (f.look && f.look.height) || 1);
+      const s = toScreen(f.x, f.y, f.z), sc = (f.look && f.look.height) || 1;
+      // 3D characters: dizzy stars come from here (billboard fighters paint their own)
+      if (f._char3d && (f.state === 'dizzy' || (f.state === 'down' && f.hp > 0 && f.downTime > 1))) this.fx.drawStars(ctx, s.x, s.y - 50 * sc, this.time);
+      f.drawOverhead(ctx, this, s, sc);
     }
     ctx.restore();
     this.drawWeather(ctx);

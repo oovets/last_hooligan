@@ -322,6 +322,26 @@ def set_pose(p, flip=False):
 
 POSED = [hip, torso, head] + [J[s][n] for s in ('N', 'F') for n in ('sh', 'el', 'th', 'kn', 'an')]
 
+# ------------------------------------------------------------------ glTF export (3D renderer, docs/DESIGN-V2.md phase B)
+# {"model": {...}, "export": "assets/models/<name>.glb"}: writes the rigged character in its bind pose (all joint
+# rotations zero) with EVERY accessory included. Joints are plain nodes (hip, torso, neck, head, sh/el/th/kn/an + N|F);
+# the runtime (src/render3d/characters.js) drives them from the game's pose library, hides accessories by their
+# 'tags' extras and recolours by material name (ID_<n>). Axis conversion is glTF's: Blender (x, y, z) -> (x, z, -y).
+if JOB.get('export'):
+    for o in scene.objects: o.hide_render = False; o.hide_set(False)
+    out = P(JOB['export'])
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    root['hooligan'] = json.dumps({'k': k, 'hipH': HIP_H, 'build': B, 'female': FEM, 'torso': TORSO, 'ids': ID})
+    opts = dict(filepath=out, export_format='GLB', export_extras=True, export_yup=True, export_apply=False,
+                export_cameras=False, export_lights=False, export_animations=False)
+    try:
+        bpy.ops.export_scene.gltf(**opts)
+    except TypeError:
+        for kk in ('export_cameras', 'export_lights', 'export_animations'): opts.pop(kk, None)
+        bpy.ops.export_scene.gltf(**opts)
+    print('EXPORTED', out, flush=True)
+    sys.exit(0)
+
 # ------------------------------------------------------------------ camera, lights, render settings
 RES = JOB.get('res', 128)               # frame width
 RESY = JOB.get('resY', 160)            # frame height

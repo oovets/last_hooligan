@@ -58,6 +58,7 @@ const want3d = (qp0.get('renderer') || save.data.settings.renderer) === '3d';
 async function load3d() {
   try {
     const m = await import('./render3d/renderer.js');
+    await m.loadCharacterModels();
     r3d.renderer = new m.Renderer3D(glCanvas, canvas);
   } catch (e) { console.warn('[3d] renderer unavailable, using 2D', e); }
 }
