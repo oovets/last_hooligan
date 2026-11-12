@@ -3,6 +3,7 @@
 
 import { VIEW_W, VIEW_H, HALF_W, HALF_H, Z_PX, STEP_UP } from '../engine/constants.js';
 import { toScreen, toWorld } from '../engine/iso.js';
+import { Firm } from './firm.js';
 import { TileMap } from '../engine/tilemap.js';
 import { renderFloor, drawWallBlock } from '../engine/tiles.js';
 import { Camera } from '../engine/camera.js';
@@ -103,6 +104,10 @@ export class World {
     this.fighters.push(this.player);
     this.checkpoint = { x: start.x, y: start.y };
     this.camera.snapTo(start.x, start.y);
+
+    // the firm: the player's lads (game/firm.js); off for attract demos / levels with firm:false / settings.firm false
+    this.firm = Firm.enabled(this, callbacks) ? new Firm(this, { size: save.data.settings.firmSize ?? 3 }) : null;
+    if (this.firm) this.firm.spawn(game);
 
     // static enemies
     for (const e of level.enemies || []) this.spawnEnemy(e.type, e.x, e.y, e);
@@ -212,11 +217,17 @@ export class World {
     const pt = Math.floor(p.y) * W + Math.floor(p.x);
     if (pt === this.flowTile && this.flow) return;
     this.flowTile = pt;
-    const dist = this.flow && this.flow.length === W * H ? this.flow : new Int16Array(W * H);
+    this.flow = this.bfsFlow(pt, this.flow);
+  }
+
+  // Breadth-first distance field (tiles) toward tile index pt. Same stepping rules everywhere (terrace steps etc.).
+  bfsFlow(pt, reuse) {
+    const W = this.map.w, H = this.map.h;
+    const dist = reuse && reuse.length === W * H ? reuse : new Int16Array(W * H);
     dist.fill(-1);
     const q = new Int32Array(W * H);
     let qh = 0, qt = 0;
-    if (pt < 0 || pt >= W * H) { this.flow = dist; return; }
+    if (pt < 0 || pt >= W * H) return dist;
     dist[pt] = 0; q[qt++] = pt;
     while (qh < qt) {
       const i = q[qh++];
@@ -234,21 +245,38 @@ export class World {
         dist[j] = nd; q[qt++] = j;
       }
     }
-    this.flow = dist;
+    return dist;
   }
 
-  flowDir(x, y) {
-    if (!this.flow) return null;
+  // Path direction toward any point (lads' orders, enemies going for a lad). Near the player it reuses the main
+  // field; other target tiles get their own field, cached for 0.6s.
+  flowDirTo(x, y, tx, ty) {
+    const p = this.player, W = this.map.w;
+    const ix = Math.floor(tx), iy = Math.floor(ty);
+    if (!p || Math.hypot(tx - p.x, ty - p.y) < 2.5 || !this.map.inBounds(ix, iy)) return this.flowDir(x, y);
+    const key = iy * W + ix;
+    const C = this._flowCache || (this._flowCache = new Map());
+    let e = C.get(key);
+    if (!e || this.time - e.t > 0.6) {
+      e = { t: this.time, d: this.bfsFlow(key, e && e.d) };
+      C.delete(key); C.set(key, e);
+      if (C.size > 24) C.delete(C.keys().next().value);
+    }
+    return this.flowDir(x, y, e.d);
+  }
+
+  flowDir(x, y, field = this.flow) {
+    if (!field) return null;
     const W = this.map.w, H = this.map.h;
     const tx = Math.floor(x), ty = Math.floor(y);
-    const here = this.flow[ty * W + tx];
+    const here = field[ty * W + tx];
     let best = null, bd = here >= 0 ? here : 1e9;
     let hHere = this.heightAt(x, y); if (hHere >= 99) hHere = 0;
     for (const [ox, oy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
       const nx = tx + ox, ny = ty + oy;
       if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
-      if (ox && oy && (this.flow[ty * W + nx] < 0 || this.flow[ny * W + tx] < 0)) continue;
-      const d = this.flow[ny * W + nx];
+      if (ox && oy && (field[ty * W + nx] < 0 || field[ny * W + tx] < 0)) continue;
+      const d = field[ny * W + nx];
       if (d >= 0 && d < bd && this.heightAt(nx + 0.5, ny + 0.5) <= hHere + STEP_UP) { bd = d; best = { x: nx + 0.5 - x, y: ny + 0.5 - y }; }
     }
     if (!best) return null;
@@ -264,6 +292,20 @@ export class World {
     for (const t of this.tokens) if (!t.alive || t.removed) this.tokens.delete(t);
     if (this.tokens.size < this.diff.tokens + (this.level.extraTokens || 0)) { this.tokens.add(f); return true; }
     return false;
+  }
+  // Attack token on a target other than the player (a lad, or an enemy a lad is fighting): the two closest
+  // fighters going for that target may attack, the rest circle. Recomputed every 0.25s.
+  sideToken(f, t) {
+    const m = this._sideTok || (this._sideTok = new Map());
+    let e = m.get(t);
+    if (!e || this.time - e.t > 0.25) {
+      const att = this.fighters.filter(o => o.team !== t.team && o.alive && !o.removed && o.controller && o.controller.curTarget === t)
+        .sort((a, b) => Math.hypot(a.x - t.x, a.y - t.y) - Math.hypot(b.x - t.x, b.y - t.y)).slice(0, 2);
+      e = { t: this.time, set: new Set(att) };
+      m.set(t, e);
+      if (m.size > 64) m.clear();
+    }
+    return e.set.has(f);
   }
   releaseToken(f, cooldown = 0) {
     if (this.tokens.delete(f) && cooldown) f.data.tokenCd = this.time + cooldown;
@@ -522,7 +564,8 @@ export class World {
       if (save.data.settings.shake) this.camera.shake(2, 0.12);
     }
     if (res === 'ko' && att && att.winLine && att.say && def && (def.choke || def.chokeLift || (att.grabCfg && att.grabCfg.choke))) att.say(att.winLine, 2.2);
-    if (res === 'ko' && !t.isPlayer) {
+    if (this.firm) this.firm.onHit(att, t, dmg, res);
+    if (res === 'ko' && t.team !== 'player') {
       this.slowmo = t.boss ? 1.4 : 0.12;
       this.sfx(t.boss ? 'bossKO' : 'ko', t);
     }
@@ -531,6 +574,8 @@ export class World {
   onDeath(f) {
     this.releaseToken(f);
     if (f.isPlayer) { this.deathT = 0; this.sfx('playerDown', f); return; }
+    if (this.firm) this.firm.onDeath(f);
+    if (f.isLad) { if (f.weapon) this.dropWeapon(f); return; }
     this.stats.kos++;
     this.addScore(f.scoreValue, f.x, f.y, f.z + 0.5, true);
     const def = ENEMIES[f.type];
@@ -559,7 +604,7 @@ export class World {
     audio.setBoss(false);
     audio.sfx('crowdCheer');
     this.addScore(5000, f.x, f.y, f.z + 1, true);
-    for (const e of this.fighters) if (!e.isPlayer && e.alive && e !== f) { e.controller && (e.controller.fleeT = 99); }
+    for (const e of this.fighters) if (e.team !== 'player' && e.alive && e !== f) { e.controller && (e.controller.fleeT = 99); }
     this.goArrow = this.exit ? { x: this.exit.x + this.exit.w / 2, y: this.exit.y + this.exit.h / 2 } : null;
     this.lock = null;
   }
@@ -662,11 +707,11 @@ export class World {
           this.spawnProjectile(f, th.type, f.x + f.fx * 6, f.y + f.fy * 6, th.dmg).z = f.z + 1.3;
           f.data.throwing = null;
         } else {
-          const tgt = f.isPlayer ? null : this.player;
+          const tgt = f.isPlayer ? null : ((f.controller && f.controller.curTarget) || this.player);
           if (tgt) this.spawnProjectile(f, f.data.projectile || 'bottle', tgt.x, tgt.y, (ITEMS[f.data.projectile || 'bottle']?.weapon?.throwDmg || 10) * f.power);
         }
       }
-      if (f.state === 'dead' && !f.isPlayer && f.deadT > 2.2) f.removed = true;
+      if (f.state === 'dead' && f.team !== 'player' && f.deadT > 2.2) f.removed = true;
     }
     this.separate();
     this.fighters = this.fighters.filter(f => !f.removed);
@@ -697,6 +742,7 @@ export class World {
 
     this.updateHazards(dt);
     this.updateEncounters(dt);
+    if (this.firm) this.firm.update(dt);
     this.updateTriggers(dt);
     if (this.level.onUpdate) this.level.onUpdate(this, dt);
 
@@ -791,7 +837,8 @@ export class World {
     p.setState('idle'); p.invuln = 2.5;
     p.controller.enabled = true;
     this.message('GET UP!', `${this.game.lives} LIVES LEFT`, 1.6, '#ff6a5a');
-    for (const f of this.fighters) if (!f.isPlayer && f.alive && Math.hypot(f.x - p.x, f.y - p.y) < 2.5) {
+    if (this.firm) this.firm.onRespawn();
+    for (const f of this.fighters) if (f.team !== 'player' && f.alive && Math.hypot(f.x - p.x, f.y - p.y) < 2.5) {
       const dx = f.x - p.x, dy = f.y - p.y, d = Math.hypot(dx, dy) || 1;
       f.knockDown({ x: dx / d, y: dy / d }, 4, 1);
     }
@@ -855,6 +902,7 @@ export class World {
   clearEncounter(e) {
     e.state = 'cleared';
     this.sayWinLine();
+    if (this.firm) this.firm.onClear();
     if (this.lock === (e.lockArea || e.area)) this.lock = null;
     if (e.checkpoint !== false && e.area) this.checkpoint = { x: e.area.x + e.area.w / 2, y: e.area.y + e.area.h / 2 };
     if (!e.boss) {
@@ -934,7 +982,7 @@ export class World {
           v.hit.add(f);
           const res = f.takeHit({ attacker: null, def: { hz: 1, sfx: 'carHit' }, dmg: v.dmg, dir: { x: v.dx * 0.6 + (-v.dy) * Math.sign(-rx * v.dy + ry * v.dx || 1) * 0.8, y: v.dy * 0.6 + v.dx * Math.sign(-rx * v.dy + ry * v.dx || 1) * 0.8 }, kb: 7, stun: 0.6, knockdown: true, launch: 5, unblockable: true, guardDmg: 0 }, this);
           this.onHit({ x: v.x, y: v.y }, f, { hz: 1, sfx: 'carHit', shake: 6, hitstop: 0.08 }, res, v.dmg);
-          if (!f.isPlayer && this.player) this.addScore(150, f.x, f.y, 1, true);
+          if (f.team !== 'player' && this.player) this.addScore(150, f.x, f.y, 1, true);
         }
       }
     }

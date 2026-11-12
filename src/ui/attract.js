@@ -236,7 +236,7 @@ class DemoScene {
       this.saved = { lives: game.lives, score: game.score, cash: game.cash, inventory: game.inventory, keys: game.keys, collected: game.collected };
       game.lives = 9; game.score = 0; game.cash = 0; game.inventory = []; game.keys = new Set(); game.collected = {};
       audio.setVolumes({ sfx: 0 });
-      this.world = new World(LEVELS[0], game, { onComplete: () => this.leave(), onGameOver: () => this.leave() });
+      this.world = new World(LEVELS[0], game, { onComplete: () => this.leave(), onGameOver: () => this.leave(), noFirm: true });
       this.world.player.controller = new DemoBot();
       this.world.player.controller.enabled = true;
     } catch (e) { console.warn('[attract] demo unavailable', e); this.ok = false; }

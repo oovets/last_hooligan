@@ -22,6 +22,13 @@ export const KEYMAP = {
   item2: ['Digit2'],
   item3: ['Digit3'],
   inventory: ['Tab', 'KeyQ'],
+  // the firm (game/firm.js): hold COMMAND for slow-motion mouse orders; quick orders work any time
+  command: ['KeyG'],
+  orderFollow: ['KeyR'],
+  orderCharge: ['KeyT'],
+  orderHold: ['KeyH'],
+  orderSing: ['KeyY'],
+  select4: ['Digit4'],
   pause: ['Escape', 'KeyP'],
   // menu actions
   confirm: ['Enter', 'Space', 'KeyJ', 'NumpadEnter'],
@@ -68,6 +75,8 @@ class Input {
     this.anyTap = false;
     this.listeners = [];
     this.codeToActions = {};
+    // mouse in logical view coordinates (initMouse); pressed/released are per-step edges like keys
+    this.mouse = { x: 0, y: 0, inside: false, down: [false, false, false], pressed: [false, false, false], released: [false, false, false], _p: new Set(), _r: new Set(), moved: false };
     for (const [a, codes] of Object.entries(KEYMAP)) for (const c of codes) (this.codeToActions[c] ||= []).push(a);
   }
 
@@ -86,6 +95,17 @@ class Input {
   }
 
   onKey(fn) { this.listeners.push(fn); }
+
+  // Mouse over the game canvas, mapped to the logical view (vw x vh). Right-click menu is suppressed on the canvas.
+  initMouse(el, vw, vh) {
+    const M = this.mouse;
+    const pos = e => { const r = el.getBoundingClientRect(); M.x = (e.clientX - r.left) / r.width * vw; M.y = (e.clientY - r.top) / r.height * vh; M.inside = M.x >= 0 && M.y >= 0 && M.x < vw && M.y < vh; };
+    el.addEventListener('mousemove', e => { pos(e); M.moved = true; });
+    el.addEventListener('mousedown', e => { pos(e); if (e.button < 3) { M.down[e.button] = true; M._p.add(e.button); } e.preventDefault(); el.focus && el.focus(); });
+    window.addEventListener('mouseup', e => { if (e.button < 3) { M.down[e.button] = false; M._r.add(e.button); } });
+    el.addEventListener('contextmenu', e => e.preventDefault());
+    el.addEventListener('mouseleave', () => { M.inside = false; });
+  }
 
   poll() {
     const now = {};
@@ -120,6 +140,9 @@ class Input {
       this.held[a] = now[a];
     }
     this.tapped.clear();
+    const M = this.mouse;
+    for (let b = 0; b < 3; b++) { M.pressed[b] = M._p.has(b); M.released[b] = M._r.has(b); }
+    M._p.clear(); M._r.clear();
     this.anyPressedFlag = this.anyTap;
     this.anyTap = false;
   }

@@ -14,6 +14,7 @@ import { ITEMS } from './items.js';
 import { frame, MenuList, hintBar, heading, scarfIcon, badgeIcon, keyIcon, secretIcon, coinIcon, scanlines, fmtTime, fmtScore, hideLoader, C } from '../ui/widgets.js';
 import { optionItems, drawBindings, drawControlCard } from '../ui/options.js';
 import { r3d } from '../render3d/index.js';
+import { updateFirmInput, drawFirmWorld, drawFirmScreen, drawFirmPanel, COMMAND_SLOW } from '../ui/firmhud.js';
 
 export class PlayScene {
   constructor(levelIndex) {
@@ -37,6 +38,11 @@ export class PlayScene {
       onGameOver: () => { this.bankTotals(); app.go(app.scenes.gameOver(this.levelIndex)); },
     });
     this.hud = new HUD();
+    this.firmUI = {};
+    if (this.world.firm && this.world.firm.lads.length && !(save.data.seenNew || []).includes('firmHint')) {
+      (save.data.seenNew ||= []).push('firmHint'); save.write();
+      setTimeout(() => this.world && this.world.toast('YOUR FIRM: R WITH ME  T GET INTO THEM  H HOLD  Y SING UP  HOLD G = COMMAND'), 4500);
+    }
     audio.music(this.level.music || 'streets');
     audio.crowd(this.level.crowd || 0);
     this.buildMenus();
@@ -107,7 +113,8 @@ export class PlayScene {
     if (this.paused) { this.updatePause(dt); return; }
     if (input.pressed('pause')) { this.paused = true; this.page = 'menu'; this.pauseMenu.sel = 0; audio.sfx('pause'); this.duck(); return; }
     if (input.pressed('inventory')) { this.invOpen = true; this.invSel = 0; audio.sfx('pause'); return; }
-    w.update(dt);
+    updateFirmInput(w, this.firmUI);
+    w.update(w.firm && w.firm.command ? dt * COMMAND_SLOW : dt);
     const p = w.player;
     if (this.wasAlive && !p.alive) { const T = (save.data.totals ||= {}); T.deaths = (T.deaths || 0) + 1; }
     this.wasAlive = p.alive;
@@ -141,7 +148,10 @@ export class PlayScene {
       ctx.clearRect(0, 0, VIEW_W, VIEW_H);
       this.world.drawOverlay3D(ctx);
     } else this.world.draw(ctx);
+    drawFirmWorld(ctx, this.world);
     this.hud.draw(ctx, this.world, game);
+    drawFirmPanel(ctx, this.world);
+    drawFirmScreen(ctx, this.world, this.firmUI);
     if (this.invOpen) this.drawInventory(ctx);
     if (this.paused) this.drawPause(ctx);
     if (!r3d.renderer) scanlines(ctx);

@@ -40,6 +40,7 @@ if (DEV.mute) {
 save.load();
 audio.setVolumes({ music: save.data.settings.music, sfx: save.data.settings.sfx });
 input.init(window);
+input.initMouse(canvas, VIEW_W, VIEW_H);
 const unlockAudio = () => audio.init();
 window.addEventListener('keydown', unlockAudio);
 window.addEventListener('mousedown', unlockAudio);

@@ -531,7 +531,7 @@ registerProp('industrial_vent', {
         const def = { hz: 0.8, sfx: 'zap', hitstop: 0.05, shake: 3 };
         const res = f.takeHit({ attacker: null, def, dmg: o.dmg || 11, dir: { x: d > 0.05 ? dx / d : -f.fx, y: d > 0.05 ? dy / d : -f.fy }, kb: 3.5, stun: 0.5, knockdown: true, launch: 2.5, unblockable: true, guardDmg: 0 }, world);
         world.onHit({ x: cx, y: cy }, f, def, res, o.dmg || 11);
-        if (!f.isPlayer && world.player) world.addScore(120, f.x, f.y, 1, true);
+        if (f.team !== 'player' && world.player) world.addScore(120, f.x, f.y, 1, true);
       }
     }
   },

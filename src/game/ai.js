@@ -20,6 +20,11 @@
 // keepDist, taunt and wait. Rushers occasionally charge in from range (one at a time, announced with a shout).
 // Difficulty (save.data.settings.difficulty) scales reaction time, aggression, blocking and rushing.
 //
+// Targets: enemies go for the nearest opponent — the player or one of the player's lads (world.firm, game/firm.js),
+// weighted toward the player and sticky for a moment; bosses always go for the player. `this.curTarget` is the
+// fighter the default behaviour is aimed at this step (subclasses such as the LadController override target()).
+// Attack tokens: world.diff.tokens limits attackers on the player; any other target allows two (world.sideToken).
+//
 // def.think(f, world, dt, ai) -> true to skip the default behaviour this step (bosses' specials).
 // ai.base(f, world, dt) runs the default behaviour; ai.shout(f, world, textOrList, chance) shows a speech bubble.
 
@@ -72,7 +77,7 @@ function updateGroup(world) {
   const mem = [];
   for (const f of world.fighters) {
     const c = f.controller;
-    if (!(c instanceof AIController) || !f.alive || f.removed || !c.aggro || c.goal || c.fleeT > 0) continue;
+    if (!(c instanceof AIController) || f.team === 'player' || c.curTarget !== p || !f.alive || f.removed || !c.aggro || c.goal || c.fleeT > 0) continue;
     const d = Math.hypot(f.x - p.x, f.y - p.y);
     if (d > 9) continue;
     mem.push({ f, c, a: Math.atan2(f.y - p.y, f.x - p.x) });
@@ -154,10 +159,30 @@ export class AIController {
     return (s && s[kind]) || GENERIC_SHOUTS[kind];
   }
 
+  // Who this fighter fights. Enemies: the player or the nearest of the player's lads (bosses: always the player).
+  target(f, world) {
+    const P = world.player;
+    const lads = world.firm && world.firm.lads;
+    if (f.boss || !lads || !lads.length || f.team === 'player') return P;
+    const ok = o => o && o.alive && !o.removed && o.state !== 'dead' && !(o.routT > 0);
+    if (this.tgt && world.time < this.tgtUntil && (this.tgt === P || ok(this.tgt))) return this.tgt;
+    let best = P, bs = P && P.alive ? Math.hypot(P.x - f.x, P.y - f.y) * 0.8 : 1e9;
+    for (const l of lads) {
+      if (!ok(l)) continue;
+      let n = 0;
+      for (const o of world.fighters) if (o !== f && o.controller && o.controller.curTarget === l) n++;
+      const s = Math.hypot(l.x - f.x, l.y - f.y) + n * 1.6;
+      if (s < bs) { bs = s; best = l; }
+    }
+    this.tgt = best; this.tgtUntil = world.time + 1.2 + Math.random() * 0.8;
+    return best;
+  }
+
   // The default behaviour; bosses can call ai.base(f, world, dt) from their think().
   base(f, world, dt) {
     const I = f.intent, A = this.ai, D = this.dm;
-    const p = world.player;
+    const p = this.curTarget = this.target(f, world);
+    const onPlayer = p === world.player;
 
     // scripted walk-in (spawned off-screen / through doors)
     if (this.goal) {
@@ -278,7 +303,7 @@ export class AIController {
 
     this.think -= dt;
     if (this.throwT > 0) this.throwT -= dt;
-    const hasToken = A.ignoreTokens || world.hasToken(f);
+    const hasToken = A.ignoreTokens || (onPlayer ? world.hasToken(f) : world.sideToken(f, p));
     if (hasToken) this.tokenT += dt; else this.tokenT = 0;
     const reach = this.attackReach(f);
 
@@ -301,7 +326,7 @@ export class AIController {
         this.shout(f, world, this.lines('rush'), 0.8);
         return;
       }
-      if (!hasToken && !A.ignoreTokens) world.requestToken(f);
+      if (!hasToken && !A.ignoreTokens && onPlayer) world.requestToken(f);
       if (A.taunt && !hasToken && dist < 4.5 && Math.random() < A.taunt) {
         I.taunt = true; f.face2(dx, dy);
         this.shout(f, world, this.lines('taunt'), 0.45);
@@ -332,7 +357,7 @@ export class AIController {
       this.settleT = 0;
       // approach through our slot so attackers come from different sides
       let tx = p.x, ty = p.y;
-      if (this.slotA !== null && dist < 4.5) {
+      if (this.slotA !== null && dist < 4.5 && onPlayer) {
         const myA = Math.atan2(-dy, -dx);
         const off = angDiff(this.slotA, myA);
         // swing round the player when our slot is on the other side
@@ -359,10 +384,10 @@ export class AIController {
 
   // stay around our slot at radius `want` from the player, facing them
   hover(f, world, dt, want) {
-    const I = f.intent, p = world.player;
+    const I = f.intent, p = this.curTarget || world.player;
     const dx = p.x - f.x, dy = p.y - f.y, dist = Math.hypot(dx, dy) || 0.001;
     if (dist > 6.5) { this.moveToward(f, world, p.x, p.y, dt, dist > 8); f.face2(dx, dy); return; }
-    const a = this.slotA !== null ? this.slotA : Math.atan2(-dy, -dx);
+    const a = this.slotA !== null && p === world.player ? this.slotA : Math.atan2(-dy, -dx);
     const tx = p.x + Math.cos(a) * want, ty = p.y + Math.sin(a) * want;
     const ex = tx - f.x, ey = ty - f.y, ed = Math.hypot(ex, ey);
     let mx = 0, my = 0;
@@ -402,8 +427,19 @@ export class AIController {
       I.mx = this.detour.x; I.my = this.detour.y; I.run = run;
       return;
     }
-    if (!(world.hasWalkLine ? world.hasWalkLine(f.x, f.y, tx, ty) : world.hasLOS(f.x, f.y, tx, ty))) {
-      const fd = world.flowDir(f.x, f.y);
+    // path-find when the straight line is blocked, or for a moment after getting stuck on something the line
+    // test misses (lamp posts, bollards clipping a fighter's width)
+    if (this.pathT > 0) this.pathT -= dt;
+    // progress watchdog: under 0.3 tiles closer to the goal in 0.6s -> path-find for a while
+    const dGoal = Math.hypot(tx - f.x, ty - f.y);
+    if (this.progT === undefined || Math.abs(this.progTx - tx) + Math.abs(this.progTy - ty) > 1) { this.progT = 0; this.progD = dGoal; this.progTx = tx; this.progTy = ty; }
+    this.progT += dt;
+    if (this.progT > 0.6) {
+      if (dGoal > 0.8 && this.progD - dGoal < 0.3 && f.canAct) this.pathT = 1.5;
+      this.progT = 0; this.progD = dGoal;
+    }
+    if (this.pathT > 0 || !(world.hasWalkLine ? world.hasWalkLine(f.x, f.y, tx, ty) : world.hasLOS(f.x, f.y, tx, ty))) {
+      const fd = world.flowDirTo ? world.flowDirTo(f.x, f.y, tx, ty) : world.flowDir(f.x, f.y);
       if (fd) { dx = fd.x; dy = fd.y; }
     }
     const l = Math.hypot(dx, dy) || 1;
@@ -414,13 +450,17 @@ export class AIController {
   checkStuck(f, dt) {
     const moved = Math.hypot(f.x - this.lastX, f.y - this.lastY);
     this.lastX = f.x; this.lastY = f.y;
-    const wants = Math.hypot(f.intent.mx, f.intent.my) > 0.3;
-    if (wants && moved < 0.2 * dt && f.state !== 'attack') {
+    const want = Math.hypot(f.intent.mx, f.intent.my);
+    const wants = want > 0.3;
+    // stuck = making under a third of the intended progress (sliding along a corner counts as stuck)
+    const expect = (f.intent.run ? f.runSpeed : f.speed) * want * dt;
+    if (wants && moved < Math.max(0.2 * dt, 0.3 * expect) && f.state !== 'attack') {
       this.stuckT += dt;
       if (this.stuckT > 0.35) {
         const a = Math.random() * Math.PI * 2;
         this.detour = { x: Math.cos(a), y: Math.sin(a) };
         this.detourT = 0.4;
+        this.pathT = 1.5;
         this.stuckT = 0;
         this.strafe *= -1;
       }

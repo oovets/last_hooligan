@@ -697,7 +697,7 @@ registerProp('laststand_fuse', {
       const hit = { attacker: null, def: { hz: 1, sfx: 'hitHeavy', shake: 4 }, dmg, dir: { x: d > 0.05 ? dx / d : 1, y: d > 0.05 ? dy / d : 0 }, kb: 6, stun: 0.6, knockdown: true, launch: 4, unblockable: true, guardDmg: 0 };
       const res = f.takeHit(hit, world);
       world.onHit({ x: cx, y: cy }, f, hit.def, res, dmg);
-      if (!f.isPlayer && res !== 'miss') world.addScore(150, f.x, f.y, 1, true);
+      if (f.team !== 'player' && res !== 'miss') world.addScore(150, f.x, f.y, 1, true);
     }
     // chain reaction: other breakables in the blast radius
     for (const o of world.props) {

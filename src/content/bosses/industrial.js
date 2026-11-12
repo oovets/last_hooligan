@@ -114,7 +114,7 @@ export function spawnRollingDrum(world, owner, x, y, dx, dy, o = {}) {
         const def = { hz: 0.5, sfx: 'hitHeavy', hitstop: 0.06, shake: 4 };
         const res = f.takeHit({ attacker: owner, def, dmg: dmg * (owner.power || 1), dir: { x: dx, y: dy }, kb: 6, stun: 0.6, knockdown: true, launch: 3.5, unblockable: false, guardDmg: 30 }, w);
         w.onHit(owner, f, def, res, dmg);
-        if (!f.isPlayer && w.player) w.addScore(150, f.x, f.y, 1, true);
+        if (f.team !== 'player' && w.player) w.addScore(150, f.x, f.y, 1, true);
       }
     },
     burst(w) {
@@ -352,7 +352,7 @@ registerEnemy('industrial_gunnar', {
 // Telegraph marker for this level's bosses/specials (called from the level's drawOverlay).
 export function drawIndustrialTells(ctx, world) {
   for (const f of world.fighters) {
-    if (!f.alive || f.state !== 'attack' || !f.attack || f.attack.phase !== 0 || f.isPlayer) continue;
+    if (!f.alive || f.state !== 'attack' || !f.attack || f.attack.phase !== 0 || f.team === 'player') continue;
     const n = f.attack.name;
     if (n === 'industrial_pound') {
       const s = toScreen(f.x, f.y, 0);

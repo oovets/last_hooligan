@@ -539,7 +539,7 @@ export function pubDance(world, p, label) {
   world.message(label || 'BANGER!', 'EVERYONE STOPS TO DANCE. HIT THEM.', 2, '#ff6ad0');
   const dancers = [];
   for (const f of world.fighters) {
-    if (f.isPlayer || !f.alive || f.boss || f.removed) continue;
+    if (f.team === 'player' || !f.alive || f.boss || f.removed) continue;
     if (Math.hypot(f.x - p.cx, f.y - p.cy) > 9) continue;
     if (!(f.canAct || f.state === 'taunt')) continue;
     f.data.pubPrevTaunt = [f.tauntAnim, f.tauntTime];

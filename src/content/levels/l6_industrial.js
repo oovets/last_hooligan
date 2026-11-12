@@ -49,7 +49,7 @@ function makeForklift(o) {
         const def = { hz: 0.8, sfx: 'carHit', hitstop: 0.08, shake: 6 };
         const res = f.takeHit({ attacker: null, def, dmg: 14, dir: { x: this.dir * 0.6, y: side * 0.8 }, kb: 6, stun: 0.6, knockdown: true, launch: 4, unblockable: true, guardDmg: 0 }, world);
         world.onHit({ x: this.x, y: this.y }, f, def, res, 14);
-        if (!f.isPlayer && world.player) world.addScore(200, f.x, f.y, 1, true);
+        if (f.team !== 'player' && world.player) world.addScore(200, f.x, f.y, 1, true);
       }
     },
     draw(ctx, world) {
@@ -148,7 +148,7 @@ function makeCrane() {
         const def = { hz: 2, sfx: 'hitHeavy', hitstop: 0.1, shake: 8 };
         const res = f.takeHit({ attacker: null, def, dmg: 30, dir: { x: (f.x - x) / (d || 1) || 1, y: (f.y - y) / (d || 1) }, kb: 5, stun: 0.7, knockdown: true, launch: 3, unblockable: true, guardDmg: 0 }, world);
         world.onHit({ x, y }, f, def, res, 30);
-        if (!f.isPlayer) { crushed++; world.addScore(300, f.x, f.y, 1, true); }
+        if (f.team !== 'player') { crushed++; world.addScore(300, f.x, f.y, 1, true); }
       }
       if (crushed) world.fx.popup(x, y, 1, crushed > 1 ? 'MULTI CRUSH!' : 'CRUSHED!', '#ffd23a', 1);
       for (const p of world.props) {

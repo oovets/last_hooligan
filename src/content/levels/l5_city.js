@@ -39,7 +39,7 @@ function bassDrop(world, p) {
   world.camera.shake(8, 0.6);
   world.fx.confetti(p.x + 0.5, p.y + 0.5, 1.5, DANCE_COLS, 30);
   for (const f of world.fighters) {
-    if (f.isPlayer || !f.alive || f.boss) continue;
+    if (f.team === 'player' || !f.alive || f.boss) continue;
     if (f.x < CLUB.x || f.x > CLUB.x1 || f.y < CLUB.y || f.y > CLUB.y1) continue;
     const dx = f.x - (p.x + 0.5), dy = f.y - (p.y + 0.5), d = Math.hypot(dx, dy) || 1;
     f.takeHit({ attacker: world.player, def: { hz: 1, sfx: 'hitHeavy' }, dmg: 14, dir: { x: dx / d, y: dy / d }, kb: 5, stun: 0.6, knockdown: true, launch: 3, unblockable: true, guardDmg: 0 }, world);

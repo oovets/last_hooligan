@@ -336,7 +336,7 @@ registerEnemy('awayend_homefirm', {
 function summonStewards(f, world) {
   const L = world.level.boss || {};
   const pts = L.reinforce || [{ x: f.x + 2, y: f.y, from: { x: f.x + 4, y: f.y } }];
-  const alive = world.fighters.filter(o => !o.isPlayer && o.alive && o !== f).length;
+  const alive = world.fighters.filter(o => o.team !== 'player' && o.alive && o !== f).length;
   const n = Math.max(0, Math.min(2, 4 - alive));
   for (let i = 0; i < n; i++) {
     const s = pts[(f.data.summons + i) % pts.length];
@@ -467,7 +467,7 @@ registerEnemy('awayend_headsteward', {
     const los = world.hasLOS(f.x, f.y, p.x, p.y);
 
     if (ai.whistleCd <= 0 && !pDown) {
-      const minions = world.fighters.filter(o => !o.isPlayer && o.alive && o !== f).length;
+      const minions = world.fighters.filter(o => o.team !== 'player' && o.alive && o !== f).length;
       ai.whistleCd = ai.phase2 ? 14 : 12;
       if (minions < 2) {
         f.face2(dx, dy);

@@ -131,6 +131,26 @@ Varje fas ska vara spelbar och klara `check.mjs --sim` innan nästa börjar.
 **Fas C — Firman i striden.** Lagmedveten AI, 2–4 grabbar som följer med, kommandoläget, snabbordrar och moral, testat på THE STREETS och THE PUB.
 *Klart när:* simuleringen klarar banorna med grabbar, och en headless-test visar att grabbarna lyder alla order.
 
+> **Status fas C (2026-11-12): klar** på grenen `phase-c-firm`. Kod: `src/game/firm.js` (Firm, LadController, nerv,
+> order) och `src/ui/firmhud.js` (kontroller, kommandoläge, markörer, HUD-panel).
+> - **Grabbarna:** tre lads följer med, nämligen de andra spelbara karaktärerna (som standard Big Mo, Little Stig och
+>   Terrace Tina) med sina signaturslag. De ligger på spelarens lag, så de kan inte slå dig och du kan inte slå dem.
+>   Den som blir nedslagen ligger kvar tills striden är vunnen och reser sig sedan. Den som hamnar långt efter (dörrar,
+>   låsta arenor) hoppar in bredvid ledaren.
+> - **Order:** R betyder WITH ME!, T GET INTO THEM!, H HOLD! och Y SING UP! (nerv +35, 15 s nedkylning). Håll G för
+>   kommandoläge: tiden går i 25 %, och 1–4 eller klick väljer grabbar (SHIFT lägger till, dra för ruta). Högerklick på
+>   en fiende ger HAVE HIM!, högerklick på marken ger OVER THERE! (de går dit och håller platsen).
+> - **Nerv:** den sjunker vid underläge, träffar och när en kompis faller, och stiger nära ledaren. Vid noll springer
+>   grabben iväg och kommer tillbaka. Fiender sticker och försvinner ("RAN OFF!", halva poängen). En nedslagen top boy
+>   knäcker fienderna runt honom. Bossar påverkas inte.
+> - **Fiende-AI:** fiender väljer närmaste motståndare, alltså spelaren eller en grabb (bossar går alltid på spelaren).
+>   Varje mål tar högst två anfallare (`world.sideToken`), och pathfinding fungerar mot vilken punkt som helst
+>   (`world.flowDirTo`). AI:n använder pathfinding när den inte kommer närmare målet, vilket hjälper fienderna också.
+> - **Test:** `node scripts/test_firm.mjs [nivå]` kontrollerar alla order samt nerv, flykt, KO och återhämtning
+>   (godkänt på streets, pub och derby). Alla 8 banor klarar `check.mjs --sim` med grabbarna.
+> - **Inställningar:** `settings.firm` (på/av) och `settings.firmSize` (1–4); finns ännu inte i menyn. Handkontrollen
+>   har inga ordrar ännu.
+
 **Fas D — Firman mellan matcherna.** Puben som bas, grabbar med stats och egenskaper, rekrytering, träning, skador, kassa, rykte, heat och sparversion 2.
 *Klart när:* en hel loop fungerar: pub, resa, bana, tillbaka till puben med konsekvenser.
 

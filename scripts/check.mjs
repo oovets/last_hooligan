@@ -193,10 +193,10 @@ async function simulate(L, idx) {
     let guard = 0;
     while (e.state !== 'cleared' && guard++ < 40) {
       step(90);
-      for (const f of w.fighters) if (!f.isPlayer && f.alive && !f.controller.goal) { f.takeHit({ attacker: p, def: { hz: 1 }, dmg: 9999, dir: { x: 1, y: 0 }, kb: 1, stun: 0.3, knockdown: true, launch: 0, guardDmg: 0 }, w); f.invuln = 0; }
+      for (const f of w.fighters) if (f.team !== 'player' && f.alive && !f.controller.goal) { f.takeHit({ attacker: p, def: { hz: 1 }, dmg: 9999, dir: { x: 1, y: 0 }, kb: 1, stun: 0.3, knockdown: true, launch: 0, guardDmg: 0 }, w); f.invuln = 0; }
       step(150);
     }
-    if (e.state !== 'cleared') err(L, `sim: encounter ${e.id || e.idx} never cleared (state ${e.state}, wave ${e.wave}, alive ${w.fighters.filter(f => !f.isPlayer && f.alive).length})`);
+    if (e.state !== 'cleared') err(L, `sim: encounter ${e.id || e.idx} never cleared (state ${e.state}, wave ${e.wave}, alive ${w.fighters.filter(f => f.team !== 'player' && f.alive).length})`);
   }
   if (!w.exitOpen) err(L, 'sim: exit did not open after all encounters/boss');
   const ex = w.exit;

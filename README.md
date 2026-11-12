@@ -44,6 +44,8 @@ During development the game is **muted** by `src/devflags.js` (`DEV.mute = true`
 | Pick up / use | E |
 | Eat & drink | 1 2 3 |
 | Kit bag / pause | Tab / Esc |
+| **Firm:** with me / get into them / hold / sing up | R / T / H / Y |
+| **Firm:** command mode (slow-mo, mouse orders) | hold G, 1-4 or click = select, right-click = have him / go there |
 
 ## Develop
 
