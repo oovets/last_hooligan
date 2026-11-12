@@ -6,6 +6,7 @@
 // with _L/_R). Bone-local axes as in Blender: limbs swing forward about X, out to the side about Z, twist about Y.
 //
 // Animator layers (every frame):
+//   0. key clips — hand-keyed strikes (clips.js) locked to the attack's startup/active/recovery timing
 //   1. base pose — the game's pose library (Fighter.getPose(): every state, attack and boss move), converted to the
 //      skeleton; walking and running are generated procedurally from the distance actually travelled (no foot slide)
 //   2. 3D secondary motion — hip/shoulder counter-twist toward the working arm or leg, arms kept clear of the body,
@@ -19,6 +20,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { specForLook } from '../game/sprites.js';
 import { fillPose } from '../game/poses.js';
+import { CLIPS, evalClip, attackU } from './clips.js';
 
 export const CHAR2 = { templates: {}, meta: {}, ready: false };
 export const CHAR2_SCALE = 1.27;          // the game's chunky character scale (matches the sprites)
@@ -26,7 +28,7 @@ const K = 0.046;                          // metres per pose-library pixel (hip 
 const TORSO_OF = { harrington: 'jacket', bomber: 'jacket', track: 'jacket', leather: 'jacket', suit: 'jacket', shirt: 'jacket', parka: 'parka', tee: 'tee', polo: 'tee', vest: 'tee', hivis: 'hivis' };
 const BONES = ['root', 'hips', 'spine', 'chest', 'neck', 'head', 'shoulder_L', 'upperArm_L', 'forearm_L', 'hand_L', 'shoulder_R', 'upperArm_R', 'forearm_R', 'hand_R',
   'thigh_L', 'shin_L', 'foot_L', 'toe_L', 'thigh_R', 'shin_R', 'foot_R', 'toe_R'];
-const ANIMATED = ['hips', 'spine', 'chest', 'neck', 'head', 'upperArm_L', 'forearm_L', 'hand_L', 'upperArm_R', 'forearm_R', 'hand_R', 'thigh_L', 'shin_L', 'foot_L', 'thigh_R', 'shin_R', 'foot_R'];
+const ANIMATED = ['hips', 'spine', 'chest', 'neck', 'head', 'shoulder_L', 'shoulder_R', 'upperArm_L', 'forearm_L', 'hand_L', 'upperArm_R', 'forearm_R', 'hand_R', 'thigh_L', 'shin_L', 'foot_L', 'thigh_R', 'shin_R', 'foot_R'];
 
 export async function loadCharacters2() {
   try {
@@ -87,6 +89,7 @@ export class Character2 {
     this.hipOff = new THREE.Vector3();
     this.phase = 0; this.lastX = null; this.lastY = null; this.speed = 0;
     this.headYaw = 0; this.first = true;
+    this.ik = { L: { v: new THREE.Vector3(), w: 0 }, R: { v: new THREE.Vector3(), w: 0 } };   // smoothed fist targets
   }
 
   build(look) {
@@ -135,13 +138,17 @@ export class Character2 {
     this.speed += (v - this.speed) * (1 - Math.exp(-dt * 10));
     const loco = (st === 'walk' || st === 'run' || st === 'idle') && !f.combat;
     const T = this.target || (this.target = {});
-    if (loco && this.speed > 0.25) this.locomotion(T, f, moved, st === 'run' || this.speed > 4.2);
+    const clip = st === 'attack' && f.attack ? CLIPS[f.attack.def.pose || f.attack.name] : null;
+    T.ikL = T.ikR = null;
+    for (const b of ['shoulder_L', 'shoulder_R']) (T[b] || (T[b] = new THREE.Vector3())).set(0, 0, 0);
+    if (clip) this.fromClip(T, clip, attackU(f));
+    else if (loco && this.speed > 0.25) this.locomotion(T, f, moved, st === 'run' || this.speed > 4.2);
     else this.fromPose(T, f.getPose(), f, world.time);
     // secondary 3D layers
     this.secondary(T, f, world);
     // smoothing: strikes snap, everything else eases
     const fast = st === 'attack' || st === 'hurt' || st === 'blockstun' || st === 'knockdown' || st === 'thrown' || st === 'grabbed';
-    const k = this.first ? 1 : 1 - Math.exp(-dt * (fast ? 34 : loco ? 16 : 13));
+    const k = this.first ? 1 : 1 - Math.exp(-dt * (clip ? 48 : fast ? 34 : loco ? 16 : 13));
     this.first = false;
     for (const b of ANIMATED) {
       const t = T[b] || ZERO;
@@ -159,6 +166,38 @@ export class Character2 {
     let d = yaw - this.group.rotation.y;
     d = ((d + Math.PI) % TAU + TAU) % TAU - Math.PI;
     this.group.rotation.y += d * (1 - Math.exp(-dt * (fast ? 40 : 18)));
+    // fist IK (clips): smooth the targets like the joints, then solve shoulder + elbow
+    for (const side of ['L', 'R']) {
+      const t = T['ik' + side], s = this.ik[side];
+      const w = t ? t.w : 0;
+      if (t && w > 0) { if (s.w < 0.01 || this.first) s.v.set(t.v[0], t.v[1], t.v[2]); else s.v.lerp(V1.set(t.v[0], t.v[1], t.v[2]), k); }
+      s.w += (w - s.w) * k;
+      if (s.w > 0.01) { this.group.updateMatrixWorld(true); this.solveArm(side, s.v, s.w); }
+    }
+  }
+
+  // two-bone IK: put the hand at target (model space, metres from the feet: x = left, y = up, z = forward),
+  // elbow bending down and out. weight blends from the current (joint-angle) pose.
+  solveArm(side, target, weight) {
+    const up = this.B['upperArm_' + side], fo = this.B['forearm_' + side], ha = this.B['hand_' + side];
+    if (!up || !fo || !ha) return;
+    const S = up.getWorldPosition(IK.s), E0 = fo.getWorldPosition(IK.e), H0 = ha.getWorldPosition(IK.h);
+    const a = S.distanceTo(E0), b = E0.distanceTo(H0);
+    const T = IK.t.copy(target).applyMatrix4(this.inner.matrixWorld);
+    T.lerp(H0, 1 - Math.min(1, weight));
+    const dir = IK.d.subVectors(T, S);
+    let d = dir.length(); dir.normalize();
+    d = Math.max(Math.abs(a - b) + 1e-3, Math.min(a + b - 1e-3, d));
+    // pole: elbow down, out to its own side, a little back (model space -> world)
+    const out = side === 'L' ? 1 : -1;
+    const pole = IK.p.set(0.55 * out, -1, -0.35).transformDirection(this.inner.matrixWorld);
+    const n = pole.addScaledVector(dir, -pole.dot(dir)).normalize();
+    const cosA = Math.max(-1, Math.min(1, (a * a + d * d - b * b) / (2 * a * d)));
+    const sinA = Math.sqrt(1 - cosA * cosA);
+    const E = IK.E.copy(S).addScaledVector(dir, a * cosA).addScaledVector(n, a * sinA);
+    const Tc = IK.T2.copy(S).addScaledVector(dir, d);
+    aimBone(up, E0, E);
+    aimBone(fo, ha.getWorldPosition(IK.h), Tc);
   }
 
   setBone(T, name, x, y, z, side) {
@@ -189,6 +228,20 @@ export class Character2 {
     (T.hipOff || (T.hipOff = new THREE.Vector3())).set(0, -P.dy * K, P.dx * K);
     // breathing when standing about
     if (f.state === 'idle') { const b = Math.sin(time * 2.2 + (f.id || 0)) * 0.025; T.chest.x += b; T.head.x -= b * 0.6; }
+  }
+
+  // hand-keyed clip at u (degrees -> radians; *_R mirrors)
+  fromClip(T, clip, u) {
+    const C = evalClip(clip, u, this.clipOut || (this.clipOut = {}));
+    const R = Math.PI / 180;
+    for (const b in C) {
+      if (b === 'hip') continue;
+      const v = C[b], side = b.endsWith('_R') ? 'R' : 'L';
+      this.setBone(T, b, v[0] * R, v[1] * R, v[2] * R, side);
+    }
+    (T.hipOff || (T.hipOff = new THREE.Vector3())).set(C.hip[0], C.hip[1], C.hip[2]);
+    T.ikL = C.ikL; T.ikR = C.ikR;
+    this.lastPose = null;
   }
 
   // procedural walk/run from distance travelled
@@ -226,7 +279,7 @@ export class Character2 {
       const arms = (Math.sin(P.uaN) * (1 - Math.min(1, P.faN / 2)) - Math.sin(P.uaF) * (1 - Math.min(1, P.faF / 2)));
       const legs = Math.sin(P.thN) - Math.sin(P.thF);
       const tw = clamp(arms * 0.55 + legs * 0.15, -0.7, 0.7);
-      T.chest.y += -tw * 0.6; T.spine.y += -tw * 0.3; T.hips.y += tw * 0.25;
+      T.chest.y += tw * 0.6; T.spine.y += tw * 0.3; T.hips.y -= tw * 0.25;   // y+ = right shoulder forward
     }
     // head turns toward whoever this fighter is fighting
     const tgt = f.isPlayer ? (world.lastEnemy && world.lastEnemyT > 0 ? world.lastEnemy : null) : (f.controller && f.controller.curTarget) || null;
@@ -280,6 +333,18 @@ export class Character2 {
   dispose() { for (const m of Object.values(this.mats)) m.dispose(); this.setWeapon(null); }
 }
 
+// rotate bone (in world space) so the direction bone->childPos points at want
+function aimBone(bone, childPos, want) {
+  const b = bone.getWorldPosition(IK.b);
+  const cur = IK.c.subVectors(childPos, b).normalize(), des = IK.w.subVectors(want, b).normalize();
+  const dq = IK.q.setFromUnitVectors(cur, des);
+  const bq = bone.getWorldQuaternion(IK.bq), pq = bone.parent.getWorldQuaternion(IK.pq).invert();
+  bone.quaternion.copy(pq.multiply(dq.multiply(bq)));
+  bone.updateMatrixWorld(true);
+}
+const IK = { s: new THREE.Vector3(), e: new THREE.Vector3(), h: new THREE.Vector3(), t: new THREE.Vector3(), d: new THREE.Vector3(), p: new THREE.Vector3(),
+  E: new THREE.Vector3(), T2: new THREE.Vector3(), b: new THREE.Vector3(), c: new THREE.Vector3(), w: new THREE.Vector3(),
+  q: new THREE.Quaternion(), bq: new THREE.Quaternion(), pq: new THREE.Quaternion() };
 const ZERO = new THREE.Vector3();
 const V1 = new THREE.Vector3();
 const BLOB_GEO = new THREE.CircleGeometry(0.42, 24);

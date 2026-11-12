@@ -192,8 +192,15 @@ Varje fas ska vara spelbar och klara `check.mjs --sim` innan nästa börjar.
 >   färggradering med vinjett. `?post=0` stänger av den.
 > - **Puben:** den förklarar sig själv. Det finns en mål-ruta, en GO-pil till kartan, skyltar över alla stationer,
 >   M öppnar kartan och en välkomstskärm visas första besöket. Coach-raden visar vem som saknas och varför.
-> - **Nästa steg:** handanimerade nyckelklipp i Blender för de viktigaste slagen (anticipation och follow-through),
->   bättre händer och ansikten, sedan fas F (Football Tour-kartan).
+> - **Nyckelklipp (2026-11-13):** `src/render3d/clips.js` innehåller handkeyade klipp för jab, cross, hook, uppercut,
+>   haymaker, front kick, low kick, roundhouse, stomp, headbutt, shoulder charge och vapensving (och thrust via
+>   cross). Varje klipp är låst till attackens riktiga faser, så träffbilden alltid hamnar på spelets träff-frames:
+>   startup ger anticipation, active ger den kinetiska kedjan höft → bröst → axel → arm med lite överextension, och
+>   recovery ger follow-through tillbaka till gard. Slag skrivs som näv-banor: ett tvåbens-IK (axel och armbåge,
+>   armbågen ned och ut) placerar näven i målpunkten. Uppmätt: cross och hook landar inom 1–2 cm från målet på
+>   mittlinjen, och jabben når 0,79 m. Attacker utan eget klipp faller tillbaka på poslibraryt.
+> - **Nästa steg:** klipp för träffreaktioner, knockdown och resa sig, block och dodge, bättre händer och ansikten,
+>   sedan fas F (Football Tour-kartan).
 
 **Fas E — THE TERRACES** som första bana byggd för 3D och firma: läktartrappsteg (motorstöd finns redan), strålkastare som slocknar och tänds, stor strid om läktaren och bossen THE FOGHORN.
 
