@@ -1,0 +1,107 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>3D Clip Viewer</title>
+<style>body{margin:0;background:#15131c;color:#ccc;font:12px monospace}#ui{padding:6px}canvas{display:block}</style>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }</script>
+</head><body>
+<div id="ui">clips <input id="clips" size="80" value="hurtFront,hurtBack,knockdown,getup,dodge,blockHit"> facing <select id="face"><option value="0">3/4 right</option><option value="1">front</option><option value="2">side</option><option value="3">back</option></select> <button id="go">render</button> <span id="info"></span></div>
+<div id="view"></div>
+<script type="module">
+// Film-strip viewer for the 3D animator (src/render3d/characters2.js + clips.js).
+// Each row = one clip (state clip or attack), each column = a moment in the clip (u from 0 to 1), drawn with the game's camera.
+//   window.filmstrip(['hurtFront', 'atk:spinKick'], { frames: 7, facing: 0, look: 'vic' }) -> renders; window.shot(name) uploads PNG
+import * as THREE from 'three';
+import '../src/content/index.js';
+import '../src/content/levels/index.js';
+import { CHARACTERS } from '../src/content/characters.js';
+import { buildLook } from '../src/content/wardrobe.js';
+import { Fighter } from '../src/game/fighter.js';
+import { ATTACKS } from '../src/game/combat.js';
+import { Character2, loadCharacters2, CHAR2 } from '../src/render3d/characters2.js';
+import { STATE_CLIPS } from '../src/render3d/clips.js';
+
+const W = 1500, H = 900;
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setSize(W, H); renderer.setPixelRatio(1);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+document.getElementById('view').appendChild(renderer.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0x2a2836);
+const ELEV = Math.PI / 6;
+const VIEW_DIR = new THREE.Vector3(Math.cos(ELEV) / Math.SQRT2, Math.sin(ELEV), Math.cos(ELEV) / Math.SQRT2);
+let cam;
+scene.add(new THREE.HemisphereLight(0xffffff, 0x303040, 1.4));
+const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.position.set(-6, 14, 8); sun.castShadow = true;
+sun.shadow.camera.left = -40; sun.shadow.camera.right = 40; sun.shadow.camera.top = 40; sun.shadow.camera.bottom = -40; sun.shadow.mapSize.set(2048, 2048);
+scene.add(sun); scene.add(sun.target);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), new THREE.MeshLambertMaterial({ color: 0x4a4858 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+const grid = new THREE.GridHelper(200, 200, 0x5a5868, 0x524f60); grid.position.y = 0.002; scene.add(grid);
+await loadCharacters2();
+document.getElementById('info').textContent = CHAR2.ready ? 'models: ' + Object.keys(CHAR2.templates).join(' ') : 'NO MODELS';
+
+const FACES = [[1, -1], [1, 1], [1, 0], [-1, -1]];   // game-world facing vectors (screen right-ish, toward camera, side, away)
+let actors = [];
+const world = { time: 0, lastEnemy: null, lastEnemyT: 0, fighters: [] };
+
+function lookFor(id) {
+  if (!id || id === 'hooligan') return buildLook({});
+  const c = CHARACTERS.find(c => c.id === id);
+  return (c && c.look) || buildLook({});
+}
+
+function setMoment(f, name, u) {
+  f.attack = null; f.combat = true; f.onGround = true; f.vz = 0; f.grabbedBy = null; f.grabbing = null; f.hitDir = null;
+  if (name.startsWith('atk:')) {
+    const an = name.slice(4), def = ATTACKS[an] || { pose: an, startup: 0.2, active: 0.1, recovery: 0.3 };
+    f.state = 'attack';
+    const su = def.startup, ac = def.active || 0.1, re = def.recovery || 0.3;
+    let t, phase;
+    if (u < 0.35) { phase = 0; t = u / 0.35 * su; }
+    else if (u < 0.5) { phase = 1; t = su + (u - 0.35) / 0.15 * ac; }
+    else { phase = 2; t = su + ac + (u - 0.5) / 0.5 * re; }
+    f.attack = { name: an, def, t, phase, hit: new Set(), landT: def.air ? su + ac : undefined };
+    if (def.air && phase < 2) { f.onGround = false; }
+    return;
+  }
+  const S = STATE_CLIPS[name];
+  const st = (S && S.state) || name;
+  f.state = st;
+  f._forceClip = S ? name : null;
+  f.animT = f.stateT = (S ? S.dur : 1) * u * 0.9999;
+  if (S && S.setup) S.setup(f);
+}
+
+window.filmstrip = (names, opt = {}) => {
+  for (const a of actors) { scene.remove(a.c.group); a.c.dispose(); }
+  actors = [];
+  const frames = opt.frames || 7, face = FACES[opt.facing ?? 0];
+  const look = lookFor(opt.look);
+  const spacing = opt.spacing || 2.3;
+  names.forEach((name, r) => {
+    for (let i = 0; i < frames; i++) {
+      const u = frames === 1 ? 0.5 : i / (frames - 1);
+      const f = new Fighter({ look, x: 0, y: 0 });
+      f.fx = face[0] / Math.hypot(...face); f.fy = face[1] / Math.hypot(...face);
+      setMoment(f, name, u);
+      const c = new Character2(f.look);
+      for (let n = 0; n < 40; n++) c.animate(f, world, 1 / 60);   // settle the smoothing (facing eases in)
+      // world (x,y) -> three (x,z); lay rows/columns along screen axes
+      const sx = (i - (frames - 1) / 2) * spacing, sy = (r - (names.length - 1) / 2) * spacing * 0.95;
+      const right = new THREE.Vector3(1, 0, -1).normalize(), down = new THREE.Vector3(1, 0, 1).normalize();
+      c.group.position.copy(right.clone().multiplyScalar(sx).add(down.clone().multiplyScalar(sy * 1.6)));
+      scene.add(c.group);
+      actors.push({ c, f, name });
+    }
+  });
+  const aspect = W / H;
+  const hh = Math.max(frames * spacing * 0.37 / aspect, names.length * spacing * 0.42) + 1.0;
+  cam = new THREE.OrthographicCamera(-hh * aspect, hh * aspect, hh, -hh, 0.1, 400);
+  cam.position.copy(VIEW_DIR.clone().multiplyScalar(80)).add(new THREE.Vector3(0, 0.9, 0));
+  cam.lookAt(0, 0.9, 0);
+  renderer.render(scene, cam);
+  document.getElementById('info').textContent = names.join(' | ');
+};
+window.shot = name => fetch('/__shot?name=' + name, { method: 'POST', body: renderer.domElement.toDataURL('image/png') });
+document.getElementById('go').onclick = () => window.filmstrip(document.getElementById('clips').value.split(',').map(s => s.trim()), { facing: +document.getElementById('face').value });
+window.ready = true;
+</script></body></html>

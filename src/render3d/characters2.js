@@ -20,7 +20,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { specForLook } from '../game/sprites.js';
 import { fillPose } from '../game/poses.js';
-import { CLIPS, evalClip, attackU } from './clips.js';
+import { CLIPS, evalClip, attackU, stateClipFor } from './clips.js';
 
 export const CHAR2 = { templates: {}, meta: {}, ready: false };
 export const CHAR2_SCALE = 1.27;          // the game's chunky character scale (matches the sprites)
@@ -139,16 +139,18 @@ export class Character2 {
     const loco = (st === 'walk' || st === 'run' || st === 'idle') && !f.combat;
     const T = this.target || (this.target = {});
     const clip = st === 'attack' && f.attack ? CLIPS[f.attack.def.pose || f.attack.name] : null;
-    T.ikL = T.ikR = null;
+    T.ikL = T.ikR = null; T.yaw = 0;
     for (const b of ['shoulder_L', 'shoulder_R']) (T[b] || (T[b] = new THREE.Vector3())).set(0, 0, 0);
+    const sc = clip ? null : stateClipFor(f);
     if (clip) this.fromClip(T, clip, attackU(f));
+    else if (sc) this.fromClip(T, sc.clip, sc.u);
     else if (loco && this.speed > 0.25) this.locomotion(T, f, moved, st === 'run' || this.speed > 4.2);
     else this.fromPose(T, f.getPose(), f, world.time);
     // secondary 3D layers
     this.secondary(T, f, world);
     // smoothing: strikes snap, everything else eases
-    const fast = st === 'attack' || st === 'hurt' || st === 'blockstun' || st === 'knockdown' || st === 'thrown' || st === 'grabbed';
-    const k = this.first ? 1 : 1 - Math.exp(-dt * (clip ? 48 : fast ? 34 : loco ? 16 : 13));
+    const fast = st === 'attack' || st === 'hurt' || st === 'blockstun' || st === 'knockdown' || st === 'thrown' || st === 'grabbed' || st === 'dodge' || st === 'getup';
+    const k = this.first ? 1 : 1 - Math.exp(-dt * (clip ? 48 : sc ? (fast ? 40 : 24) : fast ? 34 : loco ? 16 : 13));
     this.first = false;
     for (const b of ANIMATED) {
       const t = T[b] || ZERO;
@@ -163,9 +165,12 @@ export class Character2 {
     // facing
     const flip = (this.lastPose && (this.lastPose.flip || 0) >= 0.5) && !loco;
     const yaw = Math.atan2(f.fx, f.fy) + (flip ? Math.PI : 0);
-    let d = yaw - this.group.rotation.y;
+    if (this.baseYaw === undefined) this.baseYaw = this.group.rotation.y;
+    let d = yaw - this.baseYaw;
     d = ((d + Math.PI) % TAU + TAU) % TAU - Math.PI;
-    this.group.rotation.y += d * (1 - Math.exp(-dt * (fast ? 40 : 18)));
+    this.baseYaw += d * (1 - Math.exp(-dt * (fast ? 40 : 18)));
+    // clip yaw (spin kicks): whole-body turn on top of the facing, unsmoothed so a full 360 never unwinds
+    this.group.rotation.y = this.baseYaw + (T.yaw || 0);
     // fist IK (clips): smooth the targets like the joints, then solve shoulder + elbow
     for (const side of ['L', 'R']) {
       const t = T['ik' + side], s = this.ik[side];
@@ -241,6 +246,7 @@ export class Character2 {
     }
     (T.hipOff || (T.hipOff = new THREE.Vector3())).set(C.hip[0], C.hip[1], C.hip[2]);
     T.ikL = C.ikL; T.ikR = C.ikR;
+    T.yaw = C.yaw * R;
     this.lastPose = null;
   }
 

@@ -12,11 +12,12 @@ Senast uppdaterad 2026-11-13.
 | Fas C: firman i striden (order, nerv, kommandoläge) | klar | `phase-c-firm` |
 | Fas D: firman mellan matcherna (THE ANCHOR, rykte, heat) | klar | `phase-d-firm-hub` |
 | Overhaul: skinnade v2-karaktärer, animator, AO, bloom | påbörjad | `phase-d-firm-hub` |
-| Overhaul: handkeyade slagklipp med näv-IK | klar, ej committad | `overhaul-key-clips` |
+| Overhaul: handkeyade slagklipp med näv-IK | klar | `main` |
+| Overhaul: klipp för tillstånd, luft-, grepp- och specialattacker | klar | `main` |
 | Fas E: THE TERRACES | pausad (motorstöd för trappsteg finns) | – |
 | Fas F: Football Tour-kartan och arenorna | ej påbörjad | – |
 
-Grenarna bygger på varandra, så den senaste innehåller allt. `main` har fortfarande bara originalspelet.
+Alla grenar är mergade till `main`.
 
 ## Först: provspela och städa
 
@@ -31,12 +32,17 @@ Grenarna bygger på varandra, så den senaste innehåller allt. `main` har fortf
 
 ## Grafik och rörelse (overhaulen)
 
-- [ ] Klipp för träffreaktioner (riktningsberoende), knockdown, att resa sig, block och parry samt dodge.
-- [ ] Klipp för grepp, kast och att bli kastad, hopp- och luftattacker (flyingKick, jumpKick, divePunch) och spinKick.
-- [ ] Klipp för grabbarnas signaturslag: Mos hammare, Stigs flurry och glidtackling, Tinas yxspark, Vics strypgrepp
-      och chokeslam, Old Boys skalle.
-- [ ] Klipp för bossarnas specialattacker (bodySlam, push, derby_*, underground_*, laststand_*).
-- [ ] Taunt, victory, dizzy och idle-variationer.
+- [x] Klipp för träffreaktioner (fram, huvud, mage, bakifrån), block, blockträff, knockdown, liggande, KO, att resa
+      sig och dodge (`STATE_CLIPS` i `src/render3d/clips.js`, väljs av `stateClipFor`).
+- [x] Klipp för grepp, strypgrepp, kast, att bli kastad, luftattacker (flyingKick, jumpKick, divePunch) och spinKick
+      (hel snurr via klippens `yaw`-spår).
+- [x] Klipp för knee, throw, push, slap, counter, backElbow, backKick, bodySlam, throwItem, Tinas yxspark och Vics
+      vic_tighten, vic_chokeslam och vic_lunge. Taunt, victory och dizzy.
+- [ ] Klipp för bossarnas och banornas specialattacker (`awayend_*`, `city_*`, `derby_*`, `industrial_*`,
+      `laststand_*`, `pub_*`, `underground_*`, `cheer`), i dag faller de tillbaka på pose-biblioteket.
+- [ ] Idle-variationer (vikt som skiftar, se sig om, spotta).
+- [ ] Provspela klippen live och finjustera tajming och räckvidd. `tools/anim3d.html` visar klipp som filmremsor:
+      `filmstrip(['hurtFront', 'atk:spinKick'], { frames: 7, facing: 0, look: 'vic' })`.
 - [ ] Bättre händer (knytnäve, fingrar) och ansikten med uttryck (skrik, ont, KO).
 - [ ] Riktiga 3D-vapen i handen, i dag visas föremålets ikon som en sprite.
 - [ ] Prestanda: slå ihop meshar per figur (färre draw calls inför stora firmastrider), samt halv upplösning eller

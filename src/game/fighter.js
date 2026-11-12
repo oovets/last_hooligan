@@ -231,6 +231,8 @@ export class Fighter {
     if (this.invuln > 0) return 'miss';
     const dir = hit.dir;
     const facing = -(this.fx * dir.x + this.fy * dir.y) > 0.15;
+    // remembered for directional hit reactions (3D animator): where the blow came from and how high it landed
+    this.hitDir = { x: dir.x, y: dir.y, front: facing, high: !hit.def || hit.def.hz === undefined || hit.def.hz >= 1.3, t: world ? world.time : 0 };
     const att = hit.attacker && hit.attacker.kind === 'fighter' ? hit.attacker : null;
     if ((this.state === 'block' || this.state === 'blockstun') && facing && !hit.unblockable) {
       // PARRY: a fresh block right before the hit
