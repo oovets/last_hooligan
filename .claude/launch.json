@@ -9,6 +9,15 @@
         "8642"
       ],
       "port": 8642
+    },
+    {
+      "name": "hooligan-3d",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "scripts/serve.py",
+        "8643"
+      ],
+      "port": 8643
     }
   ]
 }

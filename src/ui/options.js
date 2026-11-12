@@ -35,6 +35,11 @@ export function optionItems({ inGame = false, onKeys, onBack, onReset } = {}) {
     { label: 'SCANLINES', value: () => (s.scanlines ? 'ON' : 'OFF'), left: () => { s.scanlines = !s.scanlines; save.write(); }, right: () => { s.scanlines = !s.scanlines; save.write(); }, hint: 'OLD TELLY MODE' },
     { label: 'FULLSCREEN', value: () => (typeof document !== 'undefined' && document.fullscreenElement ? 'ON' : 'OFF'), fn: toggleFullscreen, hint: 'PRESS TO TOGGLE' },
   ];
+  if (!inGame) {
+    // 2D classic renderer or the Three.js 3D renderer (phase A). Switching reloads the page so the renderer is set up cleanly.
+    const flip = () => { s.renderer = s.renderer === '3d' ? '2d' : '3d'; save.write(); const u = new URL(location.href); u.searchParams.delete('renderer'); location.href = u.toString(); };
+    items.splice(items.length - 1, 0, { label: 'GRAPHICS', value: () => (s.renderer === '3d' ? '3D (BETA)' : '2D CLASSIC'), left: flip, right: flip, hint: '3D: REAL LIGHTS AND SHADOWS. RELOADS THE GAME' });
+  }
   if (onKeys) items.push({ label: 'KEY BINDINGS', fn: onKeys, hint: 'KEYBOARD AND GAMEPAD LAYOUT' });
   if (onReset) {
     let armed = -10;

@@ -125,7 +125,7 @@ export class OptionsScene {
     } else {
       heading(ctx, 'OPTIONS', VIEW_W / 2, 8, { scale: 3 });
       frame(ctx, VIEW_W / 2 - 170, 48, 340, 248);
-      this.menu.draw(ctx, VIEW_W / 2 - 160, 60, { w: 320, rowH: 19 });
+      this.menu.draw(ctx, VIEW_W / 2 - 160, 60, { w: 320, rowH: 18 });
       drawText(ctx, this.menu.hint(), VIEW_W / 2, 306, { color: '#c0b8d0', align: 'center', outline: '#000' });
       hintBar(ctx, [['menuUp', 'MOVE'], ['menuLeft', 'CHANGE'], ['confirm', 'SELECT'], ['back', 'BACK']], VIEW_H - 14);
     }

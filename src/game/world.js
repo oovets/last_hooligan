@@ -1033,6 +1033,26 @@ export class World {
     }
   }
 
+  // 3D renderer mode: the scene itself is drawn by src/render3d; this paints the 2D layers that sit on top of it
+  // (particles, popups, GO arrow, level overlays, custom actors, speech bubbles / telegraphs, weather), using the
+  // same camera transform so everything lines up with the 3D view.
+  drawOverlay3D(ctx) {
+    const cam = this.camera;
+    ctx.save();
+    ctx.translate(cam.tx, cam.ty);
+    for (const a of this.actors) if (a.draw && !a.removed) a.draw(ctx, this);
+    this.fx.draw(ctx);
+    if (this.level.drawOverlay) this.level.drawOverlay(ctx, this);
+    this.fx.drawPopups(ctx);
+    this.drawGoArrow(ctx);
+    for (const f of this.fighters) {
+      if (f.removed || !f.drawOverhead) continue;
+      f.drawOverhead(ctx, this, toScreen(f.x, f.y, f.z), (f.look && f.look.height) || 1);
+    }
+    ctx.restore();
+    this.drawWeather(ctx);
+  }
+
   // Props use a Blender sprite when one exists for their type/variant (and they aren't open/animated specials).
   drawProp(ctx, p) {
     const spr = !p.open && !p.o.noSprite ? envProp(p.type, p.o) : null;

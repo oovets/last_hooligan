@@ -36,6 +36,7 @@ export function defaultSave() {
       minimap: true,             // HUD minimap
       scanlines: false,          // CRT scanline overlay
       hints: true,               // on-screen button hints
+      renderer: '2d',            // '2d' | '3d' (Three.js renderer, phase A; ?renderer=3d overrides)
     },
     run: null,                   // snapshot to continue from (GameState.snapshot())
     completed: false,

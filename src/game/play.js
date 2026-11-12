@@ -13,6 +13,7 @@ import { save } from '../save.js';
 import { ITEMS } from './items.js';
 import { frame, MenuList, hintBar, heading, scarfIcon, badgeIcon, keyIcon, secretIcon, coinIcon, scanlines, fmtTime, fmtScore, hideLoader, C } from '../ui/widgets.js';
 import { optionItems, drawBindings, drawControlCard } from '../ui/options.js';
+import { r3d } from '../render3d/index.js';
 
 export class PlayScene {
   constructor(levelIndex) {
@@ -41,7 +42,7 @@ export class PlayScene {
     this.buildMenus();
   }
 
-  exit() { audio.crowd(0); this.unduck(); }
+  exit() { audio.crowd(0); this.unduck(); if (r3d.renderer) r3d.renderer.end(); }
 
   duck() { const s = save.data.settings; audio.setVolumes({ music: (s.music ?? 0.6) * 0.35 }); }
   unduck() { const s = save.data.settings; audio.setVolumes({ music: s.music ?? 0.6, sfx: s.sfx ?? 0.8 }); }
@@ -135,11 +136,15 @@ export class PlayScene {
   }
 
   draw(ctx) {
-    this.world.draw(ctx);
+    if (r3d.renderer) {
+      r3d.renderer.render(this.world);
+      ctx.clearRect(0, 0, VIEW_W, VIEW_H);
+      this.world.drawOverlay3D(ctx);
+    } else this.world.draw(ctx);
     this.hud.draw(ctx, this.world, game);
     if (this.invOpen) this.drawInventory(ctx);
     if (this.paused) this.drawPause(ctx);
-    scanlines(ctx);
+    if (!r3d.renderer) scanlines(ctx);
   }
 
   // ------------------------------------------------------------------ kit bag

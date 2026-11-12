@@ -105,6 +105,15 @@ Varje fas ska vara spelbar och klara `check.mjs --sim` innan nästa börjar.
 **Fas A — 3D-renderer, prototyp.** `src/render3d/` med Three.js (vendrat och låst). THE STREETS renderas i 3D med texturerat golv, väggblock, billboard-props, ljus och skuggor, samt karaktärer som enkla placeholder-figurer. HUD:en ligger kvar som 2D-canvas ovanpå. Det finns en växel `?renderer=2d|3d` så att båda lever parallellt.
 *Klart när:* bana 1 går att spela från start till mål i 3D med 60 fps på en vanlig laptop, och simuleringen är oförändrad.
 
+> **Status fas A (2026-11-12): prototypen är klar** på grenen `phase-a-3d`. Den startas med `?renderer=3d` eller via OPTIONS → GRAPHICS.
+> Koden ligger i `src/render3d/renderer.js`, och Three.js 0.170.0 laddas via importmap från jsDelivr (vendring återstår).
+> Ortografisk kamera i exakt samma projektion som 2D: golvtextur bakas från golvstilarna, väggar är instansierade boxar med
+> stilarnas texturer, och ljuset består av hemisfärljus, skuggkastande sol/måne och en pool med 10 punktljus.
+> Props, figurer, föremål och trafik är billboards som återanvänder den befintliga 2D-grafiken. Väggar framför spelaren
+> ditheras bort. Partiklar, popups, pratbubblor, GO-pilen, väder och HUD ritas på 2D-canvasen ovanpå.
+> Mätt: cirka 3,4 ms per bildruta inklusive simulering och GPU (1024×576). Alla 8 banor klarar `check.mjs --sim`.
+> Saknas: golvdekaler och `drawGround`, och bilarnas strålkastarljus i 3D. Custom actors ritas ovanpå utan djup.
+
 **Fas B — Karaktärer i 3D.** Riggade glTF-karaktärer exporteras från Blender med animationer från poslibraryt och omfärgning per material-ID. Spelaren, fienderna och bossarna i bana 1–2 använder dem.
 *Klart när:* alla attacker och tillstånd i `Fighter` har en animation och wardrobe-färgerna syns.
 

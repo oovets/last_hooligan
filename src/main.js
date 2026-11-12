@@ -20,11 +20,13 @@ canvas.width = VIEW_W * RENDER_SCALE; canvas.height = VIEW_H * RENDER_SCALE;
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
+const stage = document.getElementById('stage');
+const glCanvas = document.getElementById('gl');
 function resize() {
   const s = Math.min(window.innerWidth / VIEW_W, window.innerHeight / VIEW_H);
   const k = s >= 2 ? Math.floor(s) : s; // integer scale when big enough (crisp pixels)
-  canvas.style.width = Math.floor(VIEW_W * k) + 'px';
-  canvas.style.height = Math.floor(VIEW_H * k) + 'px';
+  const w = Math.floor(VIEW_W * k) + 'px', h = Math.floor(VIEW_H * k) + 'px';
+  for (const el of [stage, canvas, glCanvas]) { el.style.width = w; el.style.height = h; }
 }
 window.addEventListener('resize', resize);
 resize();
@@ -47,11 +49,21 @@ canvas.focus();
 import { loadEnv } from './engine/envsprites.js';
 import { loadModels, EXTRAS } from './game/sprites.js';
 import { drawText } from './engine/font.js';
+import { r3d } from './render3d/index.js';
 
 // ---- asset preload (Blender-rendered environment + character atlases); the game falls back to procedural art
 let loadState = { done: 0, total: 1, ready: false };
+const qp0 = new URLSearchParams(location.search);
+const want3d = (qp0.get('renderer') || save.data.settings.renderer) === '3d';
+async function load3d() {
+  try {
+    const m = await import('./render3d/renderer.js');
+    r3d.renderer = new m.Renderer3D(glCanvas, canvas);
+  } catch (e) { console.warn('[3d] renderer unavailable, using 2D', e); }
+}
 async function preload() {
   const tasks = [loadEnv()];
+  if (want3d) tasks.push(load3d());
   try {
     const r = await fetch('assets/sprites/index.json');
     if (r.ok) { const idx = await r.json(); EXTRAS.push(...(idx.extras || [])); tasks.push(loadModels(idx.models || [])); }
@@ -105,7 +117,7 @@ requestAnimationFrame(frame);
 
 // debug handle
 window.__hooligan = {
-  app, save, audio, game,
+  app, save, audio, game, r3d,
   play(i = 0) { game.reset(); app.go(app.scenes.play(i), { fade: false }); },
   get world() { return app.scene && app.scene.world; },
   // test helpers: simulate key holds

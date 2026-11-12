@@ -26,6 +26,9 @@ python3 scripts/serve.py
 
 Then open http://localhost:8642. Add `?play=N` to jump straight into level N (0-based).
 
+**3D renderer (beta, phase A of [`docs/DESIGN-V2.md`](docs/DESIGN-V2.md)):** add `?renderer=3d` or pick
+OPTIONS → GRAPHICS → 3D. It uses Three.js (loaded from jsDelivr via an import map) with real lighting and shadows.
+
 During development the game is **muted** by `src/devflags.js` (`DEV.mute = true`). Set it to `false` for sound.
 
 ### Controls (keyboard; a gamepad also works)
