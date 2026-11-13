@@ -318,7 +318,7 @@ export class World {
     const m = this._sideTok || (this._sideTok = new Map());
     let e = m.get(t);
     if (!e || this.time - e.t > 0.25) {
-      const att = this.fighters.filter(o => o.team !== t.team && o.alive && !o.removed && o.controller && o.controller.curTarget === t)
+      const att = this.fighters.filter(o => o.team !== t.team && o.alive && !o.removed && o.controller && o.controller.curTarget === t && o.grabbing !== t)
         .sort((a, b) => Math.hypot(a.x - t.x, a.y - t.y) - Math.hypot(b.x - t.x, b.y - t.y)).slice(0, 2);
       e = { t: this.time, set: new Set(att) };
       m.set(t, e);
@@ -443,6 +443,8 @@ export class World {
   }
 
   playerUse(f) {
+    // 0. a mate out cold at your feet: haul him up (game/firm.js)
+    if (this.firm && this.firm.tryRevive(f)) return;
     // 1. interactive props
     for (const p of this.props) {
       if (p.removed || p.open || !p.def.interact) continue;

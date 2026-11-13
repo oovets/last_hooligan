@@ -25,11 +25,12 @@ import { AIController } from './ai.js';
 import { CHARACTERS, characterById } from '../content/characters.js';
 import { audio } from '../audio/audio.js';
 import { save } from '../save.js';
+import { input } from '../engine/input.js';
 import { getFirm, squadLads, fighterParams } from './firmdata.js';
 
-export const ORDER_TEXT = { follow: 'WITH ME!', charge: 'GET INTO THEM!', hold: 'HOLD!', move: 'OVER THERE!', attack: 'HAVE HIM!', sing: 'SING UP!' };
-export const ORDER_TAG = { follow: 'FOL', charge: 'ATK', hold: 'HLD', move: 'MOV', attack: 'TGT' };
-const REPLY = {
+export const ORDER_TEXT = { follow: 'WITH ME!', charge: 'GET INTO THEM!', hold: 'HOLD!', move: 'OVER THERE!', attack: 'HAVE HIM!', sing: 'SING UP!', pin: 'GRAB HIM!', regroup: 'BACK TO ME!' };
+export const ORDER_TAG = { follow: 'FOL', charge: 'ATK', hold: 'HLD', move: 'MOV', attack: 'TGT', pin: 'PIN', regroup: 'REG' };
+export const REPLY = {
   follow: ['WITH YOU!', 'RIGHT BEHIND YA!', 'COMING!'],
   charge: ['HAVE IT!', 'COME ON THEN!', 'GET IN!'],
   hold: ['HOLDING!', 'GOING NOWHERE!', 'NOT AN INCH!'],
@@ -41,6 +42,17 @@ const REPLY = {
   up: ['STILL HERE!', 'IS THAT ALL?', 'ME HEAD...'],
   help: ['HELP ME OUT HERE!', 'LADS! OVER HERE!', 'GIZ A HAND!', 'I\'M SURROUNDED!'],
   cover: ['GOT YOUR BACK!', 'OI! LEAVE HIM!', 'I\'M COMING!'],
+  pin: ['GOT HIM!', 'LEAVE HIM TO ME!', 'HE\'S MINE!'],
+  regroup: ['COMING BACK!', 'ON ME WAY!', 'WITH YOU!'],
+};
+// short situational shouts (Firm.bark: per-lad and global cooldowns keep them readable)
+const BARK = {
+  pin: ['GOT HIM! GO ON!', 'HE\'S GOING NOWHERE!', 'HIT HIM!'],
+  caught: ['MINE!', 'GOT HIM!'],
+  dteam: ['HAVE THAT!', 'GET IN!', 'TEAMWORK!'],
+  cheers: ['CHEERS, BOSS!', 'ME HEAD...', 'BACK IN IT!'],
+  rescue: ['GET OFF HIM!', 'OI! LEAVE HIM!'],
+  rally: ['WITH YOU!', 'RIGHT HERE!'],
 };
 const pick = a => a[Math.floor(Math.random() * a.length)];
 
@@ -53,6 +65,12 @@ const LAD_AI = {
   vic: { attacks: [['jab', 2], ['cross', 2], ['kick', 1]], comboLen: [1, 2], aggression: 0.5, reaction: 0.32, grabChance: 0.12, blockChance: 0.12 },
   oldboy: { attacks: [['old_headbutt', 3], ['jab', 2], ['cross', 1]], comboLen: [1, 2], aggression: 0.55, reaction: 0.3, blockChance: 0.2 },
 };
+// DOUBLE TEAM: the leader and a lad on the same man inside the window (or the leader on a pinned man) -> launch
+// chance per attack decision that a lad goes to grab and pin the man instead (near the leader only)
+export const PIN_CHANCE = { biglad: 0.45, normal: 0.25, lightweight: 0.06 };
+export const REVIVE_R = 1.4;   // how close the leader has to be to haul a KO'd lad up
+const PIN_STATES = new Set(['idle', 'walk', 'run', 'hurt', 'block', 'blockstun', 'dizzy']);   // states a man can be pinned from
+const DT_WINDOW = 1.2, DT_HITS = 4, DT_PIN_HITS = 3, DT_CD = 6, DT_DMG = 8;
 const LAD_POWER = 0.8;     // lads hit a bit softer than the player so the leader still matters
 const ENGAGE = 4.5;        // follow: pile in on enemies this close to the leader or the lad
 
@@ -78,10 +96,14 @@ export class LadController extends AIController {
     const I = f.intent;
     I.attack = null; I.attackName = null; I.jump = false; I.dodge = false; I.grab = false; I.use = false; I.taunt = false; I.run = false;
     this.t += dt;
+    if (this.pinCd > 0) this.pinCd -= dt;
+    if (this.stompCd > 0) this.stompCd -= dt;
+    if (this.tightT > 0) this.tightT -= dt;
     if (!f.alive) { I.mx = I.my = 0; I.block = false; return; }
     const P = world.player;
     // broken nerve: run back toward the leader, away from the nearest enemy
     if (f.routT > 0) {
+      if (f.grabbing) f.releaseGrab();
       f.routT -= dt;
       const e = this.nearestFoe(f, world, f, 6);
       let mx = P.x - f.x, my = P.y - f.y;
@@ -91,9 +113,30 @@ export class LadController extends AIController {
       if (f.routT <= 0) { f.nerve = 45; f.say && f.say(pick(REPLY.back), 1.2); }
       return;
     }
-    const o = this.order;
-    if (o.type === 'attack' && !live(o.target)) this.order = { type: 'follow' };
+    let o = this.order;
+    if ((o.type === 'attack' || o.type === 'pin') && (!live(o.target) || o.target.routed)) this.order = { type: 'follow' };
+    if (o.type === 'pin') { o.t = (o.t || 0) + dt; if (o.done || o.t > 6) this.order = { type: 'follow' }; }
     if (o.type === 'move' && dist(f, o) < 0.6) this.order = { type: 'hold', x: o.x, y: o.y };
+    o = this.order;
+    // holding a man for the others
+    if (this.holdPin(f, world, dt)) return;
+    // a man coming his way (a pass) or flattened by a double team: catch / finish him
+    if (this.catchFor && this.stompFollow(f, world, dt)) return;
+    // BACK TO ME!: drop everything and get round the leader (swat away anyone right on top of you)
+    if (o.type === 'regroup') {
+      o.t = (o.t || 0) + dt;
+      const e = this.nearestFoe(f, world, f, 0.9);
+      if (e && (this.t % 1) < 0.5) { this.foe = e; this.curTarget = e; this.base(f, world, dt); return; }
+      this.foe = null; this.curTarget = null; I.block = false;
+      const n = Math.max(1, this.firm.lads.length), a = Math.atan2(-P.fy, -P.fx) + (this.idx - (n - 1) / 2) * 0.9;
+      const tx = P.x + Math.cos(a), ty = P.y + Math.sin(a);
+      if (world.heightAt(tx, ty) < 0.4) this.moveToward(f, world, tx, ty, dt, true); else this.moveToward(f, world, P.x, P.y, dt, true);
+      if (dist(f, P) < 1.6 || o.t > 4) {
+        if (dist(f, P) < 1.6 && !(f.rallyCd > 0)) { f.nerve = Math.min(100, (f.nerve ?? 100) + 20); f.rallyCd = 12; this.firm.bark(f, 'rally'); }
+        this.order = { type: 'follow' }; this.tightT = 5;
+      }
+      return;
+    }
 
     // who to fight
     this.foeT -= dt;
@@ -101,7 +144,27 @@ export class LadController extends AIController {
       this.foeT = 0.4 + Math.random() * 0.3;
       this.foe = this.chooseFoe(f, world);
     }
-    if (this.foe) { this.curTarget = this.foe; this.base(f, world, dt); return; }
+    if (this.foe) {
+      this.curTarget = this.foe;
+      // decided to pin this man: step in and grab him (for a moment, then give up)
+      if (this.pinWant && (this.pinWant.e !== this.foe || this.foe.grabbedBy || this.foe.grabbing || !live(this.foe))) this.pinWant = null;   // someone else has him
+      if (this.pinWant && (this.pinWant.t -= dt) > 0) {
+        if (this.tryPin(f, world, dt)) { this.pinWant = null; return; }
+        if (f.canAct) { this.moveToward(f, world, this.foe.x, this.foe.y, dt, false); return; }
+      } else this.pinWant = null;
+      if (o.type === 'pin') {
+        // GRAB HIM!: walk straight in and grab (the normal AI would hover at punching distance)
+        if (this.tryPin(f, world, dt)) return;
+        if (f.canAct && live(this.foe)) { I.block = false; this.moveToward(f, world, this.foe.x, this.foe.y, dt, dist(f, this.foe) > 2.5); return; }
+      }
+      this.base(f, world, dt);
+      // the moment he'd swing at a man near the leader, sometimes he goes to grab and pin him instead
+      if ((I.attack || I.attackName) && this.rollPin(f, world)) {
+        I.attack = null; I.attackName = null;
+        if (!this.tryPin(f, world, dt)) this.pinWant = { e: this.foe, t: 0.8 };
+      }
+      return;
+    }
     this.curTarget = null;
     I.block = false;
     f.combat = false;
@@ -116,7 +179,7 @@ export class LadController extends AIController {
     const n = Math.max(1, this.firm.lads.length);
     const back = Math.atan2(-P.fy, -P.fx);
     const a = back + (this.idx - (n - 1) / 2) * 0.9;
-    const r = 1.5 + (this.idx % 2) * 0.5;
+    const r = this.tightT > 0 ? 1.0 : 1.5 + (this.idx % 2) * 0.5;
     const tx = P.x + Math.cos(a) * r, ty = P.y + Math.sin(a) * r;
     const d = Math.hypot(tx - f.x, ty - f.y);
     if (d > 0.6 && world.heightAt(tx, ty) < 0.4) this.moveToward(f, world, tx, ty, dt, d > 3.2);
@@ -126,7 +189,16 @@ export class LadController extends AIController {
 
   chooseFoe(f, world) {
     const o = this.order, P = world.player;
-    if (o.type === 'attack') return o.target;
+    if (o.type === 'attack' || o.type === 'pin') return o.target;
+    // GET OFF HIM!: someone has hold of the leader
+    if (o.type === 'follow' || o.type === 'charge') {
+      const g = P.grabbedBy;
+      if (live(g) && !g.boss && g.team !== 'player' && dist(g, f) < 8) {
+        let crowd = 0;
+        for (const l of this.firm.lads) if (l !== f && l.controller && l.controller.foe === g) crowd++;
+        if (crowd < 2) return g;
+      }
+    }
     const hot = f.traits && f.traits.has('hothead');
     if (o.type === 'hold' || o.type === 'move') {
       const c = o.type === 'hold' ? o : f;
@@ -135,6 +207,8 @@ export class LadController extends AIController {
     if (o.type === 'charge') return this.nearestFoe(f, world, f, 12) || this.nearestFoe(f, world, P, 12);
     // follow: look after the leader first, then a mate who's shouting for help, then anything close (fewest lads on
     // it first)
+    // just regrouped: only men right round the leader, so the firm fights as one knot
+    if (this.tightT > 0) return this.threatOn(f, world, P, 4) || this.nearestFoe(f, world, P, 2.5);
     const r = (f.engage || ENGAGE) + (hot ? 1.5 : 0);
     const onLeader = this.threatOn(f, world, P, r + 1.5);
     if (onLeader) return onLeader;
@@ -144,6 +218,98 @@ export class LadController extends AIController {
       if (t) { if (!(f.coverT > 0)) { f.coverT = 6; f.say && f.say(pick(REPLY.cover), 1.0); } return t; }
     }
     return this.nearestFoe(f, world, f, r) || this.nearestFoe(f, world, P, r);
+  }
+
+  // HOLD HIM!: pin the man (arms locked) so the leader and the lads can hit him without breaking the hold
+  holdPin(f, world, dt) {
+    const I = f.intent, P = world.player;
+    // a pin that ended some other way (launched, knocked down, the pinner hit, thrown): tidy up once
+    if (this.pinVictim && (f.grabbing !== this.pinVictim || !f.pinning)) {
+      if (this.order.type === 'pin' && this.order.target === this.pinVictim) this.order.done = true;
+      this.pinVictim = null; this.pinCd = 3;
+    }
+    if (f.pinning && !f.grabbing) f.pinning = false;
+    if (!(f.grabbing && f.pinning)) return false;
+    const v = f.grabbing;
+    if (this.pinVictim !== v) {
+      this.pinVictim = v; this.pinT = 0; this.farT = 0;
+      world.releaseToken(v);
+      this.firm.bark(f, 'pin', { force: true, toast: `${f.name} HAS GOT HIM! FREE HITS!` });
+    }
+    I.mx = I.my = 0; I.block = false;
+    this.curTarget = v; this.foe = v;
+    this.pinT += dt;
+    const T = f.traits;
+    const pinMax = 2.6 + (T && T.has('biglad') ? 1.2 : 0) - (T && T.has('lightweight') ? 1.0 : 0);
+    this.farT = P.alive && dist(P, v) < 6 ? 0 : this.farT + dt;
+    if (this.pinT > pinMax || this.farT > 1.2 || v.boss || v.routed || !live(v)) {
+      f.releaseGrab(); this.pinCd = 4; this.pinVictim = null;
+      if (this.order.type === 'pin' && this.order.target === v) this.order.done = true;
+      return true;
+    }
+    // turn the man toward the leader (not into a wall)
+    const want = Math.atan2(P.y - f.y, P.x - f.x), cur = Math.atan2(f.fy, f.fx);
+    let d = want - cur; d = Math.atan2(Math.sin(d), Math.cos(d));
+    const na = cur + Math.max(-4 * dt, Math.min(4 * dt, d));
+    const nx = Math.cos(na), ny = Math.sin(na), reach = (f.grabCfg && f.grabCfg.choke ? 0.42 : 0.55) + (v.r || 0.3);
+    if (world.heightAt(f.x + nx * reach, f.y + ny * reach) < 0.4) { f.fx = nx; f.fy = ny; }
+    v.face2(f.fx, f.fy);
+    const hold = (f.grabCfg && f.grabCfg.hold) || 1.8;
+    f.grabT = Math.min(f.grabT, hold - 0.1);
+    return true;
+  }
+
+  // stay on a man who was passed to us or launched by a double team: face him in flight, stomp him once he's down
+  stompFollow(f, world, dt) {
+    const b = this.catchFor, I = f.intent;
+    this.catchT -= dt;
+    if (!live(b) || this.catchT <= 0 || b.grabbedBy || !['thrown', 'knockdown', 'down'].includes(b.state)) { this.catchFor = null; return false; }
+    I.block = false;
+    const d = dist(f, b);
+    if (b.state !== 'down') { I.mx = I.my = 0; if (f.canAct) f.face2(b.x - f.x, b.y - f.y); return true; }
+    if (d < 1.0) {
+      I.mx = I.my = 0;
+      if (f.state === 'idle' || f.state === 'walk' || f.state === 'run') {
+        f.face2(b.x - f.x, b.y - f.y);
+        if (!(this.stompCd > 0)) { I.attackName = 'stomp'; this.stompCd = 0.6; }
+      }
+      return true;
+    }
+    if (d < 4) { this.moveToward(f, world, b.x, b.y, dt, d > 2); return true; }
+    this.catchFor = null;
+    return false;
+  }
+
+  // grab this.foe for a pin: on a pin order, or now and then when the leader is close enough to use it
+  // auto pin: rolled once per attack decision, only when the leader is close enough to make use of it
+  rollPin(f, world) {
+    const e = this.foe, P = world.player, o = this.order, T = f.traits;
+    if (!['follow', 'charge', 'attack'].includes(o.type) || this.pinCd > 0 || f.weapon || f.grabbing) return false;
+    if (!live(e) || e.boss || e.ungrabbable || e.grabbedBy || e.grabbing || e.routed || dist(f, e) > 2.2) return false;
+    if (!PIN_STATES.has(e.state)) return false;
+    // one lad goes for the pin at a time
+    if (this.firm.lads.some(l => l !== f && l.controller && ((l.controller.pinWant && l.controller.pinWant.e === e) || (l.grabbing === e)))) return false;
+    if (!P.alive || P.state === 'down' || P.state === 'knockdown' || dist(P, e) > 4.5) return false;
+    const chance = T && T.has('biglad') ? PIN_CHANCE.biglad : T && T.has('lightweight') ? PIN_CHANCE.lightweight : PIN_CHANCE.normal;
+    if (Math.random() >= chance) { this.pinCd = 0.6; return false; }
+    this.pinCd = 1.5;
+    return true;
+  }
+
+  // grab this.foe into a pin if he's in reach and grabbable right now
+  tryPin(f, world, dt) {
+    const e = this.foe, P = world.player, o = this.order, T = f.traits;
+    if (!['follow', 'charge', 'attack', 'pin'].includes(o.type) || f.weapon || f.grabbing) return false;   // (pinCd gates the roll, not an attempt)
+    if (!(f.state === 'idle' || f.state === 'walk' || f.state === 'run' || f.state === 'block')) return false;
+    if (!live(e) || e.boss || e.ungrabbable || e.grabbedBy || e.invuln > 0 || e.routed || Math.abs(e.z - f.z) > 0.4) return false;
+    if (!PIN_STATES.has(e.state)) return false;
+    const d = dist(f, e);
+    if (d > ((f.grabCfg && f.grabCfg.range) || 0.95) + (e.r || 0.3)) return false;
+    f.face2(e.x - f.x, e.y - f.y);
+    f.pinning = true;
+    if (f.grabTarget(world, e)) { f.intent.block = false; return true; }
+    f.pinning = false;
+    return false;
   }
 
   // an enemy who is having a go at `who` (aimed at him and close), with at most one other lad already on it
@@ -188,6 +354,20 @@ export class Firm {
     this.markers = [];             // order feedback drawn on the ground {x,y,t,kind}
     this.size = opts.size ?? 3;
     this.topBoyDown = false;
+    this.barkCd = 0; this.barks = {};
+    this.dtQueue = [];             // men due a DOUBLE TEAM launch (run in update, never inside a hit)
+  }
+
+  // a short situational shout from a lad (cooldowns per lad and across the firm, so they stay readable)
+  bark(l, kind, opts = {}) {
+    if (!live(l) || !l.say) return false;
+    if (!opts.force && (l.barkCd > 0 || this.barkCd > 0)) return false;
+    const a = BARK[kind] || kind;
+    l.say(Array.isArray(a) ? pick(a) : String(a), opts.dur || 1.2, opts.color);
+    l.barkCd = opts.cd ?? 2.5; this.barkCd = 0.8;
+    this.barks[kind] = (this.barks[kind] || 0) + 1;
+    if (opts.toast && this.world.toast) this.world.toast(opts.toast);
+    return true;
   }
 
   static enabled(world, opts) {
@@ -225,7 +405,8 @@ export class Firm {
     f.isLad = true; f.character = rec.char; f.ladIdx = i; f.rec = rec;
     f.grabCfg = (ch && ch.grab) || null;
     f.koLines = (ch && ch.koLines) || null; f.rage = !!(ch && ch.rage);
-    f.kickMul = pr.kickMul + ((ch && ch.kickMul) || 0); f.punchMul = (ch && ch.punchMul) || 0;
+    // pr.kickMul is an offset (kicks stat 5 = 0, 3 = -0.1); combat multiplies kick damage by f.kickMul
+    f.kickMul = ((ch && ch.kickMul) || 1) * (1 + pr.kickMul); f.punchMul = (ch && ch.punchMul) || 0;
     f.nerve = pr.nerve; f.nerveMul = pr.nerveMul; f.engage = pr.engage;
     f.traits = new Set(rec.traits); f.bonds = rec.bonds || {};
     f.fight = { kos: 0, downs: 0 };
@@ -287,6 +468,30 @@ export class Firm {
     const who = this.targets();
     if (type === 'sing') return this.sing();
     if (!who.length) return;
+    if (type === 'pin') {
+      // GRAB HIM!: the nearest lad (of the selection) goes and pins that man
+      const t = opts.target;
+      if (!live(t) || t.boss || t.ungrabbable || t.team === 'player') { w.toast && w.toast("CAN'T HOLD HIM"); return; }
+      // a free lad if there is one; a busy one lets go of his man first
+      let l = null, bd = 1e9;
+      for (const pass of [0, 1]) {
+        for (const c of who) {
+          if (!live(c) || c.routT > 0 || (pass === 0 && c.grabbing)) continue;
+          const d = dist(c, t); if (d < bd) { bd = d; l = c; }
+        }
+        if (l) break;
+      }
+      if (!l) return;
+      const c = l.controller;
+      if (l.grabbing && l.grabbing !== t) { l.releaseGrab(); c.pinVictim = null; }
+      c.pinWant = null; c.catchFor = null;
+      c.order = { type: 'pin', target: t, t: 0 }; c.foe = t; c.foeT = 0.5; c.pinCd = 0;
+      P.say && P.say(ORDER_TEXT.pin, 1.1);
+      setTimeout(() => { if (l.alive && l.say) l.say(pick(REPLY.pin), 1.1); }, 260);
+      this.markers.push({ target: t, t: 0, kind: 'attack' });
+      w.sfx && w.sfx('menuSelect', P);
+      return;
+    }
     who.forEach((l, k) => {
       const c = l.controller;
       if (type === 'hold') c.order = { type: 'hold', x: l.x, y: l.y };
@@ -297,8 +502,9 @@ export class Firm {
         if (w.heightAt(x, y) > 0.4) { x = opts.x; y = opts.y; }
         c.order = { type: 'move', x, y };
       } else if (type === 'attack') c.order = { type: 'attack', target: opts.target };
+      else if (type === 'regroup') { c.order = { type: 'regroup', t: 0 }; c.catchFor = null; if (l.grabbing) l.releaseGrab(); }
       else c.order = { type };
-      c.foeT = 0; c.foe = null;
+      c.foeT = 0; c.foe = null; c.pinWant = null;
       if (l.routT > 0) l.routT = Math.min(l.routT, 0.5);
     });
     P.say && P.say(ORDER_TEXT[type], 1.1);
@@ -333,19 +539,26 @@ export class Firm {
   update(dt) {
     const w = this.world, P = w.player;
     if (this.singCd > 0) this.singCd -= dt;
+    if (this.barkCd > 0) this.barkCd -= dt;
+    if (this.dtQueue.length) {
+      const q = this.dtQueue; this.dtQueue = [];
+      for (const t of q) if (live(t) && !t.boss && t.state !== 'knockdown' && t.state !== 'down') this.doubleTeam(P, t, t._dteam && t._dteam.lad);
+    }
     for (const m of this.markers) m.t += dt;
     this.markers = this.markers.filter(m => m.t < (m.kind === 'attack' ? 2.5 : 3));
     for (const l of this.lads) if (!l.alive) this.selected.delete(l);
     // catch-up: a lad left far behind (doors, locked arenas, teleports) rejoins next to the leader
     for (const l of this.lads) {
       if (!l.alive || l.removed) continue;
-      if (dist(l, P) > 13 || (w.lock && !inside(w.lock, l) && dist(l, P) > 7)) { this.place(l, l.ladIdx); l.controller.foe = null; }
+      if (dist(l, P) > 13 || (w.lock && !inside(w.lock, l) && dist(l, P) > 7)) { if (l.grabbing) l.releaseGrab(); this.place(l, l.ladIdx); l.controller.foe = null; }
     }
     // a lad in trouble (hurt and outnumbered) shouts for help: his mates come over (LadController.chooseFoe) and the
     // HUD flags him so you can send someone (or go yourself)
     for (const l of this.lads) {
       if (l.helpT > 0) l.helpT -= dt;
       if (l.coverT > 0) l.coverT -= dt;
+      if (l.barkCd > 0) l.barkCd -= dt;
+      if (l.rallyCd > 0) l.rallyCd -= dt;
       if (l.helpCd > 0) { l.helpCd -= dt; continue; }
       if (!live(l) || l.routT > 0) continue;
       let on = 0;
@@ -356,6 +569,19 @@ export class Firm {
         w.toast && w.toast(`${l.name} NEEDS A HAND!`);
       }
     }
+    // GET OFF HIM!: the leader just got grabbed -> lads on WITH ME / GET INTO THEM re-pick at once, one shouts
+    const held = P.grabbedBy && !P.grabbedBy.boss;
+    if (held && !this._leaderHeld) {
+      let s = null, bd = 1e9;
+      for (const l of this.active) {
+        const t = l.controller.order.type;
+        if (!live(l) || l.routT > 0 || (t !== 'follow' && t !== 'charge')) continue;
+        l.controller.foeT = 0;
+        const d = dist(l, P); if (d < bd) { bd = d; s = l; }
+      }
+      if (s) this.bark(s, 'rescue', { force: true });
+    }
+    this._leaderHeld = !!held;
     // nerve
     for (const f of w.fighters) {
       if (f.isPlayer || !live(f) || f.boss) continue;
@@ -402,7 +628,7 @@ export class Firm {
     if (f.team === 'player') {
       f.routT = 3.2;
       f.say && f.say(pick(REPLY.flee), 1.1);
-      w.toast && w.toast(`${f.name} HAS BOTTLED IT! SING UP (Y) OR SORT IT YOURSELF`);
+      w.toast && w.toast(`${f.name} HAS BOTTLED IT! SING UP (${input.hint('orderSing')}) OR SORT IT YOURSELF`);
       return;
     }
     if (f.routed || isElite(f)) return;
@@ -417,6 +643,60 @@ export class Firm {
     if (!t || t.isPlayer || t.boss || res === 'miss' || res === 'none') return;
     const k = res === 'blocked' ? 0.15 : 0.55;
     t.nerve = Math.max(0, (t.nerve ?? 100) - dmg * k);
+    // DOUBLE TEAM tracker: leader and lad hitting the same man close together
+    if (t.team === 'player' || !att || !(att.isPlayer || att.isLad) || (res !== 'hit' && res !== 'armor')) return;
+    const now = this.world.time, d = t._dteam || (t._dteam = { p: -9, l: -9, lad: null, n: 0, cd: -9 });
+    if (att.isPlayer) { d.p = now; const g = t.grabbedBy; if (g && g.pinning) { d.l = now; d.lad = g; } }
+    else { d.l = now; d.lad = att; }
+    if (now - d.p < DT_WINDOW && now - d.l < DT_WINDOW) d.n++; else d.n = 0;
+    const pinned = t.grabbedBy && t.grabbedBy.pinning;
+    if (att.isPlayer && d.n >= (pinned ? DT_PIN_HITS : DT_HITS) && now > d.cd && !t.dying && !this.dtQueue.includes(t)) {
+      d.cd = now + DT_CD; d.n = 0; this.dtQueue.push(t);
+    }
+  }
+
+  // DOUBLE TEAM!: slow-motion launch, extra damage, the other side's nerve takes a knock
+  doubleTeam(P, t, lad) {
+    const w = this.world;
+    let dx = t.x - P.x, dy = t.y - P.y;
+    const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl;
+    t.hp -= DT_DMG * (P.power || 1) * (t.defense || 1);
+    t.lastAttacker = P;
+    if (t.hp <= 0) { t.hp = 0; t.dying = true; w.sfx && w.sfx('ko', t); }
+    t.knockDown({ x: dx, y: dy }, 5, 4);
+    w.slowmo = Math.max(w.slowmo || 0, 0.22);
+    w.fx && w.fx.popup(t.x, t.y, t.z + 1.6, 'DOUBLE TEAM!', '#ffe14a');
+    w.sfx && w.sfx('combo', P);
+    if (w.camera && save.data.settings && save.data.settings.shake) w.camera.shake(4, 0.2);
+    w.addScore && w.addScore(150, t.x, t.y, t.z + 1, false);
+    w.stats && (w.stats.doubleTeams = (w.stats.doubleTeams || 0) + 1);
+    for (const o of w.fighters) {
+      if (!live(o) || o.isPlayer || o.boss || dist(o, t) > 6) continue;
+      if (o.team === 'player') o.nerve = Math.min(100, (o.nerve ?? 100) + 8);
+      else if (o !== t) o.nerve = Math.max(0, (o.nerve ?? 100) - 12);
+    }
+    if (live(lad) && lad.controller) { this.bark(lad, 'dteam', { force: true }); lad.controller.catchFor = t; lad.controller.catchT = 1.5; }
+  }
+
+  // PASS HIM ON: a throw in the general direction of a free lad goes to him (he catches it into a pin)
+  aimThrow(thrower, victim, dx, dy) {
+    const w = this.world;
+    if (!victim || victim.boss || victim.ungrabbable || victim.routed || victim.dying || victim.hp <= 0) return null;
+    let best = null, bc = Math.cos(Math.PI / 6);
+    for (const l of this.active) {
+      if (!live(l) || !l.canAct || l.routT > 0 || l.grabbing) continue;
+      const ex = l.x - thrower.x, ey = l.y - thrower.y, d = Math.hypot(ex, ey);
+      if (d < 1.5 || d > 3.6) continue;
+      const c = (ex * dx + ey * dy) / d;
+      if (c < bc) continue;
+      if (!w.hasWalkLine(thrower.x, thrower.y, l.x, l.y)) continue;
+      bc = c; best = l;
+    }
+    if (!best) return null;
+    victim.passTo = best;
+    best.controller.catchFor = victim; best.controller.catchT = 1.2;
+    const ex = best.x - thrower.x, ey = best.y - thrower.y, d = Math.hypot(ex, ey);
+    return { x: ex / d, y: ey / d };
   }
 
   onDeath(f) {
@@ -445,15 +725,46 @@ export class Firm {
   }
 
   // an encounter was won: everyone who got knocked out gets back up
+  revive(l, hpFrac, nerve) {
+    l.alive = true; l.dying = false; l.out = false;
+    l.hp = Math.max(1, Math.round(l.maxHp * hpFrac));
+    l.setState('down'); l.downTime = 0.6; l.stateT = 0;
+    l.nerve = nerve;
+    if (l.controller) { l.controller.foe = null; l.controller.foeT = 0; }
+  }
+
+  // PICK HIM UP: the leader hauls a knocked-out lad back onto his feet (USE over him; once per lad per fight)
+  canRevive(c, P) { return !c.alive && !c.removed && c.out && !c.revivedThisFight && dist(c, P) < REVIVE_R; }
+  enemyOnTop(P) { return this.world.fighters.some(e => e.team !== 'player' && live(e) && !e.routed && dist(e, P) < 1.6); }
+
+  tryRevive(P) {
+    const w = this.world;
+    let l = null, bd = 1e9;
+    for (const c of this.lads) { if (!this.canRevive(c, P)) continue; const d = dist(c, P); if (d < bd) { bd = d; l = c; } }
+    if (!l) return false;
+    // refused with a man on top of you: say so, but let USE do its other jobs (weapons, doors, items)
+    if (this.enemyOnTop(P)) { w.toast && w.toast('NOT WITH THEM ON TOP OF YOU!'); return false; }
+    P.face2(l.x - P.x, l.y - P.y);
+    P.setState('pickup'); P.vx = P.vy = 0;
+    P.actionDur = 1.2;
+    P.onAction = () => {
+      if (l.alive || l.removed) return;
+      this.revive(l, 0.3, 60);
+      l.revivedThisFight = true; l.invuln = 1;
+      w.toast && w.toast(`${l.name} IS BACK ON HIS FEET!`);
+      this.bark(l, 'cheers', { force: true, dur: 1.3 });
+      for (const o of this.active) if (dist(o, P) < 7) o.nerve = Math.min(100, (o.nerve ?? 100) + 10);
+    };
+    return true;
+  }
+
   onClear() {
     for (const l of this.lads) {
       if (l.alive || l.removed) continue;
-      l.alive = true; l.dying = false; l.out = false;
-      l.hp = Math.round(l.maxHp * 0.45);
-      l.setState('down'); l.downTime = 0.6; l.stateT = 0;
-      l.nerve = 70;
+      this.revive(l, 0.45, 70);
       setTimeout(() => l.alive && l.say && l.say(pick(REPLY.up), 1.4), 700);
     }
+    for (const l of this.lads) l.revivedThisFight = false;
     for (const l of this.lads) { if (l.alive) { l.hp = Math.min(l.maxHp, l.hp + l.maxHp * 0.25); l.nerve = Math.max(l.nerve ?? 0, 80); } }
   }
 
@@ -462,7 +773,7 @@ export class Firm {
     return this.lads.filter(l => l.rec).map(l => ({ id: l.rec.id, name: l.name, kos: (l.fight && l.fight.kos) || 0, downs: (l.fight && l.fight.downs) || 0, out: !l.alive || l.dying || l.hp <= 0 }));
   }
 
-  onRespawn() { this.lads.forEach((l, i) => { if (l.alive) { this.place(l, i); l.controller.foe = null; } }); }
+  onRespawn() { this.lads.forEach((l, i) => { if (l.alive) { if (l.grabbing) l.releaseGrab(); this.place(l, i); l.controller.foe = null; } }); }
 }
 
 function inside(a, f) { return f.x >= a.x && f.y >= a.y && f.x <= a.x + a.w && f.y <= a.y + a.h; }

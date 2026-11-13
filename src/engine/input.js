@@ -28,6 +28,7 @@ export const KEYMAP = {
   orderCharge: ['KeyT'],
   orderHold: ['KeyH'],
   orderSing: ['KeyY'],
+  orderRegroup: ['KeyN'],
   select4: ['Digit4'],
   hubMap: ['KeyM'],          // the pub: open THE MAP from anywhere
   pause: ['Escape', 'KeyP'],
@@ -53,7 +54,7 @@ const PADMAP = {
   8: ['inventory'],
   9: ['pause'],
   10: ['use'],
-  11: ['use'],
+  11: ['orderRegroup'],      // R3: BACK TO ME! (L3 keeps use)
   // d-pad: quick firm orders in a fight (the stick moves), menu navigation in menus
   12: ['orderCharge', 'menuUp'],
   13: ['orderFollow', 'menuDown'],
@@ -172,7 +173,7 @@ class Input {
   hint(a) {
     if (this.lastDevice === 'pad') {
       const names = { jump: 'A', kick: 'B', punchL: 'X', punchR: 'Y', grab: 'LB', block: 'RB', dodge: 'LT', use: 'L3', pause: 'START', inventory: 'SELECT', confirm: 'A', back: 'B',
-        command: 'RT', orderCharge: 'D-UP', orderFollow: 'D-DOWN', orderHold: 'D-LEFT', orderSing: 'D-RIGHT' };
+        command: 'RT', orderCharge: 'D-UP', orderFollow: 'D-DOWN', orderHold: 'D-LEFT', orderSing: 'D-RIGHT', orderRegroup: 'R3' };
       return names[a] || a.toUpperCase();
     }
     const c = (KEYMAP[a] || [''])[0];

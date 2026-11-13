@@ -77,10 +77,23 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
       OVER THERE, K/Y = välj vem som får ordern, L/B = WITH ME). Ledaren står still medan man ger order.
 - [x] Grabbarna skyddar ledaren först på WITH ME, ropar på hjälp när de är skadade och i underläge (HUD:en blinkar
       HELP) och kompisarna kommer till undsättning.
-- [ ] Provspela kommandoläget: tempot (25 %), markörens fart, om ledaren ska kunna röra sig.
-- [ ] Kontrollsidan i pausmenyn (CONTROLS) visar inte firmans knappar, bara tipset när banan startar.
-- [ ] Taktiska order: "flankera", "ta den med vapnet", "skydda honom" (en grabb som livvakt åt en annan).
-- [ ] Lagspel: en grabb håller fast en fiende medan du slår (grepp + ledaren), dubbelattacker.
+- [x] Lagspel: HOLD HIM! (en grabb låser fast en fiende, dina och grabbarnas slag bryter inte greppet, ibland av sig
+      själv, eller GRAB HIM! i kommandoläget med I/LB), DOUBLE TEAM (du och en grabb på samma man ger en slow-motion-
+      launch), PASS HIM ON (kast mot en ledig grabb fångas direkt i ett grepp, dina kast fäller inte dina egna),
+      PICK HIM UP (E över en utslagen grabb, en gång per grabb och strid), BACK TO ME! (N/R3, samlas tätt kring dig med
+      nerv-boost) och GET OFF HIM! (grabbarna slår loss den som har greppet om dig). Kontrollsidan visar firmans knappar.
+- [x] Buggfix: grabbarnas sparkar läkte fienden (kickMul från statsen var en offset men användes som multiplikator).
+- [ ] Provspela kommandoläget och lagspelet: tempot (25 %), markörens fart, hur ofta grabbarna låser fast själva
+      (`PIN_CHANCE` i firm.js), DOUBLE TEAM-tröskeln (`DT_*`) och pinnens längd.
+- [ ] Taktiska order: ROUND THE BACK (flankera gruppen du slåss med, kommandoläge O/LT), MIND HIM (livvakt åt en
+      annan grabb eller dig), TOOLED UP (ta den med vapnet; kräver pickDelay i world.nearestWeapon först).
+- [ ] Egen 3D-animation för att låsa fast / bli fastlåst (i dag används grabbing/grabbed-klippen).
+- [ ] Grabbarna siktar egna kast mot fiendeklungor.
+- [ ] Firma på/av och firmans storlek i alternativmenyn (behöver tätare rader i menyn), en THE FIRM-flik i HOW TO PLAY.
+- [ ] Personlighet i striden: hetsporren rusar in ensam, den fege stannar bak, lookout ropar BEHIND YA, singer drar
+      igång en ramsa, bästa kompisar slåss bättre sida vid sida och blir galna när den andra slås ut, liability går
+      för långt (heat). Rättning: oldschool-nervbonusen staplas i dag per grabb (firm.js nerve-loopen).
+- [ ] Testerna: seeda Math.random i test_firm.mjs; walkPlayer bevisar inget när PlayerController är avstängd.
 - [ ] Grabbarnas egna initiativ efter personlighet (hetsporren rusar, den fege stannar bak) syns i striden.
 - [ ] Firma på/av och firmans storlek i menyn (finns bara i sparfilen).
 - [ ] Mål i strider utöver "slå ner alla", t.ex. ta läktaren, håll puben eller hämta en skadad kompis (DESIGN-V2 §3.4).

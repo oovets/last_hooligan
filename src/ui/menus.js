@@ -121,7 +121,7 @@ export class OptionsScene {
     if (this.page === 'keys') {
       heading(ctx, 'KEY BINDINGS', VIEW_W / 2, 8, { scale: 3 });
       frame(ctx, 40, 44, VIEW_W - 80, 252);
-      drawBindings(ctx, 70, 58);
+      drawBindings(ctx, 70, 54, 12);
       drawText(ctx, 'MENUS: ARROWS / WASD + ENTER, ESC TO GO BACK. GAMEPADS WORK EVERYWHERE.', VIEW_W / 2, 280, { color: C.dim, align: 'center' });
       hintBar(ctx, [['back', 'BACK']], VIEW_H - 14);
     } else {
@@ -163,7 +163,7 @@ export class HowToPlayScene {
       drawText(ctx, 'KEYBOARD', 44, 72, { color: C.gold });
       drawControlCard(ctx, 44, 86);
       drawText(ctx, 'GAMEPAD', 44, 186, { color: C.gold });
-      const pad = [['STICK / D-PAD', 'MOVE (FULL TILT = RUN)'], ['X / Y', 'PUNCH'], ['B', 'KICK'], ['A', 'JUMP'], ['RB', 'BLOCK'], ['LT', 'DODGE'], ['LB', 'GRAB / THROW'], ['STICK CLICK', 'PICK UP / USE'], ['SELECT', 'KIT BAG'], ['START', 'PAUSE']];
+      const pad = [['STICK / D-PAD', 'MOVE (FULL TILT = RUN)'], ['X / Y', 'PUNCH'], ['B', 'KICK'], ['A', 'JUMP'], ['RB', 'BLOCK'], ['LT', 'DODGE'], ['LB', 'GRAB / THROW'], ['L3', 'PICK UP / USE'], ['SELECT', 'KIT BAG'], ['START', 'PAUSE'], ['HOLD RT', 'FIRM: COMMAND MODE'], ['D-PAD / R3', 'FIRM: ORDERS / BACK TO ME']];
       pad.forEach(([k, t], i) => { const c = i % 2, r = Math.floor(i / 2); drawText(ctx, k, 44 + c * 280, 200 + r * 13, { color: '#ffffff' }); drawText(ctx, t, 140 + c * 280, 200 + r * 13, { color: '#c0e8ff' }); });
       drawText(ctx, 'CONTROLS MODE (OPTIONS): SCREEN = UP IS UP THE SCREEN. ISO = ARROWS FOLLOW THE STREETS.', VIEW_W / 2, 270, { color: C.dim, align: 'center' });
     } else if (this.page === 1) {

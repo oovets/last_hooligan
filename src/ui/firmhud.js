@@ -24,6 +24,7 @@ export const COMMAND_SLOW = 0.25;
 const CURSOR_SPEED = 9;      // tiles per real second
 const SNAP = 0.95;           // cursor snaps to a man this close (tiles)
 const SEL_COL = '#ffd23a', LAD_COL = '#5ab0ff';
+const short = n => n.replace('THE ', '').replace('TERRACE ', '').replace('LITTLE ', '').replace('BIG ', '');
 const shiftDown = () => input.keys.has('ShiftLeft') || input.keys.has('ShiftRight');
 
 // ------------------------------------------------------------------ input (called by PlayScene before world.update)
@@ -43,8 +44,11 @@ export function updateFirmInput(world, ui, dt = 1 / 60) {
     if (input.pressed('orderCharge')) F.order('charge');
     if (input.pressed('orderHold')) F.order('hold');
     if (input.pressed('orderSing')) F.order('sing');
+    if (input.pressed('orderRegroup')) F.order('regroup');
   }
   if (!F.command) { ui.drag = null; ui.hover = null; input.mouse.moved = false; return; }
+  // presses used for orders must not leak into the leader (a jump/grab after G is released, even across hitstop)
+  if (p.controller && p.controller.pollButtons) p.controller.pollButtons();
   updateCursor(world, ui, dt);
   // number keys select lads while commanding (eating/drinking is off in command mode)
   const keys = ['item1', 'item2', 'item3', 'select4'];
@@ -52,6 +56,7 @@ export function updateFirmInput(world, ui, dt = 1 / 60) {
     if (input.pressed(k)) { const l = F.lads[i]; if (l && l.alive) F.select(l, shiftDown()); }
     input.consume(k);
   });
+  if (input.pressed('jump')) F.order('regroup');
   const M = input.mouse, cam = world.camera;
   const ladAt = (sx, sy) => pickFighter(world, sx, sy, f => f.isLad && f.alive);
   if (M.pressed[0]) ui.drag = { x0: M.x, y0: M.y };
@@ -116,6 +121,7 @@ function updateCursor(world, ui, dt) {
     else if (world.heightAt(c.x, c.y) < 0.4 || world.heightAt(c.x, c.y) <= world.heightAt(p.x, p.y) + 0.35) F.order('move', { x: c.x, y: c.y });
     else world.toast("CAN'T GET THERE");
   }
+  if (input.pressed('grab') && best && best.team !== 'player') F.order('pin', { target: best });
   if (input.pressed('punchR')) {
     // everyone -> lad 1 -> lad 2 -> ... -> everyone
     const alive = F.lads.filter(l => l.alive);
@@ -178,7 +184,13 @@ export function drawFirmWorld(ctx, world) {
     const head = toScreen(l.x, l.y, l.z);
     const sc = (l.look && l.look.height) || 1;
     const top = head.y - 62 * sc;
-    if (!l.alive) { drawText(ctx, 'KO', head.x, head.y - 18, { color: '#ff7a7a', align: 'center', outline: '#000' }); return; }
+    if (!l.alive) {
+      drawText(ctx, 'KO', head.x, head.y - 18, { color: '#ff7a7a', align: 'center', outline: '#000' });
+      const P = world.player;
+      if (P.alive && F.canRevive(l, P) && !F.enemyOnTop(P)) drawText(ctx, input.hint('use') + ' PICK HIM UP', head.x, head.y - 28, { color: '#7affe0', align: 'center', outline: '#000' });
+      else if (P.alive && !l.revivedThisFight && !l.removed && Math.hypot(l.x - P.x, l.y - P.y) < 3) drawText(ctx, 'GET TO HIM', head.x, head.y - 28, { color: '#4a8a7a', align: 'center', outline: '#000' });
+      return;
+    }
     const o = l.controller.order;
     const tag = (i + 1) + (o.type !== 'follow' ? ' ' + ORDER_TAG[o.type] : '');
     drawText(ctx, tag, head.x, top, { color: sel ? SEL_COL : LAD_COL, align: 'center', outline: '#000' });
@@ -190,6 +202,7 @@ export function drawFirmWorld(ctx, world) {
   if (F.lads.length) for (const e of world.fighters) {
     if (e.team === 'player' || !e.alive || e.boss || e.routed) continue;
     if ((e.nerve ?? 100) < 25) { const s = toScreen(e.x, e.y, e.z); drawText(ctx, '?', s.x + 9, s.y - 58, { color: '#ffe14a', align: 'center', outline: '#000' }); }
+    if (e.grabbedBy && e.grabbedBy.pinning) { const s = toScreen(e.x, e.y, e.z); drawText(ctx, 'FREE HIT', s.x, s.y - 68, { color: Math.floor(t * 6) % 2 ? '#ffe14a' : '#ffffff', align: 'center', outline: '#000' }); }
   }
   ctx.restore();
 }
@@ -205,16 +218,18 @@ export function drawFirmScreen(ctx, world, ui) {
     ctx.fillStyle = 'rgba(90,176,255,0.5)';
     ctx.fillRect(0, 0, VIEW_W, 2); ctx.fillRect(0, VIEW_H - 2, VIEW_W, 2); ctx.fillRect(0, 0, 2, VIEW_H); ctx.fillRect(VIEW_W - 2, 0, 2, VIEW_H);
     const hdr = 'COMMAND MODE';
-    frame(ctx, VIEW_W / 2 - 172, 48, 344, 30, { fill: 'rgba(6,14,30,0.9)', accent: LAD_COL });
-    drawText(ctx, hdr, VIEW_W / 2, 53, { color: LAD_COL, align: 'center', outline: '#000' });
+    const hx = Math.max(VIEW_W / 2 - 172, 162), cx = hx + 172;   // clear of the firm panel on the left
+    frame(ctx, hx, 48, 344, 40, { fill: 'rgba(6,14,30,0.9)', accent: LAD_COL });
+    drawText(ctx, hdr, cx, 53, { color: LAD_COL, align: 'center', outline: '#000' });
     const pad = input.lastDevice === 'pad';
     const help = pad ? 'STICK: AIM   X: HAVE HIM / GO / PICK LAD   Y: WHO   B: WITH ME'
       : 'WASD: AIM   J: HAVE HIM / GO / PICK LAD   K: WHO   L: WITH ME   (OR MOUSE)';
-    drawText(ctx, help, VIEW_W / 2, 65, { color: '#c0d8f0', align: 'center' });
+    drawText(ctx, help, cx, 65, { color: '#c0d8f0', align: 'center' });
+    drawText(ctx, pad ? 'LB: GRAB HIM (PIN)   A: BACK TO ME' : 'I: GRAB HIM (PIN)   SPACE: BACK TO ME', cx, 76, { color: '#c0d8f0', align: 'center' });
     // who the next order goes to
     const sel = [...F.selected].filter(l => l.alive);
-    const who = sel.length ? 'ORDERS TO: ' + sel.map(l => l.name.replace('THE ', '').replace('TERRACE ', '').replace('LITTLE ', '').replace('BIG ', '')).join(', ') : 'ORDERS TO: THE WHOLE FIRM';
-    drawText(ctx, who, VIEW_W / 2, 82, { color: sel.length ? SEL_COL : '#7ac0ff', align: 'center', outline: '#000' });
+    const who = sel.length ? 'ORDERS TO: ' + sel.map(l => short(l.name)).join(', ') : 'ORDERS TO: THE WHOLE FIRM';
+    drawText(ctx, who, cx, 93, { color: sel.length ? SEL_COL : '#7ac0ff', align: 'center', outline: '#000' });
     const d = ui.drag;
     if (d && Math.abs(d.x1 - d.x0) + Math.abs(d.y1 - d.y0) >= 6) {
       const x0 = Math.min(d.x0, d.x1), y0 = Math.min(d.y0, d.y1);
@@ -233,8 +248,8 @@ function drawCursor(ctx, world, ui) {
   ctx.save();
   ctx.translate(cam.tx, cam.ty);
   let s, col, label;
-  if (h && h.team !== 'player') { s = toScreen(h.x, h.y, world.groundHeight(h.x, h.y, h.z)); col = '#ff4a4a'; label = 'HAVE HIM'; }
-  else if (h && h.isLad) { s = toScreen(h.x, h.y, world.groundHeight(h.x, h.y, h.z)); col = SEL_COL; label = 'PICK ' + h.name.replace('THE ', '').replace('TERRACE ', '').replace('LITTLE ', '').replace('BIG ', ''); }
+  if (h && h.team !== 'player') { s = toScreen(h.x, h.y, world.groundHeight(h.x, h.y, h.z)); col = '#ff4a4a'; label = input.lastDevice === 'pad' ? 'X HAVE HIM  LB GRAB HIM' : 'J HAVE HIM  I GRAB HIM'; }
+  else if (h && h.isLad) { s = toScreen(h.x, h.y, world.groundHeight(h.x, h.y, h.z)); col = SEL_COL; label = 'PICK ' + short(h.name); }
   else { s = toScreen(c.x, c.y, world.groundHeight(c.x, c.y, 5)); col = SEL_COL; label = 'GO HERE'; }
   const pulse = 1 + Math.sin(t * 40) * 0.08;
   ring(ctx, s.x, s.y, 12 * pulse, 6 * pulse, '#000', 0.6);
@@ -256,7 +271,7 @@ export function drawFirmPanel(ctx, world) {
     const sel = F.selected.has(l);
     const o = l.controller.order;
     drawText(ctx, String(i + 1), x + 5, yy, { color: sel ? SEL_COL : '#6a7a9a' });
-    const name = l.name.replace('THE ', '').replace('TERRACE ', '').replace('LITTLE ', '').replace('BIG ', '');
+    const name = short(l.name);
     drawText(ctx, name.slice(0, 8), x + 14, yy, { color: !l.alive ? '#6a5a6a' : l.routT > 0 ? '#ff8a5a' : sel ? '#ffffff' : '#c8d8f0' });
     bar(ctx, x + 66, yy + 1, 38, Math.max(0, l.hp / l.maxHp), l.alive ? '#5aff7a' : '#4a2a2a');
     bar(ctx, x + 66, yy + 5, 38, Math.max(0, (l.nerve ?? 100) / 100), l.routT > 0 ? '#ff4a4a' : '#ffb03a');
@@ -266,8 +281,28 @@ export function drawFirmPanel(ctx, world) {
   });
   const sy = y + h - 9;
   const ready = F.singCd <= 0;
-  drawText(ctx, ready ? 'Y SING UP: READY' : `Y SING UP: ${Math.ceil(F.singCd)}S`, x + 5, sy, { color: ready ? '#ffe14a' : '#6a6a7a' });
-  drawText(ctx, 'G CMD', x + w - 6, sy, { color: '#7ac0ff', align: 'right' });
+  drawText(ctx, input.hint('orderSing') + ' SING' + (ready ? ': READY' : ` ${Math.ceil(F.singCd)}S`), x + 5, sy, { color: ready ? '#ffe14a' : '#6a6a7a' });
+  drawText(ctx, input.hint('command') + ' CMD', x + w - 6, sy, { color: '#7ac0ff', align: 'right' });
+}
+
+// ------------------------------------------------------------------ THE FIRM block on the pause CONTROLS page
+export function drawFirmControls(ctx, x, y) {
+  const pad = input.lastDevice === 'pad';
+  const rows = pad ? [
+    ['D-DOWN / UP', 'WITH ME / GET INTO THEM'], ['D-LEFT / RIGHT', 'HOLD / SING UP'], ['R3', 'BACK TO ME'], ['HOLD RT', 'COMMAND MODE (SLOW-MO)'],
+    ['RT + X', 'HAVE HIM / GO / PICK LAD'], ['RT + LB', 'GRAB HIM (PIN FOR YOU)'], ['RT + A', 'BACK TO ME'], ['L3 BY A KO LAD', 'PICK HIM UP'],
+  ] : [
+    ['R / T', 'WITH ME / GET INTO THEM'], ['H / Y', 'HOLD / SING UP'], ['N', 'BACK TO ME'], ['HOLD G', 'COMMAND MODE (SLOW-MO)'],
+    ['G + J', 'HAVE HIM / GO / PICK LAD'], ['G + I', 'GRAB HIM (PIN FOR YOU)'], ['G + SPACE', 'BACK TO ME'], ['E BY A KO LAD', 'PICK HIM UP'],
+  ];
+  drawText(ctx, 'THE FIRM', x, y, { color: C.gold });
+  ctx.fillStyle = C.red; ctx.fillRect(x, y + 9, VIEW_W - 2 * x, 1);
+  rows.forEach(([k, n], i) => {
+    const col = i % 2, row = Math.floor(i / 2);
+    const xx = x + col * 260, yy = y + 16 + row * 12;
+    drawText(ctx, k, xx, yy, { color: '#ffffff' });
+    drawText(ctx, n, xx + 100, yy, { color: '#c0e8ff' });
+  });
 }
 
 // ------------------------------------------------------------------ helpers

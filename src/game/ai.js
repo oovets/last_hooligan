@@ -287,7 +287,9 @@ export class AIController {
     }
 
     const g = group(world);
-    const pDown = p.isDown || p.state === 'getup' || p.state === 'grabbed';
+    // a held target is off limits (no ganging up on a grabbed man), unless one of ours is PINNING him for us
+    const pinnedForUs = p.state === 'grabbed' && p.grabbedBy && p.grabbedBy.pinning && p.grabbedBy.team === f.team;
+    const pDown = p.isDown || p.state === 'getup' || (p.state === 'grabbed' && !pinnedForUs);
 
     // rushing in (shoulder charge / flying attack) — ignores tokens, one rusher at a time
     if (this.rushT > 0) {

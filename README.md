@@ -23,7 +23,7 @@ is 90s football-casual culture in the fictional city of Nordhamn.
 * Fully synthesized WebAudio soundtrack, crowd ambience and original terrace chants.
 * Wardrobe unlocks, save/continue, level select, hall of fame, gamepad support.
 * **The firm, in the fight:** 3–4 lads with their own stats and traits fight on your side. Give quick orders, or
-  hold G (pad: RT) for a slow-motion command mode with an order cursor you aim with the movement keys, stick or mouse. Lads look after you first and shout for help when they're in trouble. Nerve decides who stands and who runs, on both sides.
+  hold G (pad: RT) for a slow-motion command mode with an order cursor you aim with the movement keys, stick or mouse. Lads look after you first and shout for help when they're in trouble. They fight *with* you: a lad pins a man so you get free hits, you and a lad on the same man trigger a DOUBLE TEAM launch, a throw towards a lad is caught straight into a pin, you can haul a knocked-out lad back up, and BACK TO ME pulls everyone round you. Nerve decides who stands and who runs, on both sides.
 * **The firm, between matches:** THE ANCHOR, your local, is a walkable pub. Recruit at the bar, train in the back
   room, pick who gets on the coach at the map, and live with the consequences: injuries, reputation, police heat,
   banning orders, lads who walk out, and event cards.
@@ -62,7 +62,9 @@ During development the game is **muted** by `src/devflags.js` (`DEV.mute = true`
 | Eat & drink | 1 2 3 |
 | Kit bag / pause | Tab / Esc |
 | **Firm:** with me / get into them / hold / sing up | R / T / H / Y (pad: d-pad down / up / left / right) |
-| **Firm:** command mode (slow-mo, order cursor) | hold G (pad: RT), aim with WASD / stick: J (X) = have him / go there / pick a lad, K (Y) = cycle who gets the order, L (B) = with me |
+| **Firm:** back to me (regroup) | N (pad: R3) |
+| **Firm:** pick up a knocked-out lad | E standing over him (pad: L3) |
+| **Firm:** command mode (slow-mo, order cursor) | hold G (pad: RT), aim with WASD / stick: J (X) = have him / go there / pick a lad, I (LB) = grab him (a lad pins him), K (Y) = cycle who gets the order, L (B) = with me, Space (A) = back to me |
 | **Firm:** command mode with the mouse | 1-4 or click = select, drag = box select, right-click = have him / go there |
 | **Pub:** use a station / talk to a lad, the map | E, M |
 

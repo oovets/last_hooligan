@@ -69,13 +69,17 @@ export const BIND_ROWS = [
   ['PUNCH (RIGHT)', ['punchR'], 'Y'],
   ['KICK', ['kick'], 'B'],
   ['JUMP', ['jump'], 'A'],
-  ['BLOCK (HOLD)', ['block'], 'RB / RT'],
+  ['BLOCK (HOLD)', ['block'], 'RB'],
   ['DODGE ROLL', ['dodge'], 'LT'],
   ['GRAB / THROW WEAPON', ['grab'], 'LB'],
-  ['PICK UP / USE / READ', ['use'], 'STICK CLICK'],
+  ['PICK UP / USE / READ', ['use'], 'L3'],
   ['EAT / DRINK SLOT 1-3', ['item1', 'item2', 'item3'], '-'],
   ['KIT BAG', ['inventory'], 'SELECT'],
   ['PAUSE', ['pause'], 'START'],
+  ['FIRM: COMMAND (HOLD)', ['command'], 'RT'],
+  ['WITH ME / GET INTO THEM', null, 'D-DOWN / D-UP', 'R / T'],
+  ['HOLD / SING UP', null, 'D-LEFT / D-RIGHT', 'H / Y'],
+  ['BACK TO ME', ['orderRegroup'], 'R3 / RT+A'],
 ];
 
 function codeName(c) {

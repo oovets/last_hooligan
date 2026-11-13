@@ -85,6 +85,8 @@ export class Fighter {
     this.deadT = 0;
     this.tag = o.tag || null;
     this.onAction = null;   // callback for pickup/drink completion
+    this.actionDur = 0;     // pickup length override (e.g. hauling a mate up, game/firm.js tryRevive)
+    this.pinning = false;   // a lad holding a man for his mates: their hits don't break the hold (game/firm.js)
     this.data = {};         // free-form storage for controllers
     this.parryT = 0;        // >0: a block started this recently parries
     this.counterT = 0;      // >0: attacking now performs a counter
@@ -98,6 +100,8 @@ export class Fighter {
 
   setState(s) {
     if (this.state === s) return;
+    // leaving a pickup/drink for anything else (a hit, a knockdown) cancels its callback
+    if (s !== 'pickup' && s !== 'drink') { this.onAction = null; this.actionDur = 0; }
     this.state = s; this.stateT = 0; this.animT = 0;
   }
 
@@ -172,12 +176,12 @@ export class Fighter {
 
   // Seize a specific target (used by tryGrab and by grabOnHit attacks such as Fat Vic's lunging headlock).
   grabTarget(world, best) {
-    if (!best || !best.alive || best.ungrabbable || best.grabbedBy) return false;
+    if (!best || !best.alive || best.dying || best.hp <= 0 || best.ungrabbable || best.grabbedBy) return false;
     if (best.attack) best.attack = null;
     this.attack = null;
     this.grabbing = best; best.grabbedBy = this;
     this.grabT = 0; this.grabHits = 0;
-    best.setState('grabbed'); best.vx = best.vy = 0;
+    best.setState('grabbed'); best.vx = best.vy = best.vz = 0; best.onGround = true;   // (a body caught in the air is held at ground level)
     this.face2(best.x - this.x, best.y - this.y);
     best.face2(this.x - best.x, this.y - best.y);
     this.setState('grabbing');
@@ -189,8 +193,12 @@ export class Fighter {
     const t = this.grabbing;
     if (t) {
       t.grabbedBy = null;
-      if (t.state === 'grabbed') { t.setState('hurt'); t.stunT = 0.25; }
+      if (t.state === 'grabbed') {
+        if (t.dying || t.hp <= 0) t.knockDown({ x: -t.fx, y: -t.fy }, 2, 0);   // someone who died in the hold still goes down
+        else { t.setState('hurt'); t.stunT = 0.25; }
+      }
     }
+    this.pinning = false;
     this.grabbing = null;
     if (this.state === 'grabbing') this.setState('idle');
   }
@@ -201,7 +209,9 @@ export class Fighter {
     let l = Math.hypot(dx, dy);
     if (l < 0.1) { dx = this.fx; dy = this.fy; l = 1; }
     dx /= l; dy /= l;
-    this.grabbing = null; t.grabbedBy = null;
+    t.passTo = null;
+    if (this.isPlayer && world.firm) { const a = world.firm.aimThrow(this, t, dx, dy); if (a) { dx = a.x; dy = a.y; } }
+    this.grabbing = null; this.pinning = false; t.grabbedBy = null;
     t.setState('thrown');
     t.thrower = this;
     t.thrownHit = new Set([this]);
@@ -217,7 +227,7 @@ export class Fighter {
 
   knockDown(dir, kb, launch = 0) {
     if (this.grabbing) this.releaseGrab();
-    if (this.grabbedBy) { const g = this.grabbedBy; this.grabbedBy = null; g.grabbing = null; if (g.state === 'grabbing') g.setState('idle'); }
+    if (this.grabbedBy) { const g = this.grabbedBy; this.grabbedBy = null; g.grabbing = null; g.pinning = false; if (g.state === 'grabbing') g.setState('idle'); }
     this.attack = null;
     this.setState('knockdown');
     this.vx = dir.x * kb / this.weight; this.vy = dir.y * kb / this.weight;
@@ -272,8 +282,10 @@ export class Fighter {
     this.face = 'hurt'; this.faceT = 0.4;
     this.counterT = 0;
     if (this.grabbing) this.releaseGrab();
-    if (this.grabbedBy && this.grabbedBy !== hit.attacker) {
-      const g = this.grabbedBy; this.grabbedBy = null; g.grabbing = null; if (g.state === 'grabbing') g.setState('idle');
+    // a hit breaks someone else's hold on you, except when one of your holder's mates hits you while he PINS you
+    const gb = this.grabbedBy, pinHit = gb && gb.pinning && att && att.team === gb.team;
+    if (gb && gb !== hit.attacker && !pinHit) {
+      this.grabbedBy = null; gb.grabbing = null; gb.pinning = false; if (gb.state === 'grabbing') gb.setState('idle');
     }
     if (this.attack && this.superArmor <= dmg) this.attack = null;
     this.hitChainT = this.isPlayer ? 0.7 : 0.9;
@@ -476,7 +488,8 @@ export class Fighter {
       case 'taunt': friction = 20; if (this.stateT > (this.tauntTime || 0.9)) this.setState('idle'); break;
       case 'pickup': case 'drink': {
         friction = 30;
-        const dur = this.state === 'pickup' ? 0.25 : 0.55;
+        const dur = this.state === 'pickup' ? (this.actionDur || 0.25) : 0.55;
+        if (this.state === 'pickup' && this.actionDur > 0.3) this.animT = Math.min(this.animT, 0.17);   // hold the crouch
         if (this.stateT >= dur) { const cb = this.onAction; this.onAction = null; this.setState('idle'); cb && cb(); }
         break;
       }
@@ -593,7 +606,19 @@ export class Fighter {
     // hits other fighters on the way
     const pw = this.thrower ? this.thrower.power || 1 : 1;
     for (const o of world.fighters) {
+      // PASS HIM ON: the lad it was aimed at catches the man straight into a pin
+      if (o === this.passTo && !this.dying && this.hp > 0 && !this.boss && o.alive && o.canAct && !o.grabbing && Math.hypot(o.x - this.x, o.y - this.y) < o.r + this.r + 0.5 && Math.abs(o.z - this.z) < 1.4) {
+        this.passTo = null; o.pinning = true;
+        if (o.controller) o.controller.catchFor = null;
+        if (o.grabTarget(world, this)) {
+          world.fx && world.fx.popup(o.x, o.y, o.z + 1.4, 'CAUGHT!', '#7affe0');
+          world.firm && world.firm.bark(o, 'caught', { force: true });
+          return;
+        }
+        o.pinning = false;
+      }
       if (o === this || !o.alive || this.thrownHit.has(o) || o.isDown || o.invuln > 0 || o.dying) continue;
+      if (this.thrower && this.thrower.team === 'player' && o.team === 'player') continue;   // our throws don't flatten our own
       if (Math.hypot(o.x - this.x, o.y - this.y) < o.r + this.r + 0.15 && Math.abs(o.z - this.z) < 1.2) {
         this.thrownHit.add(o);
         const sp = Math.hypot(this.vx, this.vy) || 1;
@@ -603,6 +628,7 @@ export class Fighter {
     }
     world.breakPropsAt && world.breakPropsAt(this.x + this.vx * 0.05, this.y + this.vy * 0.05, this.z, this.thrower || this, 20);
     if (this.onGround && this.stateT > 0.1) {
+      this.passTo = null;
       const dmg = 12 * pw;
       this.hp -= dmg * this.defense;
       this.flashT = 0.1;

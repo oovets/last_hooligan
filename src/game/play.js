@@ -15,7 +15,7 @@ import { frame, MenuList, hintBar, heading, scarfIcon, badgeIcon, keyIcon, secre
 import { optionItems, drawBindings, drawControlCard } from '../ui/options.js';
 import { r3d } from '../render3d/index.js';
 import { getFirm, applyTrip, resultFromWorld } from './firmdata.js';
-import { updateFirmInput, drawFirmWorld, drawFirmScreen, drawFirmPanel, COMMAND_SLOW } from '../ui/firmhud.js';
+import { updateFirmInput, drawFirmWorld, drawFirmScreen, drawFirmPanel, drawFirmControls, COMMAND_SLOW } from '../ui/firmhud.js';
 
 export class PlayScene {
   // 2D renderer: the world is pixel art, drawn at the 2x resolution (main.js). 3D renderer: the 2D canvas only carries
@@ -50,7 +50,11 @@ export class PlayScene {
     this.firmUI = {};
     if (this.world.firm && this.world.firm.lads.length && !(save.data.seenNew || []).includes('firmHint')) {
       (save.data.seenNew ||= []).push('firmHint'); save.write();
-      setTimeout(() => this.world && this.world.toast(input.lastDevice === 'pad' ? 'YOUR FIRM: D-PAD ORDERS, HOLD RT = COMMAND (STICK AIMS, X = HAVE HIM / GO)' : 'YOUR FIRM: R WITH ME  T GET INTO THEM  H HOLD  Y SING UP  HOLD G = COMMAND (WASD AIMS, J = HAVE HIM / GO)'), 4500);
+      setTimeout(() => {
+        const w = this.world; if (!w) return;
+        if (input.lastDevice === 'pad') { w.toast('YOUR FIRM: D-PAD ORDERS, R3 BACK TO ME'); w.toast('HOLD RT = COMMAND (STICK AIMS, X = HAVE HIM, LB = GRAB HIM)'); }
+        else { w.toast('YOUR FIRM: R WITH ME  T GET INTO THEM  H HOLD  Y SING UP  N BACK TO ME'); w.toast('HOLD G = COMMAND (WASD AIMS, J = HAVE HIM, I = GRAB HIM)'); }
+      }, 4500);
     }
     audio.music(this.level.music || 'streets');
     audio.crowd(this.level.crowd || 0);
@@ -280,6 +284,7 @@ export class PlayScene {
     frame(ctx, 30, 26, VIEW_W - 60, VIEW_H - 58, { title: 'CONTROLS' });
     drawControlCard(ctx, 60, 44);
     drawComboList(ctx, 60, 146);
+    if (this.world && this.world.firm) drawFirmControls(ctx, 60, 248);
     hintBar(ctx, [['back', 'BACK']], VIEW_H - 22);
   }
 }
@@ -289,6 +294,7 @@ export const COMBOS = [
   ['J J J', 'JAB JAB HOOK'], ['J J J J', 'JAB JAB HOOK UPPERCUT'], ['K K K', 'CROSS CROSS UPPERCUT'],
   ['J K L', 'ONE-TWO ROUNDHOUSE'], ['L L', 'KICK, SPIN KICK'], ['RUN + J', 'SHOULDER CHARGE'], ['RUN + L', 'FLYING KICK'],
   ['JUMP + L / J', 'JUMP KICK / DIVE PUNCH'], ['I (GRAB) + J', 'KNEES / HEADBUTT'], ['I (GRAB) + L', 'THROW'], ['L (MAN DOWN)', 'STOMP'],
+  ['I + L AT A LAD', 'PASS HIM TO A MATE'],
 ];
 export function drawComboList(ctx, x, y) {
   drawText(ctx, 'COMBOS', x, y, { color: C.gold });
