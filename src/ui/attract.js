@@ -62,9 +62,6 @@ class StoryScene {
       drawText(ctx, l, VIEW_W / 2, y, { color: last ? C.gold : HARD.has(l) ? '#ff3a3a' : '#ffffff', align: 'center', outline: '#000', scale: last ? 2 : 1 });
     });
     ctx.globalAlpha = 1;
-    ctx.fillStyle = '#05030a'; ctx.fillRect(0, 0, VIEW_W, 28);
-    drawText(ctx, 'THE STORY SO FAR', VIEW_W / 2, 10, { color: C.gold, align: 'center' });
-    ctx.fillStyle = C.red; ctx.fillRect(VIEW_W / 2 - 60, 20, 120, 1);
     if (blink(this.t)) drawText(ctx, 'PRESS START', VIEW_W / 2, VIEW_H - 14, { color: C.gold, align: 'center', outline: '#000' });
     scanlines(ctx);
   }

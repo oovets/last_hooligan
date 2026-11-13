@@ -8,7 +8,7 @@
 //   envProp(type, opts) -> { img, ax, ay } | null
 
 const BASE = new URL('../../assets/env/', import.meta.url);
-export const ENV = { walls: {}, floors: {}, props: {}, ready: false };
+export const ENV = { walls: {}, floors: {}, props: {}, ready: false, done: 0, total: 0 };   // done/total: load progress
 
 function loadImg(file) {
   return new Promise(res => {
@@ -47,7 +47,8 @@ export async function loadEnv() {
     ENV.props[id] = [];
     p.variants.forEach((v, i) => jobs.push(loadImg(v.file).then(im => { if (im) ENV.props[id][i] = { ...v, img: im }; })));
   }
-  await Promise.all(jobs);
+  ENV.total = jobs.length;
+  await Promise.all(jobs.map(j => j.then(() => { ENV.done++; })));
   for (const id in ENV.props) ENV.props[id] = ENV.props[id].filter(Boolean);
   ENV.ready = true;
   return ENV;

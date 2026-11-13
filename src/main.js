@@ -57,7 +57,7 @@ window.addEventListener('mousedown', unlockAudio);
 window.addEventListener('touchstart', unlockAudio);
 canvas.focus();
 
-import { loadEnv } from './engine/envsprites.js';
+import { loadEnv, ENV } from './engine/envsprites.js';
 import { loadModels, EXTRAS } from './game/sprites.js';
 import { loadFonts, setFrameHD } from './engine/font.js';
 import { drawLoading } from './ui/loadscreen.js';
@@ -70,7 +70,10 @@ const want3d = (qp0.get('renderer') || save.data.settings.renderer) === '3d';
 async function load3d() {
   try {
     const m = await timed('3d:modules', import('./render3d/renderer.js'));
-    await Promise.all([timed('3d:models v1', m.loadCharacterModels()), timed('3d:models v2', m.loadCharacters2())]);
+    await timed('3d:models v2', m.loadCharacters2());
+    // the old v1 rigid models are only a fallback for when the v2 skinned models are missing
+    const { CHAR2 } = await import('./render3d/characters2.js');
+    if (!CHAR2.ready) await timed('3d:models v1', m.loadCharacterModels());
     r3d.renderer = new m.Renderer3D(glCanvas, canvas);
     try { const ms = await timed('3d:menu', import('./render3d/menustage.js')); r3d.menu = new ms.MenuStage(); } catch (e) { console.warn('[3d] menu stage unavailable', e); }
   } catch (e) { console.warn('[3d] renderer unavailable, using 2D', e); }
@@ -78,8 +81,11 @@ async function load3d() {
 // each preload step logs its time ([load] in the console) so slow loads can be diagnosed on the live site
 const T0 = performance.now();
 const timed = (name, p) => p.then(v => { console.info(`[load] ${name} ${Math.round(performance.now() - T0)}ms`); return v; });
+// The Blender environment sprites (~1000 PNGs for every level) load in the BACKGROUND: the title shows as soon as the
+// fonts and the 3D characters are in; a level / the pub waits for them only if you get there first (gated scenes below).
+const envP = timed('env', loadEnv());
 async function preload() {
-  const tasks = [timed('env', loadEnv()), timed('fonts', loadFonts())];
+  const tasks = [timed('fonts', loadFonts())];
   if (want3d) tasks.push(timed('3d', load3d()));
   try {
     const r = await fetch('assets/sprites/index.json');
@@ -104,6 +110,16 @@ const loading = {
 preload();
 let started = false;
 const qp = new URLSearchParams(location.search);
+// scenes that build a World wait for the environment sprites (floors are baked when a level is built)
+class EnvWaitScene {
+  constructor(make) { this.make = make; this.t = 0; this.shown = 0; envP.then(() => { this.ready = true; }); }
+  update(dt) { this.t += dt; if (this.ready || ENV.ready) app.go(this.make(), { fade: false }); }
+  draw(c) { const k = ENV.total ? ENV.done / ENV.total : 0; this.shown += (k - this.shown) * 0.15; drawLoading(c, this.t, this.shown); }
+}
+for (const name of ['play', 'hub', 'levelIntro']) {
+  const make = app.scenes[name];
+  if (make) app.scenes[name] = (...a) => (ENV.ready ? make(...a) : new EnvWaitScene(() => make(...a)));
+}
 function start() {
   if (started) return; started = true;
   const ov = document.getElementById('loading'); if (ov) ov.remove();
