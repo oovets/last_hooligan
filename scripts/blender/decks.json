@@ -62,15 +62,11 @@
     "mask:balaclava",
     "gloves",
     "shoes:stripes",
-    "badge:arm",
-    "track:stripes"
+    "badge:arm"
   ],
   "balaclava": {
     "color": "#141416",
     "layer": "mask:balaclava"
   },
-  "gloves": {},
-  "track_stripes": {
-    "color": "#f2c811"
-  }
+  "gloves": {}
 }

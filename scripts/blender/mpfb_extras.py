@@ -743,44 +743,6 @@ def build_kit(JOB, OBJ, J, L):
         EXTRA['gloves'] = {'name': 'gloves', 'tag': 'acc:gloves', 'force': None, 'mat': ('ID_16', hexlin('#141416'), 0.7, None, False)}
         print('GLOVES', len(ob.data.polygons))
 
-    if JOB.get('track_stripes') is not None:
-        # three stripes down the outside of each sleeve, shoulder to cuff (layer track:stripes, ID_22 = look.jacket.trim on
-        # a track top): ribbons cast onto the jacket, one object per arm segment so each rides its own bone
-        o = JOB['track_stripes']; top = OBJ[o.get('on', 'top_jacket')]; bt = _bvh(top)
-        W, GAP = o.get('width', 0.0085), o.get('gap', 0.006)
-        for sg, sd in ((1, 'L'), (-1, 'R')):
-            segs = (('upperArm', J['upperArm_' + sd] + Vector((0, 0, 0.03)), J['forearm_' + sd]),
-                    ('forearm', J['forearm_' + sd], J['hand_' + sd] + (J['forearm_' + sd] - J['hand_' + sd]).normalized() * 0.035))
-            for bone, a, b in segs:
-                d = (b - a).normalized()
-                out = Vector((sg, 0, 0)) + Vector((0, -0.15, 0)); out = (out - d * out.dot(d)).normalized()
-                around = d.cross(out).normalized()
-                bm = bmesh.new(); made = 0
-                for k in (-1, 0, 1):
-                    rows = []
-                    for i in range(13):
-                        p = a.lerp(b, i / 12)
-                        ang = k * (W + GAP) / 0.05                      # ~5 cm sleeve radius: the stripes sit side by side
-                        o2 = (out * math.cos(ang) + around * math.sin(ang)).normalized()
-                        hit = bt.ray_cast(p + o2 * 0.25, -o2, 0.3)
-                        if hit[0] is None: continue
-                        n = hit[1] if hit[1].dot(o2) > 0 else -hit[1]
-                        q = hit[0] + n * 0.0018; side = d.cross(n).normalized() * W * 0.5
-                        rows.append((bm.verts.new(q - side), bm.verts.new(q + side), n))
-                    for i in range(len(rows) - 1):
-                        f = bm.faces.new((rows[i][0], rows[i + 1][0], rows[i + 1][1], rows[i][1]))
-                        f.normal_update()
-                        if f.normal.dot(rows[i][2]) < 0: f.normal_flip()     # face out (one-sided palette material)
-                        made += 1
-                me = bpy.data.meshes.new('stripes'); bm.to_mesh(me); bm.free()
-                role = 'trackStripes%s_%s' % (sd, bone)
-                ob = bpy.data.objects.new(role, me); bpy.context.scene.collection.objects.link(ob)
-                for p in me.polygons: p.use_smooth = True
-                OBJ[role] = ob
-                EXTRA[role] = {'name': role, 'tag': 'acc:track:stripes', 'force': bone + '_' + sd,
-                               'mat': ('ID_22', hexlin(o.get('color', '#f4f1e8')), 0.7, None, False)}
-                print('TRACK STRIPES', sd, bone, made, 'quads')
-
     if JOB.get('mohawk') is not None:
         o = JOB['mohawk']
         def keep(co, n):

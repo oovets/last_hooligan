@@ -59,8 +59,7 @@
     "top:jacket",
     "legs:jeans",
     "shoes:stripes",
-    "badge:arm",
-    "track:stripes"
+    "badge:arm"
   ],
   "cranium": {
     "strength": 0.8,
@@ -71,8 +70,5 @@
     ],
     "lift": 0.003,
     "back": 0.006
-  },
-  "track_stripes": {
-    "color": "#f4f1e8"
   }
 }

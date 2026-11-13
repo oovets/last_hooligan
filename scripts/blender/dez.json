@@ -98,11 +98,7 @@
     "legs:jeans",
     "hair:crop",
     "badge:arm",
-    "shoes:stripes",
-    "track:stripes"
+    "shoes:stripes"
   ],
-  "wardrobe_tex": 512,
-  "track_stripes": {
-    "color": "#f4f1e8"
-  }
+  "wardrobe_tex": 512
 }
