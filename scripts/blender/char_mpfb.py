@@ -16,7 +16,9 @@
 #                             "xform": "build/mpfb/vic_xform.json" (write the raw -> exported transform),
 #                             "badge": true, "badge_scale": 1.0 (the arm badge on the top's left sleeve, layer 'badge:arm'),
 #                             "top_clear": [0.008, 0.04] (gap, reach in m: lift the top clear of the trousers),
-#                             "hide_pants_under_top": true (delete the trousers where the top covers them: no poke-through) }
+#                             "hide_pants_under_top": true (delete the trousers where the top covers them: no poke-through),
+#                             "shoe_stripes": true, "sole_h": 0.026 (three stripes + heel tab on the trainers; the sole as ID_10),
+#                             "hair_layer": "hair:curtains" (the LOOK hair layer that shows the hair mesh; default hair:crop) }
 #   scripts/blender/vic.json is the Fat Vic hero job (its face map comes from scripts/blender/vic_face.py).
 #
 # Needs (one-off, see assets/models/CREDITS.md for what was downloaded):
@@ -394,7 +396,7 @@ def strip_props(idb):
 
 NAMES = {'body': 'body', 'eyes': 'eyes', 'brows': 'eyebrows', 'lashes': 'eyelashes', 'teeth': 'teeth', 'hair': 'hair',
          'top': 'top', 'pants': 'pants', 'shoes': 'shoes', 'badge': 'badge', 'stripes_L': 'shoeStripesL', 'stripes_R': 'shoeStripesR'}
-TAGS = {'hair': 'acc:hair:crop', 'badge': 'acc:badge:arm', 'stripes_L': 'acc:shoes:stripes', 'stripes_R': 'acc:shoes:stripes'}   # shown only for LOOKs with hair / a badge / striped trainers
+TAGS = {'hair': 'acc:' + JOB.get('hair_layer', 'hair:crop'), 'badge': 'acc:badge:arm', 'stripes_L': 'acc:shoes:stripes', 'stripes_R': 'acc:shoes:stripes'}   # shown only for LOOKs with hair / a badge / striped trainers
 for role, ob in OBJ.items():
     strip_props(ob)                              # MPFB bookkeeping props would leak into glTF extras
     ob.name = ob.data.name = NAMES[role]

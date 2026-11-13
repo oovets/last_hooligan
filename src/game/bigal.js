@@ -79,7 +79,7 @@ export function bareLook(look) {
   // 3D: the l_bare model (char_v2.py torso 'bare': a pale, skinny torso, collarbones and all); colours = his skin in case
   // a fallback model (2D, or no l_bare) draws a top
   const skin = look.skin || '#f2d6c4';
-  return { ...look, jacket: { style: 'bare', color: skin, trim: skin, lining: skin }, shirt: skin, scarf: null };
+  return { ...look, jacket: { style: 'bare', color: skin, trim: skin, lining: skin }, shirt: skin, scarf: null, hero: null };   // (the hero model has a shirt on)
 }
 export function setupStrip(f) {
   f.strip = true;

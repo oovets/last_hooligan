@@ -1,5 +1,6 @@
 {
  "models": {
-  "vic": "vic.glb"
+  "vic": "vic.glb",
+  "bigal": "bigal.glb"
  }
 }

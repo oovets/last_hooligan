@@ -17,7 +17,7 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 | Overhaul: handkeyade klipp (slag, tillstånd, luft, grepp, Kenny och Vic) | klar |
 | Kenny Showtime ersätter Terrace Tina (muskelbygge `b_*`, balaklava, egna slag) | klar, ej provspelad |
 | Big Al (THE STEPLADDER, ny spelbar figur och grundare, TOP OFF-mekaniken) | klar och testad, ej provspelad |
-| Realistiska hjältemodeller i menyerna (MPFB2) | Fat Vic klar (kraftig kropp, Stone Island-overshirt med märke), övriga saknas |
+| Realistiska hjältemodeller i menyerna (MPFB2) | Fat Vic och Big Al klara, övriga saknas |
 | Overhaul: procedurell rörelse (fightstance, steg, acceleration) | klar, ej provspelad |
 | Fullskaliga fordon, nya menyer i full upplösning | klar |
 | Fas E: THE TERRACES | pausad (motorstöd för trappsteg finns) |
@@ -63,12 +63,11 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 - [ ] Provspela klippen live och finjustera tajming och räckvidd. `tools/anim3d.html` visar klipp som filmremsor:
       `filmstrip(['hurtFront', 'atk:spinKick', 'move:guard:left'], { frames: 7, facing: 0, look: 'vic' })`.
 - [ ] Bättre händer (knytnäve, fingrar) och ansikten med uttryck (skrik, ont, KO).
-- [ ] Realistiska hjältemodeller (MPFB2, `scripts/blender/char_mpfb.py`) för resten av figurerna. I dag finns bara
-      `vic` i `assets/models/hero/index.json`.
+- [ ] Realistiska hjältemodeller (MPFB2, `scripts/blender/char_mpfb.py`) för resten av figurerna. I dag finns
+      `vic` och `bigal` i `assets/models/hero/index.json`.
 - [x] Big Al har en egen kroppstyp i 3D (`l`, lanky: `l_jacket`, `l_bare`): lång och smal med ett magrare ansikte,
       och en riktig bar överkropp (blek, tanig, nyckelben, ren livrem) när skjortan åker av.
 - [ ] Big Al: provspela TOP OFF (skräckfrysen, skjortan i ansiktet, att knäppa igen).
-- [ ] Vic (hero): skorna är enfärgade i lookens blå, utan den orange randen och gummisulan från v2-modellen.
 - [ ] Riktiga 3D-vapen i handen, i dag visas föremålets ikon som en sprite.
 - [ ] Prestanda: slå ihop meshar per figur (färre draw calls inför stora firmastrider), samt halv upplösning eller
       ett kvalitetsval för GTAO på stora skärmar (`?post=0` är enda reglaget i dag).

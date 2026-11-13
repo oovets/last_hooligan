@@ -107,7 +107,7 @@ export const CHARACTERS = [
       hat: { style: 'balaclava', color: '#ff5a00', neon: true },   // NEON orange balaclava (glows a little in 3D)
       tattoo: 'clockwork',                                   // A Clockwork Orange on his left arm (3D)
       jacket: { style: 'vest', color: '#ecebe4' }, shirt: '#ecebe4',
-      pants: { style: 'cargo', color: '#3e4632' }, shoes: { color: '#f4f4f0', sole: '#ecebe6' },   // clean white trainers
+      pants: { style: 'cargo', color: '#3e4632' }, shoes: { color: '#f4f4f0', sole: '#ecebe6', stripe: '#141416' },   // white three-stripes, black stripes
       scarf: null, build: 1.2, height: 1.08,
     },
     unlock: null,
@@ -124,7 +124,7 @@ export const CHARACTERS = [
       skin: '#f3d9c8', hair: { style: 'curtains', color: '#5a3a1e' }, facial: 'none',
       jacket: { style: 'shirt', color: '#cdb58c', trim: '#2a2420', lining: '#a3202a', pattern: 'check' }, shirt: '#cdb58c',
       pants: { style: 'jeans', color: '#8aa6c8' }, shoes: { color: '#18181b', sole: '#ece8de', stripe: '#f5c518' },   // black three-stripes, yellow stripes
-      scarf: null, build: 0.86, height: 1.18, lanky: true,   // lanky: his own long thin v2 build (l_jacket / l_bare)
+      scarf: null, build: 0.86, height: 1.18, lanky: true, hero: 'bigal',   // hero: realistic menu model (assets/models/hero/bigal.glb)   // lanky: his own long thin v2 build (l_jacket / l_bare)
     },
     unlock: null,
   },

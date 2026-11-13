@@ -59,3 +59,22 @@ Attribution for Vic's CC-BY items:
 > "Mens shirt untucked" by Elvaerwyn, "Male classic jeans" and "Running shoes 01" by punkduck (makehumancommunity.org),
 > licensed under CC BY / CC BY 4.0 / CC BY 3.0. Modified: re-fitted, re-rigged, cut, textures downscaled and
 > colour-neutralised.
+
+## hero/bigal.glb (Big Al, built by `scripts/blender/char_mpfb.py -- scripts/blender/bigal.json`)
+
+Same MPFB 2.0.18 pipeline as `vic.glb`: a tall, thin MakeHuman build (macro + cheek/neck targets, CC0) with no likeness
+of anyone; his face and skin are MakeHuman's own, palette-tinted to his LOOK. The check on his shirt is drawn at runtime
+(characters2.js checkMaterial) over the garment's fabric maps.
+
+| Part in the glb | MakeHuman asset | Author | Licence | Pack / source |
+|---|---|---|---|---|
+| body shape, weights | base mesh + macro/cheek/neck targets, `game_engine` rig weights | MakeHuman team | CC0 | bundled with MPFB 2.0.18 |
+| skin (`ID_1`) | `young_caucasian_male` | makehuman_system | CC0 | makehuman_system_assets |
+| eyes (`eye_blue`), eyebrows (`ID_18`), eyelashes, teeth | `low-poly` eyes, `eyebrow010`, `eyelashes01`, `teeth_base` | makehuman_system | CC0 | makehuman_system_assets |
+| hair (`ID_2`, layer `hair:curtains`) | `short02` | makehuman_system | CC0 | makehuman_system_assets |
+| shirt (`ID_3`) | `elvs_male_shirt_untucked_bd1` | Elvaerwyn | **CC-BY** (version not stated in the asset) | shirts02 |
+| trousers (`ID_7`) | `punkduck_male_classic_jeans` | punkduck | **CC-BY 4.0** | pants02 |
+| trainers (`ID_9`, sole `ID_10`) | `punkduck_running_shoes_01` | punkduck | **CC-BY 3.0** | shoes02 |
+| trainer stripes + heel tab (`ID_23`) | none: generated | | | |
+
+The CC-BY attribution under `vic.glb` covers the shirt, jeans and trainers here too.

@@ -1,0 +1,47 @@
+{
+  "out": "assets/models/hero/bigal.glb",
+  "preview": "build/mpfb/bigal_preview.png",
+  "tex": "build/mpfb/tex_bigal",
+  "height": 1.78,
+  "macro": {
+    "gender": 1.0,
+    "age": 0.5,
+    "muscle": 0.35,
+    "weight": 0.12,
+    "proportions": 0.6,
+    "height": 1.0
+  },
+  "targets": {
+    "l-cheek-volume-decr": 0.4,
+    "r-cheek-volume-decr": 0.4,
+    "l-cheek-bones-incr": 0.3,
+    "r-cheek-bones-incr": 0.3,
+    "measure-neck-height-incr": 0.4,
+    "neck-scale-horiz-decr": 0.3
+  },
+  "assets": {
+    "hair": "short02",
+    "top": "elvs_male_shirt_untucked_bd1"
+  },
+  "eye_mat": "blue",
+  "tints": {
+    "body": "#f3d9c8",
+    "hair": "#5a3a1e",
+    "brows": "#5a3a1e",
+    "top": "#cdb58c",
+    "pants": "#8aa6c8",
+    "shoes": "#18181b",
+    "stripes": "#f5c518",
+    "sole": "#ece8de"
+  },
+  "hair_layer": "hair:curtains",
+  "hide_pants_under_top": true,
+  "shoe_stripes": true,
+  "sole_h": 0.026,
+  "meta": {
+    "build": "l",
+    "torso": "jacket",
+    "girth": 0.86,
+    "hero": "bigal"
+  }
+}

@@ -279,7 +279,13 @@ export class Character2 {
       let m = this.mats[mk];
       if (!m) {
         const c = spec.pal[id] || [200, 0, 200];
-        if (asAuthored) {
+        if (asAuthored && named && (id === 3 || id === 4) && look.jacket && look.jacket.pattern === 'check') {
+          // a realistic hero's shirt (Big Al): the procedural check over the garment's own fabric maps
+          const J = look.jacket;
+          m = checkMaterial(toColor(spec.pal[3] || c), new THREE.Color(J.trim || '#2a2420'), new THREE.Color(J.lining || '#a3202a'));
+          if (src.map) m.map = src.map;
+          if (src.normalMap) { m.normalMap = src.normalMap; m.normalScale = src.normalScale; }
+        } else if (asAuthored) {
           m = src.clone();
           m.metalness = 0;                                  // glTF from scan / AI tools often defaults to metallic
           if (named) m.color = toColor(c);
