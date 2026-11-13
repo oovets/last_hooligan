@@ -37,7 +37,7 @@ const SIM = args.includes('--sim');
 const only = args.filter(a => !a.startsWith('--'));
 
 await import('../src/content/index.js');
-const { LEVELS } = await import('../src/content/levels/index.js');
+const { ALL_LEVELS: LEVELS } = await import('../src/content/tour/index.js');   // story + built tour arenas
 const { TileMap } = await import('../src/engine/tilemap.js');
 const { FLOORS, WALLS } = await import('../src/engine/tiles.js');
 const { PROPS } = await import('../src/game/props.js');
@@ -212,6 +212,7 @@ async function simulate(L, idx) {
 
 for (let i = 0; i < LEVELS.length; i++) {
   const L = LEVELS[i];
+  if (L.stub) continue;
   if (only.length && !only.includes(L.id) && !only.includes(String(L.num))) continue;
   try {
     checkLevel(L);

@@ -28,7 +28,7 @@ globalThis.addEventListener = noop;
 globalThis.requestAnimationFrame = noop;
 
 await import('../src/content/index.js');
-const { LEVELS } = await import('../src/content/levels/index.js');
+const { ALL_LEVELS: LEVELS } = await import('../src/content/tour/index.js');
 const { World } = await import('../src/game/world.js');
 const { game } = await import('../src/game/state.js');
 

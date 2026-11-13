@@ -8,6 +8,7 @@ import { save } from '../save.js';
 import { audio } from '../audio/audio.js';
 import { game } from '../game/state.js';
 import { LEVELS } from '../content/levels/index.js';
+import { ALL_LEVELS } from '../content/tour/index.js';
 import { firmMode } from './hub.js';
 import { getFirm, applyTrip, resultFromWorld } from '../game/firmdata.js';
 import { drawDoll } from '../game/doll.js';
@@ -21,14 +22,14 @@ import { frame, hintBar, heading, stripes, scanlines, blink, typed, typedCount, 
 const pressed = () => input.pressed('confirm') || input.pressed('punchL') || input.pressed('pause');
 
 function toHallOfFame(next) {
-  const score = game.score, lvl = Math.min(LEVELS.length, game.levelIndex + 1);
+  const score = game.score, lvl = Math.min(LEVELS.length, game.levelIndex + 1);   // (tour arenas count as the story so far)
   if (save.qualifies(score)) return new NameEntryScene(score, lvl, next);
   return next();
 }
 
 // ---------------------------------------------------------------- level intro card
 class LevelIntroScene {
-  constructor(i) { this.i = i; this.L = LEVELS[i]; this.t = 0; this.typedN = 0; }
+  constructor(i) { this.i = i; this.L = ALL_LEVELS[i]; this.t = 0; this.typedN = 0; }
   enter() {
     game.levelIndex = this.i;
     save.data.run = game.snapshot();
@@ -133,13 +134,14 @@ class LevelCompleteScene {
     const d = save.data;
     game.score += this.bonus;
     d.highScore = Math.max(d.highScore || 0, game.score);
-    const L = LEVELS[this.i];
+    const L = ALL_LEVELS[this.i];
     this.newBest = game.score > (d.best[L.id] || 0) || (d.best[L.id] || 0) === this.scoreBefore;
     d.best[L.id] = Math.max(d.best[L.id] || 0, game.score);
     d.cash = (d.cash || 0) + this.cashEarned;
     const T = (d.totals ||= {}); T.cashEarned = (T.cashEarned || 0) + this.cashEarned;
     const next = this.i + 1;
-    if (next < LEVELS.length) { game.levelIndex = next; game.keys = new Set(); d.run = game.snapshot(); }
+    if (this.i >= LEVELS.length) { game.levelIndex = Math.min(LEVELS.length - 1, (d.unlocked || 1) - 1); game.keys = new Set(); d.run = game.snapshot(); }   // a tour away day: back to the pub, the story resumes where it was
+    else if (next < LEVELS.length) { game.levelIndex = next; game.keys = new Set(); d.run = game.snapshot(); }
     else { d.run = null; d.completed = true; }
     // the firm: consequences of the trip (game/firmdata.js); you go back to the pub afterwards
     if (firmMode() && this.world && this.world.firm) applyTrip(getFirm(game.character), resultFromWorld(this.world, true, this.rank));
@@ -165,7 +167,8 @@ class LevelCompleteScene {
       if (this.t < endT + 0.8) { this.t = endT + 0.81; this.rows.forEach((r, k) => { this.rowShown[k] = r[2]; }); return; }
       const next = this.i + 1;
       audio.sfx('menuSelect');
-      if (next < LEVELS.length) app.go(firmMode() && app.scenes.hub ? app.scenes.hub() : app.scenes.levelIntro(next));
+      if (this.i >= LEVELS.length) app.go(app.scenes.hub ? app.scenes.hub() : app.scenes.title());
+      else if (next < LEVELS.length) app.go(firmMode() && app.scenes.hub ? app.scenes.hub() : app.scenes.levelIntro(next));
       else app.go(new EndingScene());
     }
   }
@@ -173,7 +176,7 @@ class LevelCompleteScene {
     const t = this.t;
     backdrop.draw(ctx, { dim: 0.72 });
     stripes(ctx, t, '#c8102e', '#f4f1e8', 0.06, 20);
-    drawText(ctx, `LEVEL ${LEVELS[this.i].num || this.i + 1} - ${LEVELS[this.i].name}`, VIEW_W / 2, 12, { color: '#ffffff', align: 'center', outline: '#000' });
+    drawText(ctx, `${this.i >= LEVELS.length ? 'AWAY DAY' : 'LEVEL ' + (ALL_LEVELS[this.i].num || this.i + 1)} - ${ALL_LEVELS[this.i].name}`, VIEW_W / 2, 12, { color: '#ffffff', align: 'center', outline: '#000' });
     const k = Math.min(1, t * 4);
     const s = 5 + Math.round((1 - k) * 4);
     drawChrome(ctx, 'SORTED!', VIEW_W / 2, 26, s, 'blood', 'center');

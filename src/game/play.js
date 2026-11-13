@@ -8,6 +8,7 @@ import { World } from './world.js';
 import { HUD } from './hud.js';
 import { game } from './state.js';
 import { LEVELS } from '../content/levels/index.js';
+import { ALL_LEVELS } from '../content/tour/index.js';
 import { audio } from '../audio/audio.js';
 import { save } from '../save.js';
 import { ITEMS } from './items.js';
@@ -23,7 +24,7 @@ export class PlayScene {
   get pixel() { return !r3d.renderer; }
   constructor(levelIndex) {
     this.levelIndex = levelIndex;
-    this.level = LEVELS[levelIndex];
+    this.level = ALL_LEVELS[levelIndex];
     this.paused = false;
     this.pauseSel = 0;
     this.invOpen = false;
@@ -103,7 +104,7 @@ export class PlayScene {
   complete(stats) {
     const w = this.world, lv = this.level, d = save.data;
     // persist progress
-    d.unlocked = Math.max(d.unlocked || 1, Math.min(LEVELS.length, this.levelIndex + 2));
+    if (this.levelIndex < LEVELS.length) d.unlocked = Math.max(d.unlocked || 1, Math.min(LEVELS.length, this.levelIndex + 2));   // (tour arenas unlock by reputation)
     d.best[lv.id] = Math.max(d.best[lv.id] || 0, game.score);
     d.highScore = Math.max(d.highScore || 0, game.score);
     d.scarves[lv.id] = Array.from(new Set([...(d.scarves[lv.id] || []), ...w.record.scarves]));
@@ -253,7 +254,7 @@ export class PlayScene {
       return;
     }
     heading(ctx, 'PAUSED', VIEW_W / 2, 34, { scale: 4 });
-    drawText(ctx, `LEVEL ${this.level.num || this.levelIndex + 1} - ${this.level.name}`, VIEW_W / 2, 76, { color: '#ffffff', align: 'center', outline: '#000' });
+    drawText(ctx, `${this.levelIndex >= LEVELS.length ? 'AWAY DAY' : 'LEVEL ' + (this.level.num || this.levelIndex + 1)} - ${this.level.name}`, VIEW_W / 2, 76, { color: '#ffffff', align: 'center', outline: '#000' });
     if (this.page === 'menu') {
       frame(ctx, VIEW_W / 2 - 110, 96, 220, 118, { fill: 'rgba(14,9,22,0.92)' });
       this.pauseMenu.draw(ctx, VIEW_W / 2 - 100, 106, { w: 200, rowH: 18 });

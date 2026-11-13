@@ -1631,3 +1631,11 @@ for (const k of ['whistle', 'siren', 'bell', 'explosion', 'splash', 'train']) {
 }
 
 export default audio;
+
+// Tour arenas (src/content/arenas/<id>/music.js) bring their own song: registers it as a level track (crowd bed waits
+// for the level's crowd value) and, for grounds, as a stadium (louder crowd, chants).
+export function registerTrack(id, song, { stadium = true } = {}) {
+  audio.registerSongs({ [id]: song });
+  LEVEL_TRACKS.add(id);
+  if (stadium) STADIUM.add(id);
+}

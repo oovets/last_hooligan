@@ -273,14 +273,14 @@ export function fighterParams(l) {
 export function resultFromWorld(world, won, rank) {
   const L = world.level;
   return {
-    levelId: L.id, levelName: L.name, won, rank: rank || null,
+    levelId: L.id, levelName: L.name, won, rank: rank || null, tour: !!L.tour,
     kos: (world.stats && world.stats.kos) || 0, routs: (world.stats && world.stats.routs) || 0,
     bossDown: !!(world.boss && !world.boss.alive),
     lads: world.firm ? world.firm.report() : [],
   };
 }
 
-// result = { levelId, levelName, won, rank, kos, routs, bossDown, cash, lads: [{ id, kos, downs, out }] }
+// result = { levelId, levelName, won, rank, kos, routs, bossDown, cash, tour, lads: [{ id, kos, downs, out }] }
 export function applyTrip(F, result) {
   const lines = [];
   const squadIds = new Set(result.lads.map(r => r.id));
@@ -289,6 +289,12 @@ export function applyTrip(F, result) {
   // reputation
   let dRep = result.won ? 10 + ({ S: 10, A: 6, B: 3 }[result.rank] || 0) + (result.bossDown ? 5 : 0) : -5;
   dRep += Math.min(10, Math.floor((result.routs || 0) / 2));
+  // an away day on the Football Tour: taking it to a real firm on their own patch counts double (first win there: +15 more)
+  if (result.tour && result.won) {
+    const done = (F.tourWins || (F.tourWins = {}));
+    dRep = dRep * 2 + (done[result.levelId] ? 0 : 15);
+    done[result.levelId] = (done[result.levelId] || 0) + 1;
+  } else if (result.tour) dRep -= 5;
   F.rep = Math.max(0, F.rep + dRep);
   lines.push(`REPUTATION ${dRep >= 0 ? '+' : ''}${dRep} (NOW ${F.rep})`);
   // heat

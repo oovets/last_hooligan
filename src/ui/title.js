@@ -10,6 +10,7 @@ import { game } from '../game/state.js';
 import { drawDoll } from '../game/doll.js';
 import { sampleAnim } from '../game/poses.js';
 import { LEVELS } from '../content/levels/index.js';
+import { ALL_LEVELS } from '../content/tour/index.js';
 import { buildLook, progressTotals } from '../content/wardrobe.js';
 import { Backdrop, backdrop } from './backdrop.js';
 import { drawLogo, drawCrest, LOGO_LAND_TIMES, LOGO_INTRO_LEN } from './logo.js';
@@ -141,7 +142,7 @@ class MainMenuScene {
     const hasRun = () => !!d.run;
     this.menu = new MenuList([
       { label: 'NEW GAME', fn: () => startNewRun(0), hint: 'KICK OFF FROM LEVEL 1: THE STREETS' },
-      { label: 'CONTINUE', disabled: () => !hasRun(), fn: () => { game.reset(); game.restore(d.run); app.go((d.settings || {}).firm !== false && app.scenes.hub ? app.scenes.hub() : app.scenes.levelIntro(d.run.levelIndex)); }, hint: () => (d.run ? `RESUME AT LEVEL ${d.run.levelIndex + 1}: ${(LEVELS[d.run.levelIndex] || {}).name || ''}` : 'NOTHING TO CONTINUE YET') },
+      { label: 'CONTINUE', disabled: () => !hasRun(), fn: () => { game.reset(); game.restore(d.run); app.go((d.settings || {}).firm !== false && app.scenes.hub ? app.scenes.hub() : app.scenes.levelIntro(d.run.levelIndex)); }, hint: () => (d.run ? `RESUME AT LEVEL ${d.run.levelIndex + 1}: ${(ALL_LEVELS[d.run.levelIndex] || {}).name || ''}` : 'NOTHING TO CONTINUE YET') },
       { label: 'LEVEL SELECT', fn: () => app.go(new LevelSelectScene()), hint: `${d.unlocked || 1} OF ${LEVELS.length} LEVELS UNLOCKED`, badge: () => `${d.unlocked || 1}/${LEVELS.length}` },
       { label: 'WARDROBE', fn: () => app.go(new WardrobeScene()), hint: 'SPEND YOUR BANKED CASH ON CLOBBER', badge: () => '£' + (d.cash || 0) },
       { label: 'OPTIONS', fn: () => app.go(new OptionsScene()), hint: 'SOUND, SHAKE, DIFFICULTY, CONTROLS' },
