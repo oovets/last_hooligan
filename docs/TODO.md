@@ -22,7 +22,7 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 | Overhaul: procedurell rörelse (fightstance, steg, acceleration) | klar, ej provspelad |
 | Fullskaliga fordon, nya menyer i full upplösning | klar |
 | Fas E: THE TERRACES | pausad (motorstöd för trappsteg finns) |
-| Fas F: Football Tour-kartan och arenorna | kartan, registret och fyra arenor klara och valbara i LEVEL SELECT; The Den är en stubbe |
+| Fas F: Football Tour-kartan och arenorna | kartan, registret och alla fem arenor klara och valbara i LEVEL SELECT |
 | Bana 1: tvåfilig gata med mittlinje och trafik åt båda håll, högre stad i 3D (`TOWN_SCALE`), regnet avstängt | klar |
 | Menyljus för realistiska figurer (miljöljus, perspektiv i karaktärsvalet), hjältemodeller laddas vid behov | klar |
 
@@ -150,12 +150,12 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
       visas som SOON på kartan.
 - [x] Stamford Bridge, Anfield, Old Trafford och Ibrox är byggda (tema, bana, boss och musik i varje paket, `1d20d1c`)
       och klarar `check.mjs --sim`.
-- [ ] The Den är fortfarande en stubbe (bygget avbröts mitt i banan). Den syns som SOON på kartan och saknas i LEVEL
-      SELECT tills den är byggd.
+- [x] The Den är byggd (South Bermondsey, buren, valvbågarna med tåg ovanför, skrotgården, Zampa Road, Cold Blow
+      Lane; bossen DOUG "THE DOCKER" CRATCHLEY) och klarar `check.mjs --sim`.
 - [x] Arenorna är valbara direkt i LEVEL SELECT (sida 2, alltid öppna för provspelning; på pubkartan gäller ryktet).
 - [ ] Efter en tourbana startad från LEVEL SELECT: kontrollera flödet tillbaka (puben eller menyn) och att rykte och
       dubbla tourpoäng bokförs rätt.
-- [ ] Provspela de fyra arenorna, och klipp för deras bossattacker (se Grafik).
+- [ ] Provspela de fem arenorna, och klipp för deras bossattacker (se Grafik).
 - [ ] Europa: Tyskland, Italien, Spanien och Sverige.
 
 ## Visionen i övrigt

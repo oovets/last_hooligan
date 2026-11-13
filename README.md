@@ -13,8 +13,8 @@ is 90s football-casual culture in the fictional city of Nordhamn.
 * 8 story levels in Nordhamn: THE STREETS, THE PUB, THE UNDERGROUND, THE AWAY END, THE CITY, THE INDUSTRIAL ZONE,
   THE DERBY and THE LAST STAND. Each has unique enemies, hazards, secrets, 5 lost scarves, a pin badge and a boss.
 * **The Football Tour:** away days at real grounds, picked from a 1994/95 matchday-programme map in the pub and
-  unlocked by your firm's reputation: STAMFORD BRIDGE (the Headhunters), ANFIELD, OLD TRAFFORD and IBROX, each with
-  its own theme, boss and music. THE DEN (Millwall) is still to come.
+  unlocked by your firm's reputation: THE DEN (the Bushwackers), STAMFORD BRIDGE (the Headhunters), ANFIELD,
+  OLD TRAFFORD and IBROX, each with its own theme, boss and music.
 * 7 playable characters: The Last Hooligan (Dez, dressed in the wardrobe), Big Mo, Little Stig, Kenny Showtime
   (masked, roided, ultraviolent), Big Al (six foot six, the toughest man in the firm, and the shirt comes off),
   Fat Vic and The Old Boy (unlockable).
