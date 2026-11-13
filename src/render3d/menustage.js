@@ -7,10 +7,15 @@
 //     actors: [{ look, x, feet, h, anim, phase, yaw, pose?, dark? }] in logical screen px: feet position and body height;
 //             pose = an explicit pose-library pose (overrides anim), dark = a black silhouette (locked characters)
 //     rect:   logical rect of the 2D canvas the stage covers (also the render viewport)
-//     opts:   { light: 'terrace' | 'studio', persp: bool }
+//     opts:   { light: 'terrace' | 'studio', persp: bool, shadows?: bool (default: only when there's one actor) }   persp: perspective camera (rounder faces and feet; use it for
+//             single hero shots, keep orthographic for rows of busts)
+//
+// Lighting: an image-based room environment (soft wrap-around light and real reflections on PBR materials) under a
+// warm key light that casts self-shadows (arms on the body, the jaw on the neck), plus two gentle coloured rims.
 //
 // Actors are posed from the game's pose library (sampleAnim) through the same layered animator as in the game.
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { CHAR2, Character2, modelFor2 } from './characters2.js';
 import { sampleAnim } from '../game/poses.js';
 
@@ -23,8 +28,13 @@ export class MenuStage {
     this.renderer.setClearColor(0x000000, 0);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.NeutralToneMapping;
-    this.renderer.toneMappingExposure = 1.1;
-    this.renderer.shadowMap.enabled = false;
+    this.renderer.toneMappingExposure = 1.0;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;      // PCF honours shadow.radius (PCFSoft ignores it)
+    // image-based lighting, shared by every menu scene (generated once, no download)
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmrem.dispose();
     this.scenes = new Map();
     this.ready = CHAR2.ready;
     this.size = [0, 0];
@@ -34,18 +44,27 @@ export class MenuStage {
     let s = this.scenes.get(key);
     if (s) return s;
     const scene = new THREE.Scene();
+    scene.environment = this.env;
+    let key1;
     if (light === 'studio') {
-      scene.add(new THREE.HemisphereLight(0xb0b8ff, 0x2a1018, 1.5));
-      const key1 = new THREE.DirectionalLight(0xfff0dc, 2.6); key1.position.set(-2, 3, 4); scene.add(key1);
-      const rimL = new THREE.DirectionalLight(0xff3a3a, 2.4); rimL.position.set(-4, 2, -3); scene.add(rimL);
-      const rimR = new THREE.DirectionalLight(0x8ab0ff, 2.2); rimR.position.set(4, 3, -2); scene.add(rimR);
+      scene.environmentIntensity = 0.32;
+      scene.add(new THREE.HemisphereLight(0xc8ccff, 0x2a1a20, 0.35));
+      key1 = new THREE.DirectionalLight(0xfff0dc, 2.2); key1.position.set(-2, 3, 4);
+      const rimL = new THREE.DirectionalLight(0xff9a8a, 1.3); rimL.position.set(-4, 2, -3); scene.add(rimL);
+      const rimR = new THREE.DirectionalLight(0xbcd0ff, 1.2); rimR.position.set(4, 3, -2); scene.add(rimR);
     } else {
-      scene.add(new THREE.HemisphereLight(0x8890d0, 0x401018, 1.3));
-      const key1 = new THREE.DirectionalLight(0xfff2e0, 2.2); key1.position.set(1, 4, 5); scene.add(key1);
-      const flare = new THREE.DirectionalLight(0xff4a2a, 2.6); flare.position.set(-3, -0.5, -2); scene.add(flare);
-      const flood = new THREE.DirectionalLight(0xc8d8ff, 1.8); flood.position.set(3, 5, -4); scene.add(flood);
+      scene.environmentIntensity = 0.3;
+      scene.add(new THREE.HemisphereLight(0x8890d0, 0x401018, 0.7));
+      key1 = new THREE.DirectionalLight(0xfff2e0, 2.0); key1.position.set(1, 4, 5);
+      const flare = new THREE.DirectionalLight(0xff6a3a, 1.8); flare.position.set(-3, -0.5, -2); scene.add(flare);
+      const flood = new THREE.DirectionalLight(0xc8d8ff, 1.4); flood.position.set(3, 5, -4); scene.add(flood);
     }
-    s = { scene, actors: [], t: null };
+    // the key light shadows the characters onto themselves; its shadow box is fitted to the actors every draw
+    key1.castShadow = true;
+    key1.shadow.mapSize.set(1024, 1024);
+    key1.shadow.bias = -0.0004; key1.shadow.normalBias = 0.02; key1.shadow.radius = 3;
+    scene.add(key1); scene.add(key1.target);
+    s = { scene, actors: [], t: null, key: key1, keyDir: key1.position.clone().normalize() };
     this.scenes.set(key, s);
     return s;
   }
@@ -58,7 +77,22 @@ export class MenuStage {
     if (A) { s.scene.remove(A.char.group); A.char.dispose(); }
     if (!modelFor2(a.look)) return (s.actors[i] = null);
     const char = new Character2(a.look);
-    if (a.dark) for (const m of Object.values(char.mats)) { m.color.set(0x07050a); m.gradientMap = null; m.needsUpdate = true; }
+    if (a.dark) {
+      // locked characters: a flat black silhouette (unlit, so the room environment can't put sheen on it). Keep the map
+      // only for its alpha (cut-out brows / hair cards keep their shape); black colour x map stays black.
+      const dark = new Map();
+      char.group.traverse(o => {
+        if (!o.isMesh) return;
+        let d = dark.get(o.material);
+        if (!d) {
+          const m = o.material;
+          d = new THREE.MeshBasicMaterial({ color: 0x07050a, map: m.alphaTest > 0 || m.transparent ? m.map : null, alphaTest: m.alphaTest, transparent: m.transparent, side: m.side });
+          dark.set(m, d); char.mats['dark|' + dark.size] = d;
+        }
+        o.material = d;
+      });
+    }
+    char.group.traverse(o => { if (o.isMesh) { o.castShadow = !a.dark; o.receiveShadow = !a.dark; } });
     s.scene.add(char.group);
     char.group.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(char.inner);
@@ -108,6 +142,22 @@ export class MenuStage {
     });
     for (let i = actors.length; i < s.actors.length; i++) if (s.actors[i]) { s.scene.remove(s.actors[i].char.group); s.actors[i].char.dispose(); s.actors[i] = null; }
     if (!any) return false;
+    // self-shadows only for single-character hero shots (portrait, character select, wardrobe): rows of busts and the
+    // title-screen firm skip the shadow pass
+    const shadows = opts.shadows ?? actors.length === 1;
+    s.key.castShadow = shadows;
+    // fit the key light's shadow camera round the actors (world units are small: a lad is ~4 units tall here)
+    s.scene.updateMatrixWorld();
+    const box = new THREE.Box3();
+    if (shadows) for (const A of s.actors) if (A) box.expandByObject(A.char.inner);
+    if (!box.isEmpty()) {
+      const c = box.getCenter(new THREE.Vector3()), r = box.getSize(new THREE.Vector3()).length() * 0.6 + 0.5;
+      const L = s.key;
+      L.target.position.copy(c); L.position.copy(c).addScaledVector(s.keyDir, r * 2);   // authored direction, re-centred
+      const sc = L.shadow.camera;
+      sc.left = -r; sc.right = r; sc.top = r; sc.bottom = -r; sc.near = 0.1; sc.far = r * 4;
+      sc.updateProjectionMatrix(); L.target.updateMatrixWorld();
+    }
     this.renderer.clear();
     this.renderer.render(s.scene, cam);
     ctx.drawImage(this.canvas, 0, this.size[1] - H, W, H, rect.x, rect.y, rect.w, rect.h);

@@ -161,15 +161,32 @@ export class Character2 {
       // multi-material parts (striped scarf, the body) export as a group of meshes: the tag sits on the group
       const tag = (o.userData && o.userData.tags) || (o.parent && o.parent.userData && o.parent.userData.tags) || '';
       if (tag.startsWith('acc:')) o.visible = layers.has(tag.slice(4));
-      const id = parseInt(String(o.material && o.material.name).replace('ID_', ''), 10) || 3;
-      let m = this.mats[id];
+      const src = o.material || {};
+      const named = /^ID_\d+/.test(String(src.name));
+      const id = parseInt(String(src.name).replace('ID_', ''), 10) || 3;
+      // textured parts (scanned heads, generated trainers, fabric maps) keep their maps: an ID_<n> material is tinted
+      // by the palette (author its base map near white where the colour should follow the LOOK); any other material
+      // is used as authored. Cache per id + texture, so two parts with different maps never share a material.
+      const tex = src.map || src.normalMap || src.roughnessMap || src.aoMap;
+      const asAuthored = !named || tex;                     // keep the source material (cloned): textured or not ours
+      const mk = asAuthored ? (named ? id : 'raw') + '|' + src.uuid : id;   // one clone per source material
+      let m = this.mats[mk];
       if (!m) {
         const c = spec.pal[id] || [200, 0, 200];
-        // physically based, soft cloth; skin a touch of sheen, eyes and shades glossy
-        m = this.mats[id] = id === 24
-          ? new THREE.MeshStandardMaterial({ map: badgeTexture(), roughness: 0.92, metalness: 0 })   // the arm badge
-          : new THREE.MeshStandardMaterial({ color: toColor(c), roughness: ROUGH[id] ?? 0.88, metalness: 0 });
-        if (id === 13 || id === 19) m.color.multiplyScalar(0.5);
+        if (asAuthored) {
+          m = src.clone();
+          m.metalness = 0;                                  // glTF from scan / AI tools often defaults to metallic
+          if (named) m.color = toColor(c);
+        } else if (id === 24) {
+          m = new THREE.MeshStandardMaterial({ map: badgeTexture(), roughness: 0.92, metalness: 0 });   // the arm badge
+        } else {
+          // physically based, soft cloth; skin a touch of sheen, eyes and shades glossy
+          m = new THREE.MeshStandardMaterial({ color: toColor(c), roughness: ROUGH[id] ?? 0.88, metalness: 0 });
+          if (id === 13 || id === 19) m.color.multiplyScalar(0.5);
+        }
+        // authored blending, so the hit flash / fade in update() combines with it instead of replacing it
+        m.userData.base = { transparent: m.transparent, opacity: m.opacity, depthWrite: m.depthWrite };
+        this.mats[mk] = m;
       }
       o.material = m;
       o.castShadow = true;
@@ -459,10 +476,11 @@ export class Character2 {
     if (f.state === 'dead' && f.team !== 'player' && f.deadT > 0.4 && Math.floor(f.deadT * 12) % 2 === 0) alpha *= 0.5;
     const flash = f.flashT > 0;
     for (const m of Object.values(this.mats)) {
-      m.emissive.setScalar(flash ? 0.6 : 0);
-      const tr = alpha < 0.999;
-      if (m.transparent !== tr) { m.transparent = tr; m.needsUpdate = true; }
-      m.opacity = alpha;
+      if (m.emissive) m.emissive.setScalar(flash ? 0.6 : 0);
+      const b = m.userData.base || { transparent: false, opacity: 1, depthWrite: true };
+      const tr = b.transparent || alpha < 0.999;
+      if (m.transparent !== tr) { m.transparent = tr; m.depthWrite = b.depthWrite; m.needsUpdate = true; }
+      m.opacity = b.opacity * alpha;
     }
     this.group.visible = alpha > 0;
     this.setWeapon(f.weapon && f.weapon.def);

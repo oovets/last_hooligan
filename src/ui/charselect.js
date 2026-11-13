@@ -93,7 +93,7 @@ export class CharSelectScene {
       const pose = d.attack ? attackPose(d.attack, d.phase, d.p) : null;
       const yaw = 0.35 + Math.sin(this.t * 0.45) * 0.55;
       const H = 150 * (look.height || 1);
-      if (stage.draw(ctx, 'select', [{ look, x, feet: y, h: H, anim: d.anim || 'guard', phase: d.t - this.t, pose, yaw, dark }], { x: 16, y: 40, w: 246, h: 248 }, this.t, { light: 'studio' })) return;
+      if (stage.draw(ctx, 'select', [{ look, x, feet: y, h: H, anim: d.anim || 'guard', phase: d.t - this.t, pose, yaw, dark }], { x: 16, y: 40, w: 246, h: 248 }, this.t, { light: 'studio', persp: true })) return;   // hero shot: perspective
     }
     if (SPRITE_MODELS[spec.model]) {
       let clip = 'idle', frame = 0;
