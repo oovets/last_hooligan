@@ -49,11 +49,14 @@ export const RIVAL = { a: '#1f4fb4', b: '#f2f2f2', name: 'PORTSIDE CITY' };     
 export const AWAY = { a: '#f0c020', b: '#141414', name: 'VARGBY WANDERERS' };   // yellow & black away firm
 
 export function casualLook(rng, o = {}) {
+  const dark = () => rng.pick(['#141416', '#1c1c20', '#26262c', '#2e3036', '#3a3c42']);
   return {
     skin: rng.pick(SKINS),
     hair: { style: rng.pick(o.hair || ['crop', 'shaved', 'skinhead', 'curtains', 'mod', 'spiky']), color: rng.pick(HAIRC) },
     facial: rng.pick(['none', 'stubble', 'stubble', 'beard', 'tache']),
     jacket: o.jacket || rng.pick([
+      { style: 'hoodie', color: dark() },
+      { style: 'hoodie', color: rng.pick(['#141416', '#6a6e78', o.a || '#1f4fb4']) },
       { style: 'harrington', color: rng.pick(['#1d2742', '#3a3a3e', '#4a4030']) },
       { style: 'track', color: rng.pick([o.a || '#1f4fb4', '#222222', '#3a3a6a']), trim: '#e8e8e8' },
       { style: 'bomber', color: rng.pick(['#2a3220', '#1a1a20']), lining: '#e07020' },
@@ -66,6 +69,12 @@ export function casualLook(rng, o = {}) {
     scarf: o.scarf === null ? null : (o.scarf || (rng.chance(0.7) ? { a: o.a || RIVAL.a, b: o.b || RIVAL.b } : null)),
     hat: rng.chance(o.hatChance ?? 0.15) ? rng.pick([{ style: 'cap', color: '#3a3a3a' }, { style: 'beanie', color: o.a || RIVAL.a, trim: o.b || RIVAL.b }, { style: 'bucket', color: '#d8d0b8' }]) : null,
     shades: rng.chance(0.08),
+    // match-day kit: hoods up, faces covered, bum bags, gloves (the 3D models show these; 2D ignores them)
+    hood: rng.chance(o.hoodChance ?? 0.3),
+    mask: rng.chance(o.maskChance ?? 0.35) ? rng.pick(['snood', 'snood', 'balaclava']) : null,
+    maskColor: rng.pick(['#141416', '#1c1c20', '#141416', o.a || '#1f4fb4']),
+    bag: rng.chance(0.3),
+    gloves: rng.chance(0.35) ? '#141416' : null,
     build: o.build ?? rng.range(0.95, 1.2),
     height: o.height ?? rng.range(0.96, 1.04),
   };

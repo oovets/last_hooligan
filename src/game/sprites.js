@@ -122,7 +122,7 @@ export function handPos(spec, clip, frame, fx, fy, scale = 1) {
 export function modelReady(name) { return !!MODELS[name]; }
 
 // ------------------------------------------------------------------ look -> model + layers + palette
-const TORSO_OF = { harrington: 'jacket', bomber: 'jacket', track: 'jacket', leather: 'jacket', suit: 'jacket', shirt: 'jacket', parka: 'parka', tee: 'tee', polo: 'tee', vest: 'tee', hivis: 'hivis' };
+const TORSO_OF = { harrington: 'jacket', bomber: 'jacket', track: 'jacket', leather: 'jacket', suit: 'jacket', shirt: 'jacket', parka: 'parka', tee: 'tee', polo: 'tee', vest: 'tee', hivis: 'hivis', hoodie: 'hoodie' };
 
 export function modelForLook(look) {
   const b = look.build || 1;
@@ -165,7 +165,7 @@ export function specForLook(look) {
   set(11, look.scarf ? look.scarf.a : '#c8102e');
   set(12, look.scarf ? look.scarf.b : '#f4f1e8');
   set(13, '#140c0c');
-  set(14, look.hat ? look.hat.color : '#333333');
+  set(14, look.hat ? look.hat.color : (look.maskColor || '#18181c'));   // hats and masks share a colour
   set(15, look.hat ? (look.hat.trim || shade(look.hat.color, 0.25)) : '#555555');
   set(16, look.gloves || look.skin || '#e2a97a');
   set(17, '#e4e6ee');
@@ -175,13 +175,20 @@ export function specForLook(look) {
   set(21, '#2a1a12');
   set(22, J.style === 'track' ? (J.trim || '#f2efe6') : (J.color || '#2b3a2a'));
   const layers = ['body'];
-  if (look.scarf) layers.push('scarf');
+  // match-day kit (3D models; the 2D sprites simply don't have these layers): hood up/down, masks, a bum bag, cargo pockets
+  const hood = !!look.hood, mask = look.mask || null;          // mask: 'balaclava' (eye slit) | 'snood' (nose down)
+  const covered = hood || mask === 'balaclava' || (look.hat && look.hat.style === 'balaclava');
+  if (look.scarf && mask !== 'snood') layers.push('scarf');
   const hs = look.hair && look.hair.style;
-  if (hs && hs !== 'skinhead' && hs !== 'bald') layers.push('hair:' + hs);
-  if (look.facial === 'beard') layers.push('face:beard');
-  if (look.facial === 'tache') layers.push('face:tache');
+  if (hs && hs !== 'skinhead' && hs !== 'bald' && !covered) layers.push('hair:' + hs);
+  if (look.facial === 'beard' && !mask) layers.push('face:beard');
+  if (look.facial === 'tache' && !mask) layers.push('face:tache');
   if (look.shades) layers.push('face:shades');
-  if (look.hat) layers.push('hat:' + look.hat.style);
+  if (look.hat && !hood) layers.push('hat:' + look.hat.style);
+  if (hood) layers.push('hood:up'); else if (J.style === 'hoodie') layers.push('hood:down');
+  if (mask) layers.push('mask:' + mask);
+  if (look.bag) layers.push('bag');
+  if (Pn.style === 'cargo') layers.push('pants:cargo');
   const accModel = model.split('_')[0] + '_jacket';
   const key = model + '|' + layers.join(',') + '|' + pal.map(c => c ? c.join('.') : '').join(';');
   return { model, accModel, layers, pal, key };

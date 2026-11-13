@@ -75,7 +75,7 @@ window.filmstrip = (names, opt = {}) => {
   for (const a of actors) { scene.remove(a.c.group); a.c.dispose(); }
   actors = [];
   const frames = opt.frames || 7, face = FACES[opt.facing ?? 0];
-  const look = lookFor(opt.look);
+  const look = opt.lookObj || lookFor(opt.look);   // lookObj: any LOOK (e.g. a match-day kit) instead of a character id
   const spacing = opt.spacing || 2.3;
   names.forEach((name, r) => {
     for (let i = 0; i < frames; i++) {

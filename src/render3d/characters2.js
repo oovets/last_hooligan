@@ -18,6 +18,7 @@
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { specForLook } from '../game/sprites.js';
 import { fillPose } from '../game/poses.js';
@@ -26,7 +27,7 @@ import { CLIPS, evalClip, attackU, stateClipFor, GUARD_RIG } from './clips.js';
 export const CHAR2 = { templates: {}, meta: {}, ready: false };
 export const CHAR2_SCALE = 1.27;          // the game's chunky character scale (matches the sprites)
 const K = 0.046;                          // metres per pose-library pixel (hip offsets)
-const TORSO_OF = { harrington: 'jacket', bomber: 'jacket', track: 'jacket', leather: 'jacket', suit: 'jacket', shirt: 'jacket', parka: 'parka', tee: 'tee', polo: 'tee', vest: 'tee', hivis: 'hivis' };
+const TORSO_OF = { harrington: 'jacket', bomber: 'jacket', track: 'jacket', leather: 'jacket', suit: 'jacket', shirt: 'jacket', parka: 'parka', tee: 'tee', polo: 'tee', vest: 'tee', hivis: 'hivis', hoodie: 'hoodie' };
 const BONES = ['root', 'hips', 'spine', 'chest', 'neck', 'head', 'shoulder_L', 'upperArm_L', 'forearm_L', 'hand_L', 'shoulder_R', 'upperArm_R', 'forearm_R', 'hand_R',
   'thigh_L', 'shin_L', 'foot_L', 'toe_L', 'thigh_R', 'shin_R', 'foot_R', 'toe_R'];
 const ANIMATED = ['hips', 'spine', 'chest', 'neck', 'head', 'shoulder_L', 'shoulder_R', 'upperArm_L', 'forearm_L', 'hand_L', 'upperArm_R', 'forearm_R', 'hand_R', 'thigh_L', 'shin_L', 'foot_L', 'thigh_R', 'shin_R', 'foot_R'];
@@ -38,6 +39,10 @@ export async function loadCharacters2() {
     if (!r.ok) return;
     const { models = [] } = await r.json();
     const loader = new GLTFLoader();
+    // models are Draco-compressed (scripts/blender/char_v2.py); the decoder comes from the same three.js release
+    const draco = new DRACOLoader();
+    draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
+    loader.setDRACOLoader(draco);
     await Promise.all(models.map(async name => {
       try {
         const g = await loader.loadAsync(new URL(name + '.glb', base).href);
@@ -61,6 +66,7 @@ export function modelFor2(look) {
   return null;
 }
 
+const ROUGH = { 1: 0.62, 9: 0.6, 10: 0.7, 13: 0.18, 16: 0.7, 17: 0.4, 19: 0.15, 20: 0.5, 21: 0.55 };   // material id -> roughness
 let RAMP = null;
 function ramp() {
   if (RAMP) return RAMP;
@@ -103,13 +109,15 @@ export class Character2 {
     const layers = new Set(spec.layers);
     inner.traverse(o => {
       if (!o.isMesh) return;
-      const tag = (o.userData && o.userData.tags) || '';
+      // multi-material parts (striped scarf, the body) export as a group of meshes: the tag sits on the group
+      const tag = (o.userData && o.userData.tags) || (o.parent && o.parent.userData && o.parent.userData.tags) || '';
       if (tag.startsWith('acc:')) o.visible = layers.has(tag.slice(4));
       const id = parseInt(String(o.material && o.material.name).replace('ID_', ''), 10) || 3;
       let m = this.mats[id];
       if (!m) {
         const c = spec.pal[id] || [200, 0, 200];
-        m = this.mats[id] = new THREE.MeshToonMaterial({ color: toColor(c), gradientMap: ramp() });
+        // physically based, soft cloth; skin a touch of sheen, eyes and shades glossy
+        m = this.mats[id] = new THREE.MeshStandardMaterial({ color: toColor(c), roughness: ROUGH[id] ?? 0.88, metalness: 0 });
         if (id === 13 || id === 19) m.color.multiplyScalar(0.5);
       }
       o.material = m;
