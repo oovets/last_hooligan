@@ -234,9 +234,9 @@ for sg in (1, -1):
     else: body_b.ell(V(sg * 0.068, -0.045 - JK * 0.5, 1.27), (0.08 * g, 0.04 * g, 0.075))         # pecs
     body_b.ell(V(sg * 0.09, 0.02, 1.37), (0.1 * g, 0.068 + JK, 0.05 + JK * 0.5), rot(0, -16 * sg, 0))  # traps
 if HEAVY:
-    body_b.ell(V(0, -0.06, 1.04), (0.2, 0.17, 0.2))                                               # belly
-    body_b.ell(V(0, -0.1, 0.96), (0.15, 0.1, 0.1))                                                 # belly overhang
-    body_b.ell(V(0, 0.03, 1.12), (0.22, 0.13, 0.18))                                               # love handles / back
+    # husky, big-boned: a solid gut (not a beer barrel), a broad back and chest
+    body_b.ell(V(0, -0.045, 1.05), (0.17, 0.135, 0.17))                                           # gut
+    body_b.ell(V(0, 0.03, 1.2), (0.215, 0.12, 0.17))                                               # broad back / lats
 if MUS:   # V-taper: barrel chest, slabs of pec, big traps and lats, small waist
     body_b.ell(V(0, 0.01, 1.26), (0.24 + JK, 0.15 + JK, 0.17))
     body_b.ell(V(0, 0.05, 1.22), (0.25 + JK, 0.1 + JK, 0.16))
@@ -249,6 +249,7 @@ if TORSO == 'parka':
 nr = 0.056 * (0.9 + 0.1 * g) + (0.012 if HEAVY else 0.03 if MUS else 0) - (0.006 if FEM else 0)
 body_b.chain(V(0, 0.012, 1.36), V(0, 0.012, 1.54), (nr * 1.05, nr), (nr * 0.9, nr * 0.9))
 # arms: deltoid, upper arm (biceps), elbow, forearm (sleeves add a little loft)
+g = 1.18 if HEAVY else G          # heavy = husky: thick arms, not fat ones
 for sg in (1, -1):
     s = side(sg); SL = JK if SLEEVED else 0
     if MUS:   # boulder shoulders, big biceps and forearms
@@ -264,6 +265,7 @@ for sg in (1, -1):
         sl = J['upperArm_' + s].lerp(J['forearm_' + s], 0.55)
         body_b.chain(J['upperArm_' + s], sl, (0.075 * g, 0.073 * g), (0.066 * g, 0.064 * g))       # loose short sleeve
 # legs: thigh, knee, shin (trousers are loose: little calf/quad definition), chunky trainers
+g = 1.1 if HEAVY else G           # heavy = husky: solid legs, not fat thighs
 LG = 0.012   # trouser loft
 for sg in (1, -1):
     s = side(sg)
