@@ -14,7 +14,8 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 | Fas C: firman i striden (order, nerv, kommandoläge) | klar |
 | Fas D: firman mellan matcherna (THE ANCHOR, rykte, heat) | klar |
 | Overhaul: skinnade v2-karaktärer, animator, AO, bloom | klar i grunden, polering kvar |
-| Overhaul: handkeyade klipp (slag, tillstånd, luft, grepp, Tina och Vic) | klar |
+| Overhaul: handkeyade klipp (slag, tillstånd, luft, grepp, Kenny och Vic) | klar |
+| Kenny Showtime ersätter Terrace Tina (muskelbygge `b_*`, balaklava, egna slag) | klar, ej provspelad |
 | Overhaul: procedurell rörelse (fightstance, steg, acceleration) | klar, ej provspelad |
 | Fullskaliga fordon, nya menyer i full upplösning | klar |
 | Fas E: THE TERRACES | pausad (motorstöd för trappsteg finns) |
@@ -51,7 +52,7 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
       sig och dodge (`STATE_CLIPS` i `src/render3d/clips.js`, väljs av `stateClipFor`).
 - [x] Klipp för grepp, strypgrepp, kast, att bli kastad, luftattacker (flyingKick, jumpKick, divePunch) och spinKick
       (hel snurr via klippens `yaw`-spår).
-- [x] Klipp för knee, throw, push, slap, counter, backElbow, backKick, bodySlam, throwItem, Tinas yxspark och Vics
+- [x] Klipp för knee, throw, push, slap, counter, backElbow, backKick, bodySlam, throwItem, Kennys SHOWTIME BOMB och flex, Vics
       vic_tighten, vic_chokeslam och vic_lunge. Taunt, victory och dizzy.
 - [ ] Klipp för bossarnas och banornas specialattacker (`awayend_*`, `city_*`, `derby_*`, `industrial_*`,
       `laststand_*`, `pub_*`, `underground_*`, `cheer`), i dag faller de tillbaka på pose-biblioteket.

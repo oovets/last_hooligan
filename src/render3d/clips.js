@@ -308,14 +308,18 @@ export const CLIPS = {
     k(0.66, { hips: [16, 30, 0], chest: [18, 40, 0], hip: [0, -0.08, 0.12], ikR: [0.14, 1.0, 0.56] }),
     k(1.0, {}, 'out'),
   ],
-  // -------------------------------------------------------------- Tina's axe kick: right leg straight up past her head, heel chopped down
-  tina_axe: [
+  // -------------------------------------------------------------- Kenny Showtime's SHOWTIME BOMB: right fist cocked high over his
+  // head, lead hand out to measure, then an overhand that comes down through the man like a sledgehammer
+  kenny_bomb: [
     k(0.0, {}),
-    k(0.35, { hips: [-22, 8, 0], spine: [-8, 0, 0], chest: [-8, -6, 0], head: [16, 0, 0], thigh_R: [156, 0, 12], shin_R: [-8, 0, 0], foot_R: [-10, 0, 0],
-      thigh_L: [-4, 0, 3], shin_L: [-8, 0, 0], foot_L: [10, 0, 0], upperArm_L: [40, 0, 40], forearm_L: [100, 0, 0], upperArm_R: [20, 0, 46], forearm_R: [90, 0, 0], hip: [0, 0.02, -0.04] }, 'out'),
-    k(0.47, { hips: [14, 8, 0], spine: [10, 0, 0], chest: [12, -6, 0], head: [10, 0, 0], thigh_R: [52, 0, 6], shin_R: [-4, 0, 0], foot_R: [-26, 0, 0],
-      thigh_L: [-10, 0, 3], shin_L: [-30, 0, 0], foot_L: [30, 0, 0], upperArm_L: [50, 0, 30], forearm_L: [110, 0, 0], upperArm_R: [40, 0, 30], forearm_R: [110, 0, 0], hip: [0, -0.1, 0.08] }, 'in'),
-    k(0.64, { hips: [12, 6, 0], chest: [10, -4, 0], thigh_R: [40, 0, 4], shin_R: [-16, 0, 0], hip: [0, -0.1, 0.07] }),
+    k(0.35, { hips: [-10, -22, 0], spine: [-10, -10, 0], chest: [-14, -30, 0], neck: [-6, 0, 0], head: [-6, 18, 0], shoulder_R: [-10, 0, 24],
+      upperArm_L: [74, 0, 10], forearm_L: [30, 0, 0], thigh_R: [30, 0, 6], shin_R: [-30, 0, 0], thigh_L: [-18, 0, 6], shin_L: [-40, 0, 0], foot_L: [30, 0, 0],
+      hip: [0, -0.02, -0.08], ikR: [-0.26, 2.02, -0.14], ikL: [0.18, 1.46, 0.44] }, 'out'),
+    k(0.47, { hips: [24, 26, 0], spine: [16, 12, 0], chest: [22, 30, 0], neck: [6, 0, 0], head: [8, -14, 0], shoulder_R: [26, 0, 6],
+      upperArm_L: [20, 0, 30], forearm_L: [110, 0, 0], thigh_R: [52, 0, 4], shin_R: [-50, 0, 0], foot_R: [10, 0, 0], thigh_L: [-34, 0, 4], shin_L: [-20, 0, 0], foot_L: [40, 0, 0],
+      hip: [0, -0.16, 0.16], ikR: [-0.04, 1.08, 0.84] }, 'in'),
+    k(0.64, { hips: [26, 32, 0], chest: [24, 38, 0], head: [10, -16, 0], thigh_R: [50, 0, 4], shin_R: [-52, 0, 0], thigh_L: [-30, 0, 4], shin_L: [-22, 0, 0],
+      hip: [0, -0.17, 0.14], ikR: [0.12, 0.8, 0.62] }),
     k(1.0, {}, 'out'),
   ],
   // -------------------------------------------------------------- Fat Vic: squeeze (STRYPGREPP tightens: shrug, lean back, hands up and in)
@@ -553,6 +557,18 @@ export const STATE_CLIPS = {
     k(0.45, { hips: [-2, 10, 0], spine: [-6, 0, 0], chest: [-12, 10, 0], neck: [-6, 0, 0], head: [-12, -6, 0], upperArm_L: [18, 0, 30], forearm_L: [40, 0, 0], thigh_R: [16, 0, 8], shin_R: [-14, 0, 0], thigh_L: [-12, 0, 8], shin_L: [-10, 0, 0], hip: [0, -0.02, -0.04], ikR: [-0.18, 1.44, 0.34] }),
     k(1.0, { hips: [-2, 10, 0], spine: [-6, 0, 0], chest: [-10, 8, 0], neck: [-6, 0, 0], head: [-10, -6, 0], upperArm_L: [18, 0, 30], forearm_L: [40, 0, 0], thigh_R: [16, 0, 8], shin_R: [-14, 0, 0], thigh_L: [-12, 0, 8], shin_L: [-10, 0, 0], hip: [0, -0.02, -0.02], ikR: [-0.2, 1.26, 0.6] }),
   ] },
+  // Kenny Showtime: double-biceps flex, chin up, roaring (his taunt and his victory)
+  flex: { state: 'victory', dur: 1.0, loop: true, setup: f => { f.character = 'kenny'; }, keys: [
+    k(0.0, { hips: [-4, 0, 0], spine: [-6, 0, 0], chest: [-12, 0, 0], neck: [-8, 0, 0], head: [-14, 0, 0], shoulder_L: [0, 0, 14], shoulder_R: [0, 0, 14],
+      upperArm_L: [10, 0, 88], forearm_L: [118, 0, 0], hand_L: [-20, 0, 0], upperArm_R: [10, 0, 88], forearm_R: [118, 0, 0], hand_R: [-20, 0, 0],
+      thigh_R: [6, 0, 14], shin_R: [-10, 0, 0], thigh_L: [-4, 0, 14], shin_L: [-10, 0, 0], hip: [0, -0.04, 0] }),
+    k(0.5, { hips: [-6, 0, 0], spine: [-8, 0, 0], chest: [-16, 0, 0], neck: [-10, 0, 0], head: [-20, 0, 0], shoulder_L: [0, 0, 20], shoulder_R: [0, 0, 20],
+      upperArm_L: [14, 0, 92], forearm_L: [128, 0, 0], hand_L: [-24, 0, 0], upperArm_R: [14, 0, 92], forearm_R: [128, 0, 0], hand_R: [-24, 0, 0],
+      thigh_R: [8, 0, 16], shin_R: [-16, 0, 0], thigh_L: [-2, 0, 16], shin_L: [-16, 0, 0], hip: [0, -0.07, 0] }),
+    k(1.0, { hips: [-4, 0, 0], spine: [-6, 0, 0], chest: [-12, 0, 0], neck: [-8, 0, 0], head: [-14, 0, 0], shoulder_L: [0, 0, 14], shoulder_R: [0, 0, 14],
+      upperArm_L: [10, 0, 88], forearm_L: [118, 0, 0], hand_L: [-20, 0, 0], upperArm_R: [10, 0, 88], forearm_R: [118, 0, 0], hand_R: [-20, 0, 0],
+      thigh_R: [6, 0, 14], shin_R: [-10, 0, 0], thigh_L: [-4, 0, 14], shin_L: [-10, 0, 0], hip: [0, -0.04, 0] }),
+  ] },
   victory: { state: 'victory', dur: 0.56, loop: true, keys: [   // both fists in the air, pumping
     k(0.0, { hips: [-4, 0, 0], spine: [-6, 0, 0], chest: [-10, 0, 0], neck: [-8, 0, 0], head: [-16, 0, 0], upperArm_L: [168, 0, 26], forearm_L: [24, 0, 0], upperArm_R: [160, 0, 30], forearm_R: [40, 0, 0], thigh_R: [8, 0, 8], shin_R: [-8, 0, 0], thigh_L: [-6, 0, 8], shin_L: [-8, 0, 0], hip: [0, 0, 0] }),
     k(0.5, { hips: [-4, 0, 0], spine: [-8, 0, 0], chest: [-12, 0, 0], neck: [-10, 0, 0], head: [-20, 0, 0], upperArm_L: [156, 0, 30], forearm_L: [44, 0, 0], upperArm_R: [170, 0, 24], forearm_R: [20, 0, 0], thigh_R: [14, 0, 8], shin_R: [-24, 0, 0], thigh_L: [-2, 0, 8], shin_L: [-20, 0, 0], hip: [0, -0.06, 0] }),
@@ -583,8 +599,8 @@ export function stateClipFor(f) {
     case 'grabbed': name = f.grabbedBy && f.grabbedBy.grabCfg && f.grabbedBy.grabCfg.choke ? 'choked' : 'grabbed'; break;
     case 'thrown': name = 'thrown'; break;
     case 'dizzy': name = 'dizzy'; break;
-    case 'taunt': name = 'taunt'; break;
-    case 'victory': name = 'victory'; break;
+    case 'taunt': name = f.character === 'kenny' ? 'flex' : 'taunt'; break;
+    case 'victory': name = f.character === 'kenny' ? 'flex' : 'victory'; break;
     default: return null;
   }
   const S = STATE_CLIPS[name];

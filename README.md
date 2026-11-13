@@ -12,7 +12,7 @@ is 90s football-casual culture in the fictional city of Nordhamn.
 
 * 8 levels: THE STREETS, THE PUB, THE UNDERGROUND, THE AWAY END, THE CITY, THE INDUSTRIAL ZONE, THE DERBY and
   THE LAST STAND. Each has unique enemies, hazards, secrets, 5 lost scarves, a pin badge and a boss.
-* 6 playable characters: The Last Hooligan, Big Mo, Little Stig, Terrace Tina, Fat Vic and The Old Boy (unlockable).
+* 6 playable characters: The Last Hooligan, Big Mo, Little Stig, Kenny Showtime (masked, roided, ultraviolent), Fat Vic and The Old Boy (unlockable).
 * **Two renderers:**
   * **3D (Three.js, default):** wall blocks, real lights and shadows, ambient occlusion, bloom and colour grading.
     The characters are skinned Blender models on a 22-bone rig, animated by a layered animator: hand-keyed clips

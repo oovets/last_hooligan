@@ -594,6 +594,8 @@ export class World {
     this.releaseToken(f);
     if (f.isPlayer) { this.deathT = 0; this.sfx('playerDown', f); return; }
     if (this.firm) this.firm.onDeath(f);
+    const by = f.lastAttacker;
+    if (by && by.koLines && by.alive && by.say && Math.random() < 0.45) by.say(by.koLines[Math.floor(Math.random() * by.koLines.length)], 1.3);
     if (f.isLad) { if (f.weapon) this.dropWeapon(f); return; }
     this.stats.kos++;
     this.addScore(f.scoreValue, f.x, f.y, f.z + 0.5, true);

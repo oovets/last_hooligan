@@ -14,7 +14,7 @@
 //   hair:{ style:'crop'|'shaved'|'skinhead'|'curtains'|'mod'|'mohawk'|'flattop'|'spiky'|'ponytail'|'long'|'bald'
 //                |'perm'|'wedge'|'sidepart'|'balding'|'buzz'|'quiff', color },
 //   facial:'none'|'stubble'|'beard'|'tache'|'goatee'|'sideburns',
-//   hat:null|{ style:'cap'|'beanie'|'bucket'|'helmet'|'flatcap'|'hood', color, trim, bobble:true },
+//   hat:null|{ style:'cap'|'beanie'|'bucket'|'helmet'|'flatcap'|'hood'|'balaclava', color, trim, bobble:true },
 //   shades:false,
 //   jacket:{ style:'harrington'|'track'|'parka'|'bomber'|'tee'|'polo'|'leather'|'hivis'|'suit'|'vest'|'shirt'
 //                  |'kit'|'sheepskin', color, trim, lining,
@@ -204,6 +204,12 @@ function hatPix(L, hat, hx, hy, inside, back) {
         return hy < -4.2 && hx > -1 && hx < 1.6 ? sh(c, 0.35) : c;
       }
       return null;
+    }
+    case 'balaclava': {
+      // knitted over the whole head; eye slit and mouth hole show the face underneath
+      if (!(inside || skullIn(hx, hy, 0.5) || jawIn(hx, hy, 1, 0.5))) return null;
+      if (!back && hx > 0.6 && ((hy > -1.5 && hy < 0.2) || (hy > 2.0 && hy < 3.0 && hx > 1.6))) return null;
+      return hy < -3.5 && hx > -1 ? sh(c, 0.14) : (Math.floor(hy * 1.5 + 30) % 2 ? sh(c, -0.08) : c);
     }
     case 'hood': {
       const rim = skullIn(hx, hy, 1.6) || jawIn(hx, hy, 1, 1.4);

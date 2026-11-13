@@ -2,7 +2,7 @@
 #
 #   Blender -b --factory-startup --python scripts/blender/char_v2.py -- <job.json>
 #
-# job.json: { "build": "m"|"h"|"f", "torso": "jacket"|"parka"|"tee"|"hivis", "out": "assets/models/v2/m_jacket.glb",
+# job.json: { "build": "m"|"h"|"f"|"b" (b = muscle: bodybuilder V-taper, vest shows the arms), "torso": "jacket"|"parka"|"tee"|"hivis", "out": "assets/models/v2/m_jacket.glb",
 #             "preview": "path.png" (optional: render a preview sheet instead of / as well as exporting),
 #             "previewPoses": ["tpose","guard",...] }
 #
@@ -29,8 +29,9 @@ scene = bpy.context.scene
 BUILD = JOB.get('build', 'm')
 TORSO = JOB.get('torso', 'jacket')
 FEM = BUILD == 'f'
-G = {'m': 1.0, 'h': 1.32, 'f': 0.9}[BUILD]          # girth
-H = {'m': 1.0, 'h': 1.02, 'f': 0.95}[BUILD]         # height
+MUS = BUILD == 'b'                                   # muscle build (Kenny Showtime)
+G = {'m': 1.0, 'h': 1.32, 'f': 0.9, 'b': 1.12}[BUILD]   # girth
+H = {'m': 1.0, 'h': 1.02, 'f': 0.95, 'b': 1.04}[BUILD]  # height
 
 # ------------------------------------------------------------------ materials (preview colours; runtime recolours by name)
 PREVIEW = {1: (0.85, 0.62, 0.48), 2: (0.2, 0.13, 0.08), 3: (0.12, 0.2, 0.12), 4: (0.08, 0.12, 0.08), 5: (0.7, 0.12, 0.1),
@@ -58,7 +59,7 @@ def link(ob):
 # ------------------------------------------------------------------ skeleton (metres, Blender Z-up, facing -Y)
 # joint positions in a relaxed A-pose; x = character's left (+) / right (-)
 def V(x, y, z): return Vector((x, y, z * H))
-SW = (0.2 if not FEM else 0.175) * (0.92 + 0.08 * G)     # shoulder half-width
+SW = (0.2 if not FEM else 0.175) * (0.92 + 0.08 * G) + (0.03 if MUS else 0)     # shoulder half-width
 HW = (0.1 if not FEM else 0.11) * (0.95 + 0.05 * G)      # hip half-width
 J = {
     'root': V(0, 0, 0),
@@ -126,6 +127,8 @@ R = {
     'chest': ((0.165 if not FEM else 0.15) * G, 0.11 * G), 'neck': (0.055 * (0.9 + 0.1 * G), 0.055 * (0.9 + 0.1 * G)),
     'head': (0.07, 0.07), 'headTop': (0.03, 0.03),
 }
+if MUS:   # V-taper: barrel chest, thick neck, small waist
+    R.update({'hips': (0.15, 0.11), 'spine': (0.15, 0.115), 'chest': (0.255, 0.165), 'neck': (0.092, 0.086)})
 for s in ('L', 'R'):
     R['shoulder_' + s] = (0.078 * G, 0.075 * G)
     R['upperArm_' + s] = (0.066 * G, 0.064 * G)
@@ -137,6 +140,9 @@ for s in ('L', 'R'):
     R['foot_' + s] = (0.052, 0.05)
     R['toe_' + s] = (0.052, 0.04)
     R['toeEnd_' + s] = (0.042, 0.025)
+    if MUS:
+        R['shoulder_' + s] = (0.135, 0.125); R['upperArm_' + s] = (0.13, 0.125); R['forearm_' + s] = (0.088, 0.084)
+        R['hand_' + s] = (0.062, 0.05); R['thigh_' + s] = (0.112, 0.108); R['shin_' + s] = (0.078, 0.076)
 
 EDGES = [('hips', 'spine'), ('spine', 'chest'), ('chest', 'neck'), ('neck', 'head')]
 for s in ('L', 'R'):
@@ -172,6 +178,7 @@ def region(p):
         if d < bd: best, bd, bt = n, d, t
     return best, bt
 JACKET_BONES = {'spine', 'chest', 'shoulder_L', 'shoulder_R', 'upperArm_L', 'upperArm_R'} | ({'forearm_L', 'forearm_R'} if TORSO != 'tee' else set())
+if MUS and TORSO == 'tee': JACKET_BONES = {'spine', 'chest'}          # a vest: the arms are the point
 for n in ('hips',): pass
 bm = bmesh.new(); bm.from_mesh(me)
 bm.normal_update()
@@ -206,6 +213,23 @@ for f in bm.faces:
         for v in f.verts: push[v.index] = max(push.get(v.index, 0), 0.012)
 for v in bm.verts:
     if v.index in push: v.co += v.normal * push[v.index]
+# muscle build: pecs, biceps, traps
+if MUS:
+    for v in bm.verts:
+        c = v.co
+        for sx in (1, -1):
+            # pecs: two slabs on the upper chest
+            k = math.exp(-((c.z - 1.27 * H) / 0.07) ** 2) * math.exp(-((c.x - sx * 0.085) / 0.07) ** 2)
+            if c.y < 0: c.y -= 0.05 * k
+            # biceps: bulge on the front of the upper arm, triceps a little behind
+            ua, fa = J['upperArm_' + ('L' if sx > 0 else 'R')], J['forearm_' + ('L' if sx > 0 else 'R')]
+            d, t = seg_dist(c, ua, fa)
+            if d < 0.12 and 0.15 < t < 0.9:
+                kk = math.sin((t - 0.15) / 0.75 * math.pi)
+                c.y -= 0.04 * kk * (1 if c.y < ua.y + (fa.y - ua.y) * t else -0.4)
+            # traps: slope from the neck to the shoulders
+            kt = math.exp(-((c.z - 1.41 * H) / 0.045) ** 2) * math.exp(-((abs(c.x) - 0.1) / 0.06) ** 2)
+            if c.x * sx > 0: c.z += 0.045 * kt
 # heavy build: belly
 if BUILD == 'h':
     for v in bm.verts:
@@ -280,6 +304,22 @@ acc('hat:beanie', [obj_from_bm('beanie', ellipsoid(HC + Vector((0, 0.005, 0.05))
                    obj_from_bm('bobble', ellipsoid(HC + Vector((0, 0.01, 0.17)), (0.03, 0.03, 0.03), 10, 8), ID['hatTrim'])])
 acc('hat:bucket', [obj_from_bm('bucket', ellipsoid(HC + Vector((0, 0, 0.06)), (0.105, 0.115, 0.08)), ID['hat']),
                    obj_from_bm('bucketBrim', ellipsoid(HC + Vector((0, 0, 0.025)), (0.15, 0.16, 0.01), 20, 6), ID['hat'])])
+# balaclava (three holes): a knitted shell over the whole head down onto the neck, eye and mouth holes cut out,
+# a bump over the nose
+def balaclava():
+    bmb = ellipsoid(HC + Vector((0, 0.004, -0.004)), (0.109, 0.118, 0.13), 28, 20)
+    kill = []
+    for f in bmb.faces:
+        d = f.calc_center_median() - HC
+        if d.y > -0.05: continue
+        eye = -0.006 < d.z < 0.042 and 0.01 < abs(d.x) < 0.066
+        mouth = -0.082 < d.z < -0.04 and abs(d.x) < 0.034
+        if eye or mouth: kill.append(f)
+    bmesh.ops.delete(bmb, geom=kill, context='FACES')
+    return [obj_from_bm('balaclava', bmb, ID['hat']),
+            obj_from_bm('balaNose', ellipsoid(HC + Vector((0, -0.106, -0.012)), (0.02, 0.026, 0.034), 10, 8), ID['hat']),
+            obj_from_bm('balaNeck', ellipsoid(J['neck'] + Vector((0, 0.008, 0.03)), (0.08 * (1.1 if MUS else 1), 0.078, 0.07), 16, 10), ID['hat'])]
+acc('hat:balaclava', balaclava())
 acc('hat:helmet', [obj_from_bm('helmet', ellipsoid(HC + Vector((0, 0, 0.03)), (0.11, 0.12, 0.125)), ID['hat'])])
 # scarf: knotted round the neck, tails down the chest (rigid to chest)
 scarf = []

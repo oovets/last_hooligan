@@ -19,7 +19,7 @@ export const DEFAULT_HISCORES = [
 
 export function defaultSave() {
   return {
-    version: 2,                  // 2: 3D renderer became the default (load() moves older saves over once)
+    version: 3,                  // 2: 3D renderer became the default; 3: Terrace Tina replaced by Kenny Showtime
     unlocked: 1,                 // number of levels unlocked (1..8)
     character: 'hooligan',       // last selected playable character (content/characters.js)
     best: {},                    // levelId -> best score
@@ -50,6 +50,18 @@ export function defaultSave() {
   };
 }
 
+// v3: Terrace Tina left the firm, Kenny Showtime took her place (same slot, his stats, look and moves)
+function migrateTina(d) {
+  if (d.character === 'tina') d.character = 'kenny';
+  const F = d.firm;
+  if (!F || !Array.isArray(F.lads)) return;
+  for (const l of F.lads) {
+    if (l.char !== 'tina') continue;
+    Object.assign(l, { char: 'kenny', name: 'KENNY SHOWTIME', nick: 'ULTRAVIOLENCE', look: null,
+      stats: { fists: 8, kicks: 4, tough: 7, speed: 5, nerve: 8, loyalty: 5 }, traits: ['liability'] });
+  }
+}
+
 function merge(def, obj) {
   if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return obj ?? def;
   const out = { ...def };
@@ -67,6 +79,7 @@ export const save = {
       if (raw) this.data = merge(defaultSave(), JSON.parse(raw));
       // v1 saves stored renderer '2d' because that was the default: switch them to 3D once (OPTIONS > GRAPHICS can go back)
       if ((this.data.version || 1) < 2) { this.data.settings.renderer = '3d'; this.data.version = 2; }
+      if (this.data.version < 3) { migrateTina(this.data); this.data.version = 3; }
     } catch (e) { console.warn('save load failed', e); }
     if (!Array.isArray(this.data.hiscores) || !this.data.hiscores.length) this.data.hiscores = DEFAULT_HISCORES.map(h => ({ ...h }));
     return this.data;

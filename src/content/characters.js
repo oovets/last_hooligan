@@ -19,8 +19,10 @@ registerAttack('mo_charge', { pose: 'bodySlam', startup: 0.12, active: 0.28, rec
 registerAttack('stig_flurry', { pose: 'jab', startup: 0.03, active: 0.05, recovery: 0.08, dmg: 3, reach: 0.95, arc: 0.75, kb: 0.8, stun: 0.24, sfx: 'punch', whiff: 'whooshLight', hz: 1.6, score: 8, next: { punchL: 'stig_flurry2', punchR: 'cross', kick: 'lowKick' } });
 registerAttack('stig_flurry2', { pose: 'hook', startup: 0.03, active: 0.05, recovery: 0.09, dmg: 3, reach: 0.95, arc: 0.85, kb: 0.8, stun: 0.24, sfx: 'punch', whiff: 'whooshLight', hz: 1.6, score: 8, next: { punchL: 'stig_flurry', punchR: 'uppercut', kick: 'spinKick' } });
 registerAttack('stig_slide', { pose: 'flyingKick', startup: 0.04, active: 0.32, recovery: 0.22, dmg: 9, reach: 1.1, arc: 0.7, kb: 4, stun: 0.5, knockdown: true, launch: 1, lunge: 8, sfx: 'kick', whiff: 'whoosh', hz: 0.5, hitstop: 0.06, shake: 3, score: 45 });
-registerAttack('tina_axe', { pose: 'tina_axe', startup: 0.14, active: 0.1, recovery: 0.24, dmg: 12, reach: 1.35, arc: 0.6, kb: 3, stun: 0.55, knockdown: true, launch: 0, sfx: 'hitHeavy', whiff: 'whooshBig', hz: 1.8, hitstop: 0.08, shake: 4, score: 45, next: { kick: 'spinKick', punchL: 'jab' } });
-registerAttack('tina_snap', { pose: 'kick', startup: 0.06, active: 0.08, recovery: 0.14, dmg: 7, reach: 1.4, arc: 0.55, kb: 2.4, stun: 0.34, sfx: 'kick', whiff: 'whoosh', hz: 1.0, score: 15, next: { kick: 'tina_axe', punchR: 'cross', punchL: 'jab' } });
+// Kenny Showtime: ultraviolence. K = SHOWTIME BOMB (overhand from the heavens, knockdown), RUN + J = SPEAR (shoulder
+// first through a man, knockdown); every hit lands harder the more he's hurt (fighter.rage, game/fighter.js).
+registerAttack('kenny_bomb', { pose: 'kenny_bomb', startup: 0.16, active: 0.09, recovery: 0.26, dmg: 14, reach: 1.05, arc: 0.7, kb: 4.2, stun: 0.55, knockdown: true, launch: 2.5, sfx: 'hitHeavy', whiff: 'whooshBig', hz: 1.7, hitstop: 0.11, shake: 6, score: 50, guardDmg: 20, next: { punchL: 'jab', punchR: 'cross', kick: 'kick' } });
+registerAttack('kenny_spear', { pose: 'shoulder', startup: 0.08, active: 0.26, recovery: 0.3, dmg: 13, reach: 1.0, arc: 0.85, kb: 6, stun: 0.6, knockdown: true, launch: 3, lunge: 7.5, sfx: 'hitHeavy', whiff: 'whooshBig', hz: 1.2, hitstop: 0.1, shake: 6, score: 60, guardDmg: 24 });
 registerAttack('old_headbutt', { pose: 'headbutt', startup: 0.12, active: 0.08, recovery: 0.22, dmg: 11, reach: 0.9, arc: 0.7, kb: 2.5, stun: 0.6, sfx: 'hitHeavy', whiff: 'whoosh', hz: 1.8, hitstop: 0.08, shake: 3, score: 35, next: { punchL: 'jab', kick: 'kick' } });
 // Fat Vic: STRYPGREPP (chokehold) specialist. Grab -> two-handed chokehold that lifts the victim off the ground and
 // strangles them continuously (damage every tick); J/K = TIGHTEN (burst damage, keeps the hold locked);
@@ -51,9 +53,10 @@ if (!ATTACK_POSES.vic_lunge) registerAttackPose('vic_lunge', {
   windup: { lean: 0.35, dy: 2, thN: 0.6, knN: 0.6, thF: -0.5, knF: 0.6, uaN: 1.2, faN: 0.6, uaF: 1.3, faF: 0.5 },
   hit: { lean: 0.6, dy: 3, dx: 4, thN: 0.8, knN: 0.4, thF: -0.7, knF: 0.4, uaN: 1.65, faN: 0.15, uaF: 1.72, faF: 0.1 },
 });
-if (!ATTACK_POSES.tina_axe) registerAttackPose('tina_axe', {
-  windup: { lean: -0.35, thN: 2.4, knN: 0.2, thF: -0.05, knF: 0.1, uaN: 0.6, faN: 1.9, uaF: 0.8, faF: 1.7 },
-  hit: { lean: 0.2, dx: 2, thN: 1.0, knN: 0.0, thF: -0.1, knF: 0.15, uaN: 0.4, faN: 1.8, uaF: 0.6, faF: 1.6 },
+if (!ATTACK_POSES.kenny_bomb) registerAttackPose('kenny_bomb', {
+  windup: { lean: -0.3, dx: -1, uaN: 3.1, faN: 0.9, uaF: 1.0, faF: 1.6, thN: 0.3, knN: 0.3, head: -0.15 },
+  hit: { lean: 0.55, dx: 4, dy: 2, uaN: 1.2, faN: 0.1, uaF: 0.7, faF: 1.6, thN: 0.6, knN: 0.5, thF: -0.5, knF: 0.2, head: 0.2 },
+  follow: { lean: 0.5, dx: 3, dy: 2, uaN: 0.6, faN: 0.3, thN: 0.55, knN: 0.45, thF: -0.45 },
 });
 
 export const CHARACTERS = [
@@ -92,16 +95,18 @@ export const CHARACTERS = [
     unlock: null,
   },
   {
-    id: 'tina', name: 'TERRACE TINA', nick: 'THE BOOT', tagline: 'LONG LEGS, LONGER MEMORY. LETHAL KICKS.',
-    bio: ['ANCHORS SEASON TICKET SINCE 1986.', 'RUNS THE SUPPORTERS CLUB RAFFLE.', 'NOBODY EVER WINS IT BUT TINA.'],
-    stats: { power: 3, speed: 4, toughness: 3, technique: 4 },
-    fighter: { hp: 95, speed: 3.35, runSpeed: 6.0, power: 1.0, defense: 0.95, guard: 40, reachMul: 1.08 },
-    moves: { kick: 'tina_snap' }, kickMul: 1.25, punchMul: 0.85,
+    id: 'kenny', name: 'KENNY SHOWTIME', nick: 'ULTRAVIOLENCE', tagline: 'MASKED UP, PUMPED UP, NO OFF SWITCH.',
+    bio: ['NOBODY HAS SEEN HIS FACE SINCE 1994.', 'BENCHES THE LANDLORD FOR A WARM-UP.', 'EVERY FIGHT IS A SHOW. HE IS THE SHOW.'],
+    stats: { power: 5, speed: 3, toughness: 4, technique: 2 },
+    fighter: { hp: 115, speed: 3.2, runSpeed: 5.7, power: 1.25, defense: 0.85, weight: 1.35, guard: 45, superArmor: 2 },
+    moves: { punchR: 'kenny_bomb', run: 'kenny_spear' }, punchMul: 1.15, kickMul: 0.9, rage: true,
+    winLine: 'IT\'S SHOWTIME!', koLines: ['SHOWTIME!', 'NEXT!', 'IS THAT IT?', 'WHO\'S NEXT?!', 'GET UP! I\'M NOT DONE!'],
     look: {
-      female: true, skin: '#e8b090', hair: { style: 'ponytail', color: '#b4521c' }, facial: 'none',
-      jacket: { style: 'harrington', color: '#1d2742', trim: '#141a2e', lining: '#c8102e' }, shirt: '#f4f1e8',
-      pants: { style: 'jeans', color: '#1e1e26' }, shoes: { color: '#f2f2ee', sole: '#c49a5a' },
-      scarf: { a: '#c8102e', b: '#f4f1e8' }, build: 0.95, height: 0.97,
+      skin: '#d99a6c', hair: { style: 'skinhead', color: '#2a1a10' }, facial: 'none', muscle: true,
+      hat: { style: 'balaclava', color: '#141416' },
+      jacket: { style: 'vest', color: '#ecebe4' }, shirt: '#ecebe4',
+      pants: { style: 'cargo', color: '#3e4632' }, shoes: { color: '#16161a', sole: '#2a2a2e' },
+      scarf: null, build: 1.2, height: 1.08,
     },
     unlock: null,
   },

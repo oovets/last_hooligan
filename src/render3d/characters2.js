@@ -55,7 +55,7 @@ export async function loadCharacters2() {
 
 export function modelFor2(look) {
   const b = look.build || 1;
-  const pre = look.female ? 'f' : b >= 1.28 ? 'h' : 'm';
+  const pre = look.female ? 'f' : look.muscle ? 'b' : b >= 1.28 ? 'h' : 'm';
   const torso = TORSO_OF[(look.jacket && look.jacket.style) || 'harrington'] || 'jacket';
   for (const c of [`${pre}_${torso}`, `${pre}_jacket`, `m_${torso}`, 'm_jacket']) if (CHAR2.templates[c]) return c;
   return null;

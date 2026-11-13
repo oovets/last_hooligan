@@ -134,7 +134,7 @@ Varje fas ska vara spelbar och klara `check.mjs --sim` innan nästa börjar.
 > **Status fas C (2026-11-12): klar** på grenen `phase-c-firm`. Kod: `src/game/firm.js` (Firm, LadController, nerv,
 > order) och `src/ui/firmhud.js` (kontroller, kommandoläge, markörer, HUD-panel).
 > - **Grabbarna:** tre lads följer med, nämligen de andra spelbara karaktärerna (som standard Big Mo, Little Stig och
->   Terrace Tina) med sina signaturslag. De ligger på spelarens lag, så de kan inte slå dig och du kan inte slå dem.
+>   Kenny Showtime) med sina signaturslag. De ligger på spelarens lag, så de kan inte slå dig och du kan inte slå dem.
 >   Den som blir nedslagen ligger kvar tills striden är vunnen och reser sig sedan. Den som hamnar långt efter (dörrar,
 >   låsta arenor) hoppar in bredvid ledaren.
 > - **Order:** R betyder WITH ME!, T GET INTO THEM!, H HOLD! och Y SING UP! (nerv +35, 15 s nedkylning). Håll G för

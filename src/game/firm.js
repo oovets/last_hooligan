@@ -49,7 +49,7 @@ const LAD_AI = {
   hooligan: { attacks: [['jab', 3], ['cross', 2], ['hook', 1], ['kick', 2]], comboLen: [1, 3], aggression: 0.62, reaction: 0.28, blockChance: 0.18, dodgeChance: 0.06 },
   mo: { attacks: [['jab', 2], ['cross', 2], ['mo_hammer', 3], ['kick', 1]], comboLen: [1, 2], aggression: 0.55, reaction: 0.34, blockChance: 0.22, grabChance: 0.05 },
   stig: { attacks: [['stig_flurry', 4], ['cross', 1], ['lowKick', 1], ['stig_slide', 1]], comboLen: [2, 4], aggression: 0.72, reaction: 0.22, dodgeChance: 0.16, blockChance: 0.08 },
-  tina: { attacks: [['tina_snap', 3], ['tina_axe', 2], ['jab', 1]], comboLen: [1, 2], aggression: 0.62, reaction: 0.26, blockChance: 0.12, dodgeChance: 0.1 },
+  kenny: { attacks: [['kenny_bomb', 3], ['cross', 2], ['hook', 2], ['uppercut', 1], ['kick', 1]], comboLen: [1, 3], aggression: 0.85, reaction: 0.26, blockChance: 0.06, dodgeChance: 0.04 },
   vic: { attacks: [['jab', 2], ['cross', 2], ['kick', 1]], comboLen: [1, 2], aggression: 0.5, reaction: 0.32, grabChance: 0.12, blockChance: 0.12 },
   oldboy: { attacks: [['old_headbutt', 3], ['jab', 2], ['cross', 1]], comboLen: [1, 2], aggression: 0.55, reaction: 0.3, blockChance: 0.2 },
 };
@@ -204,7 +204,9 @@ export class Firm {
 
   spawn(game) {
     const firm = getFirm(this.world.player.character);
-    const recs = squadLads(firm).slice(0, Math.max(1, this.size + (firm.rep >= 60 ? 1 : 0)));
+    // a founder who is the character you're playing stays at the pub (you can't fight beside yourself)
+    const me = this.world.player.character;
+    const recs = squadLads(firm).filter(r => !r.char || r.char !== me).slice(0, Math.max(1, this.size + (firm.rep >= 60 ? 1 : 0)));
     if (recs.length) { recs.forEach((rec, i) => this.spawnLad(rec, i, game)); return; }
     this.spawnCharacters(game);
   }
@@ -222,6 +224,7 @@ export class Firm {
     });
     f.isLad = true; f.character = rec.char; f.ladIdx = i; f.rec = rec;
     f.grabCfg = (ch && ch.grab) || null;
+    f.koLines = (ch && ch.koLines) || null; f.rage = !!(ch && ch.rage);
     f.kickMul = pr.kickMul + ((ch && ch.kickMul) || 0); f.punchMul = (ch && ch.punchMul) || 0;
     f.nerve = pr.nerve; f.nerveMul = pr.nerveMul; f.engage = pr.engage;
     f.traits = new Set(rec.traits); f.bonds = rec.bonds || {};
@@ -249,6 +252,7 @@ export class Firm {
       });
       f.isLad = true; f.character = id; f.ladIdx = i;
       f.grabCfg = ch.grab || null;
+      f.koLines = ch.koLines || null; f.rage = !!ch.rage;
       f.kickMul = ch.kickMul || 0; f.punchMul = ch.punchMul || 0;
       f.nerve = 100; f.fight = { kos: 0, downs: 0 };
       f.controller = new LadController({ ai: { ...LAD_AI[id], sight: 99, shouts: false } }, this, i);

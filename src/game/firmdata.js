@@ -36,7 +36,7 @@ const TRAIT_IDS = Object.keys(TRAITS);
 const FOUNDERS = {
   mo: { nick: 'THE FRIDGE', stats: { fists: 7, kicks: 3, tough: 8, speed: 3, nerve: 7, loyalty: 8 }, traits: ['biglad'] },
   stig: { nick: 'THE TERRACE RAT', stats: { fists: 6, kicks: 4, tough: 3, speed: 8, nerve: 5, loyalty: 6 }, traits: ['hothead'] },
-  tina: { nick: 'THE BOOT', stats: { fists: 4, kicks: 8, tough: 5, speed: 6, nerve: 6, loyalty: 7 }, traits: ['singer'] },
+  kenny: { nick: 'ULTRAVIOLENCE', stats: { fists: 8, kicks: 4, tough: 7, speed: 5, nerve: 8, loyalty: 5 }, traits: ['liability'] },
   vic: { nick: 'THE PYTHON', stats: { fists: 6, kicks: 3, tough: 7, speed: 3, nerve: 6, loyalty: 7 }, traits: ['biglad'] },
   hooligan: { nick: 'DEZ', stats: { fists: 6, kicks: 6, tough: 5, speed: 5, nerve: 6, loyalty: 8 }, traits: ['oldschool'] },
 };
@@ -125,7 +125,7 @@ export function recruitTier(F) { return F.rep >= 120 ? 3 : F.rep >= 60 ? 2 : F.r
 
 export function newFirm(playerChar = 'hooligan') {
   const F = { v: 1, day: 1, rep: 0, heat: 0, nextId: 1, lads: [], squad: [], pool: [], poolDay: 0, log: [], report: null, event: null, trained: {} };
-  for (const id of ['mo', 'stig', 'tina', 'hooligan'].filter(c => c !== playerChar).slice(0, 3)) F.lads.push(founder(F, id));
+  for (const id of ['mo', 'stig', 'kenny', 'hooligan'].filter(c => c !== playerChar).slice(0, 3)) F.lads.push(founder(F, id));
   F.squad = F.lads.map(l => l.id);
   refreshPool(F);
   F.log.unshift('DAY 1. THE ANCHOR. THE FIRM IS FORMED.');

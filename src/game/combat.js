@@ -137,6 +137,7 @@ export function resolveAttack(world, f) {
     if (def.weapon && f.weapon) dmg = f.weapon.def.weapon.dmg;
     dmg *= (f.power || 1);
     if (!def.weapon && (f.kickMul || f.punchMul)) dmg *= /kick|stomp|knee/i.test(def.pose || '') ? (f.kickMul || 1) : (f.punchMul || 1);
+    if (f.rage) dmg *= 1 + 0.5 * (1 - Math.max(0, f.hp) / (f.maxHp || 100));   // Kenny: the more he's hurt, the harder he hits
     if (juggle) { dmg *= 0.75; t.juggles = (t.juggles || 0) + 1; }
     const dl = dist || 1;
     const dir = dist > 0.05 ? { x: dx / dl, y: dy / dl } : { x: ax, y: ay };

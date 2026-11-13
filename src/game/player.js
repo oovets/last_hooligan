@@ -31,6 +31,7 @@ export function createPlayer(game, x, y) {
   f.grabCfg = ch.grab || null;
   f.kickMul = ch.kickMul || 0; f.punchMul = ch.punchMul || 0;
   f.winLine = ch.winLine || null;
+  f.koLines = ch.koLines || null; f.rage = !!ch.rage;
   f.controller = new PlayerController();
   return f;
 }

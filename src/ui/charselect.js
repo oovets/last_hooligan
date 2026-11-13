@@ -21,13 +21,13 @@ const MOVES = {
   hooligan: ['J J J / J K L / K J K COMBOS', 'L L = SPIN KICK', 'RUN + J = SHOULDER CHARGE', 'WARDROBE: DRESS HIM UP'],
   mo: ['K = HAMMER FIST (KNOCKDOWN)', 'RUN + J = FRIDGE CHARGE', 'SHRUGS OFF LIGHT HITS', 'SLOW BUT HUGE HEALTH'],
   stig: ['J = LIGHTNING FLURRY', 'RUN + L = SLIDE TACKLE', 'FASTEST RUNNER IN TOWN', 'GLASS JAW - KEEP MOVING'],
-  tina: ['L = SNAP KICK, L L = AXE KICK', 'KICKS HIT 25% HARDER', 'LONGER REACH', 'PUNCHES ARE WEAKER'],
+  kenny: ['K = SHOWTIME BOMB (KNOCKDOWN)', 'RUN + J = SPEAR TACKLE', 'THE MORE HE BLEEDS, THE HARDER HE HITS', 'NEVER BLOCKS. NEVER BACKS DOWN.'],
   vic: ['I = STRYPGREPP (CHOKEHOLD) - LIFTS AND STRANGLES', 'IN THE GRIP: J/K = TIGHTEN, 3RD = CHOKESLAM', 'RUN + I = LUNGE FOR THE THROAT', 'WINS A FIGHT? "VILL DU DÖ ELLER?"'],
   oldboy: ['K = OLD-SCHOOL HEADBUTT', 'TOUGH AS OLD BOOTS', 'SEEN IT ALL', 'UNLOCK: FINISH THE GAME'],
 };
 const DEMO = {
   hooligan: ['jab', 'cross', 'hook', 'uppercut'], mo: ['haymaker', 'bodySlam'], stig: ['jab', 'hook', 'jab', 'flyingKick'],
-  tina: ['kick', 'tina_axe', 'spinKick'], vic: ['choking', 'vic_tighten', 'vic_tighten', 'vic_chokeslam'], oldboy: ['jab', 'headbutt', 'kick'],
+  kenny: ['cross', 'kenny_bomb', 'shoulder'], vic: ['choking', 'vic_tighten', 'vic_tighten', 'vic_chokeslam'], oldboy: ['jab', 'headbutt', 'kick'],
 };
 const DIRS = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
 
@@ -81,7 +81,7 @@ export class CharSelectScene {
         return { attack: pose, phase: ph, p: pp };
       }
     }
-    return { anim: t > cyc - 0.7 ? (c.id === 'tina' || c.id === 'stig' ? 'taunt' : 'victory') : 'guard', t };
+    return { anim: t > cyc - 0.7 ? (c.id === 'kenny' || c.id === 'stig' ? 'taunt' : 'victory') : 'guard', t };
   }
 
   drawFighter(ctx, i, x, y, scale, facing, dark) {
