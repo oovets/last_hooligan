@@ -390,7 +390,8 @@ export class Firm {
     const firm = getFirm(this.world.player.character);
     // a founder who is the character you're playing stays at the pub (you can't fight beside yourself)
     const me = this.world.player.character;
-    const recs = squadLads(firm).filter(r => !r.char || r.char !== me).slice(0, Math.max(1, this.size + (firm.rep >= 60 ? 1 : 0)));
+    const myName = characterById(me).name;   // (older saves: the lads Gazza ... Paddy have no char id, match by name)
+    const recs = squadLads(firm).filter(r => (!r.char || r.char !== me) && !(!r.char && r.name === myName)).slice(0, Math.max(1, this.size + (firm.rep >= 60 ? 1 : 0)));
     if (recs.length) { recs.forEach((rec, i) => this.spawnLad(rec, i, game)); return; }
     this.spawnCharacters(game);
   }

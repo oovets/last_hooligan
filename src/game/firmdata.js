@@ -13,7 +13,7 @@
 //         mood (0..100), bonds: { ladId: 0..10 }, hired (day) }
 
 import { save } from '../save.js';
-import { characterById } from '../content/characters.js';
+import { characterById, CHARACTERS } from '../content/characters.js';
 import { clubById, currentClub } from '../content/clubs.js';
 
 export const STATS = ['fists', 'kicks', 'tough', 'speed', 'nerve', 'loyalty'];
@@ -112,7 +112,7 @@ function newId(F) { return 'lad' + (F.nextId++); }
 // name / nick / look / stats / traits of a founder (playable character or one of the extra lads), for the FIRM SETUP screen
 export function founderInfo(id) {
   const fd = FOUNDERS[id] || FOUNDERS.hooligan;
-  if (fd.look) return { id, name: fd.name, nick: fd.nick, look: fd.look, stats: fd.stats, traits: fd.traits, char: null };
+  if (fd.look) return { id, name: fd.name, nick: fd.nick, look: fd.look, stats: fd.stats, traits: fd.traits, char: CHARACTERS.some(c => c.id === id) ? id : null };
   const ch = characterById(id);
   return { id, name: ch.name, nick: fd.nick, look: ch.look || null, stats: fd.stats, traits: fd.traits, char: id };
 }
@@ -156,6 +156,37 @@ export function recruitCost(l) { return 20 + Math.max(0, statSum(l) - 18) * 6; }
 export function trainCost(l, stat) { return Math.round(10 + l.stats[stat] * 8 * (l.traits.includes('grafter') ? 0.5 : 1)); }
 export function squadSize(F) { return F.rep >= 60 ? 4 : 3; }
 export function recruitTier(F) { return F.rep >= 120 ? 3 : F.rep >= 60 ? 2 : F.rep >= 20 ? 1 : 0; }
+
+// ------------------------------------------------------------------ the firm's lads are playable too
+// The eight lads with a name and look of their own (Gazza ... Paddy) join the character select: their firm stats
+// (1..10) become fighter numbers, the standard moveset (no signature moves), and the trait for flavour.
+const LAD_BIO = {
+  gaz: ['THIRTY YEARS ON THE TERRACES.', 'STONE ISLAND BADGE, IRONED JEANS.', 'NEVER RAISES HIS VOICE. NEVER NEEDS TO.'],
+  tommo: ['STARTS EVERY SONG ON THE TERRACE.', 'AND MOST OF THE FIGHTS.', 'HAS NEVER ONCE STOPPED TALKING.'],
+  spider: ['SEES THEM BEFORE THEY SEE US.', 'FASTEST FEET IN THE FIRM.', 'NOBODY KNOWS WHAT HE LOOKS LIKE.'],
+  shaz: ['GREW UP WITH FIVE BROTHERS.', 'BEAT ALL OF THEM.', 'GOES IN FIRST. ASKS NEVER.'],
+  bigh: ['SIX FOOT FOUR OF PARKA.', 'DOORS AT THE ANCHOR ON A FRIDAY.', 'DOESN\'T RUN. DOESN\'T NEED TO.'],
+  ronnie: ['DOES THE FIRM\'S BOOKS.', 'AND THE COACH, AND THE TICKETS.', 'SURPRISINGLY HANDY WITH A FLASK.'],
+  decks: ['DJ ON SATURDAY NIGHTS.', 'BALACLAVA ON SATURDAY AFTERNOONS.', 'THE OLD BILL KNOW HIS FACE ANYWAY.'],
+  paddy: ['POSTMAN. KNOWS EVERY BACK ALLEY.', 'TWO PINTS AND HE\'LL FIGHT A BUS.', 'STILL IN THE HI-VIS.'],
+};
+const s5 = v => Math.max(1, Math.min(5, Math.round(v / 2)));
+function ladCharacter(id) {
+  const fd = FOUNDERS[id], s = fd.stats, t = fd.traits[0];
+  return {
+    id, name: fd.name, nick: fd.nick, tagline: `${fd.nick}. ${TRAITS[t] ? TRAITS[t].desc : ''}`.trim(),
+    bio: LAD_BIO[id] || [], lad: true,
+    stats: { power: s5(s.fists), speed: s5(s.speed), toughness: s5(s.tough), technique: s5((s.kicks + s.nerve) / 2) },
+    fighter: {
+      hp: 70 + s.tough * 7, speed: 2.5 + s.speed * 0.13, runSpeed: 4.4 + s.speed * 0.25, power: 0.7 + s.fists * 0.07,
+      defense: 1.25 - s.tough * 0.06, weight: 0.8 + Math.max(0, (fd.look.build || 1) - 0.9) * 1.5, guard: 25 + s.tough * 4,
+      superArmor: fd.traits.includes('biglad') ? 3 : 0,
+    },
+    moves: {}, look: fd.look, unlock: null, trait: t,
+  };
+}
+const LAD_CHARS = ['gaz', 'tommo', 'spider', 'shaz', 'bigh', 'ronnie', 'decks', 'paddy'];
+for (const id of LAD_CHARS) if (!CHARACTERS.some(c => c.id === id)) CHARACTERS.push(ladCharacter(id));
 
 // the lads you can found a firm with (FIRM SETUP): the playable characters (more to come)
 export const FOUNDER_IDS = ['mo', 'stig', 'kenny', 'bigal', 'vic', 'hooligan', 'gaz', 'tommo', 'spider', 'shaz', 'bigh', 'ronnie', 'decks', 'paddy'];

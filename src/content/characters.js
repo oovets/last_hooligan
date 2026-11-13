@@ -161,9 +161,10 @@ export const CHARACTERS = [
       pants: { style: 'cargo', color: '#4a4030' }, shoes: { color: '#5a1418', sole: '#d8c060' },
       scarf: null, build: 1.15, height: 1.0, hero: 'oldboy',      // realistic menu model (assets/models/hero/oldboy.glb)
     },
-    unlock: { completed: true },
+    unlock: null,
   },
 ];
+// (the firm's own lads, Gazza ... Paddy, are added to this list by game/firmdata.js: their data lives there)
 
 export function characterById(id) { return CHARACTERS.find(c => c.id === id) || CHARACTERS[0]; }
 

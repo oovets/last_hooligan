@@ -8,6 +8,7 @@ import { save } from '../save.js';
 import { audio } from '../audio/audio.js';
 import { game } from '../game/state.js';
 import { CHARACTERS, isCharacterUnlocked } from '../content/characters.js';
+import { TRAITS } from '../game/firmdata.js';   // (also adds the firm's lads to CHARACTERS)
 import { buildLook } from '../content/wardrobe.js';
 import { drawDoll, drawPortrait, normalizeLook } from '../game/doll.js';
 import { sampleAnim, attackPose, ATTACK_POSES, ANIMS } from '../game/poses.js';
@@ -24,8 +25,10 @@ const MOVES = {
   bigal: ['E = TOP OFF: HELICOPTER TWIRL, SHIRT IN THE FACE', 'THE REVEAL FREEZES THEM. LADS GO AL! AL! AL!', 'BARE-CHESTED: HITS HARDER, TAKES MORE', 'L = THE STEPLADDER. LONGEST REACH IN TOWN'],
   kenny: ['K = SHOWTIME BOMB (KNOCKDOWN)', 'RUN + J = SPEAR TACKLE', 'THE MORE HE BLEEDS, THE HARDER HE HITS', 'NEVER BLOCKS. NEVER BACKS DOWN.'],
   vic: ['I = STRYPGREPP (CHOKEHOLD) - LIFTS AND STRANGLES', 'IN THE GRIP: J/K = TIGHTEN, 3RD = CHOKESLAM', 'RUN + I = LUNGE FOR THE THROAT', 'WINS A FIGHT? "VILL DU DÖ ELLER?"'],
-  oldboy: ['K = OLD-SCHOOL HEADBUTT', 'TOUGH AS OLD BOOTS', 'SEEN IT ALL', 'UNLOCK: FINISH THE GAME'],
+  oldboy: ['K = OLD-SCHOOL HEADBUTT', 'TOUGH AS OLD BOOTS', 'SEEN IT ALL', 'NEVER TAKES HIS CAP OFF'],
 };
+// the firm's lads (game/firmdata.js): the standard moveset and their trait
+const ladMoves = c => ['J J J / J K L / K J K COMBOS', 'L L = SPIN KICK', 'RUN + J = SHOULDER CHARGE', c.trait && TRAITS[c.trait] ? TRAITS[c.trait].name + ': ' + TRAITS[c.trait].desc : 'ONE OF THE FIRM'];
 const DEMO = {
   hooligan: ['jab', 'cross', 'hook', 'uppercut'], mo: ['haymaker', 'bodySlam'], stig: ['jab', 'hook', 'jab', 'flyingKick'],
   kenny: ['cross', 'kenny_bomb', 'shoulder'], bigal: ['jab', 'al_stepladder', 'al_strip'], vic: ['choking', 'vic_tighten', 'vic_tighten', 'vic_chokeslam'], oldboy: ['jab', 'headbutt', 'kick'],
@@ -160,11 +163,11 @@ export class CharSelectScene {
     });
     (c.bio || []).forEach((l, k) => drawText(ctx, l, px + 10, 148 + k * 10, { color: '#c0b8d0' }));
     drawText(ctx, 'MOVES', px + 10, 186, { color: C.gold });
-    (MOVES[c.id] || []).forEach((l, k) => drawText(ctx, '* ' + l, px + 14, 198 + k * 11, { color: C.text }));
+    (MOVES[c.id] || ladMoves(c)).forEach((l, k) => drawText(ctx, '* ' + l, px + 14, 198 + k * 11, { color: C.text }));
     if (!unlocked) drawText(ctx, c.unlock && c.unlock.completed ? 'FINISH THE GAME TO UNLOCK' : 'KEEP PLAYING TO UNLOCK', px + pw / 2, 270, { color: C.bad, align: 'center' });
 
     // ---- roster strip (portraits)
-    const n = CHARACTERS.length, cw = 40, x0 = Math.round(VIEW_W / 2 - (n * (cw + 6) - 6) / 2), y0 = 298;
+    const n = CHARACTERS.length, cw = Math.min(40, Math.floor((VIEW_W - 24 + 6) / n) - 6), x0 = Math.round(VIEW_W / 2 - (n * (cw + 6) - 6) / 2), y0 = 298;   // (shrinks to fit the roster)
     const stage = r3d.menu, busts = [];
     CHARACTERS.forEach((ch, i) => {
       const x = x0 + i * (cw + 6), sel = i === this.sel;
