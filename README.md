@@ -58,6 +58,9 @@ For the classic pixel-art renderer pick OPTIONS → GRAPHICS → 2D, or add `?re
 THE ANCHOR with a report. Walk to the map on the wall (or press **M**) to pick the next trip.
 
 During development the game is **muted** by `src/devflags.js` (`DEV.mute = true`). Set it to `false` for sound.
+
+**Live:** https://hooligan.sthlm.fun (app04, nginx + Let's Encrypt, behind Cloudflare). Deploy the committed HEAD with
+`scripts/deploy.sh` (copies `index.html`, `src/` and `assets/` to `/var/www/hooligan` on app04 and swaps it in).
 `UNLOCK_ALL` in `src/save.js` is on for playtesting: every level, the whole tour and the whole wardrobe are open.
 Set it to `false` to earn them.
 
