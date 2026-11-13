@@ -146,5 +146,33 @@ console.log(`\n== THE FIRM on ${L.name}`);
   F.onClear(); step(w, 1.5);
   check(l1.alive && l1.hp > 0, `KO: ...and gets back up when the fight is won (hp ${l1.hp})`);
 }
+
+// PROTECT + HELP: lads on WITH ME look after the leader first, and answer a mate who shouts for help
+{
+  const w = fresh(), F = w.firm, P = w.player;
+  F.order('follow'); step(w, 1.5);
+  const sp = spots(w, P.x, P.y, 1.2, 2);
+  const onP = w.spawnEnemy('rival', sp[0].x, sp[0].y, { aggro: true }); onP.maxHp = onP.hp = 999;
+  onP.controller.target = () => P;
+  const decoy = spots(w, P.x, P.y, 3.5, 4.5)[0];
+  const d2 = w.spawnEnemy('rival', decoy.x, decoy.y, { aggro: true }); d2.maxHp = d2.hp = 999;
+  d2.controller.target = () => F.lads[0];
+  let covered = 0, frames = 0;
+  step(w, 3, () => { frames++; if (F.lads.some(l => l.controller.foe === onP)) covered++; });
+  check(covered / frames > 0.6, `PROTECT: a lad is on the man going for the leader ${Math.round(covered / frames * 100)}% of the time`);
+  for (const f of w.fighters) if (f.team !== 'player') f.removed = true;
+  step(w, 0.3);
+
+  // HELP: two men on a hurt lad -> he shouts, a mate comes over
+  F.order('follow'); step(w, 1.5);
+  const l0 = F.lads[0];
+  l0.hp = l0.maxHp * 0.3;
+  const sp2 = spots(w, l0.x, l0.y, 0.8, 1.6);
+  const foes = [0, 1].map(i => { const e = w.spawnEnemy('rival', sp2[i].x, sp2[i].y, { aggro: true }); e.maxHp = e.hp = 999; e.controller.target = () => l0; e.power = 0; return e; });
+  let called = false, helped = false;
+  step(w, 3, () => { l0.hp = Math.max(l0.hp, l0.maxHp * 0.3); if (l0.helpT > 0) called = true; if (F.lads.some(l => l !== l0 && foes.includes(l.controller.foe))) helped = true; });
+  check(called, 'HELP: a hurt, outnumbered lad shouts for help');
+  check(helped, 'HELP: ...and a mate goes for one of the men on him');
+}
 console.log(`\n${fails ? fails + ' check(s) FAILED' : 'all firm checks passed'}`);
 process.exit(fails ? 1 : 0);

@@ -71,7 +71,16 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 
 ## Firman
 
-- [ ] Ordrar med handkontroll (radialmeny).
+- [x] Ordrar med handkontroll: d-pad = snabbordrar, håll RT = kommandoläge.
+- [x] Kommandoläget utan mus: en ordermarkör som styrs med WASD/stick och fastnar på fiender (J/X = HAVE HIM eller
+      OVER THERE, K/Y = välj vem som får ordern, L/B = WITH ME). Ledaren står still medan man ger order.
+- [x] Grabbarna skyddar ledaren först på WITH ME, ropar på hjälp när de är skadade och i underläge (HUD:en blinkar
+      HELP) och kompisarna kommer till undsättning.
+- [ ] Provspela kommandoläget: tempot (25 %), markörens fart, om ledaren ska kunna röra sig.
+- [ ] Kontrollsidan i pausmenyn (CONTROLS) visar inte firmans knappar, bara tipset när banan startar.
+- [ ] Taktiska order: "flankera", "ta den med vapnet", "skydda honom" (en grabb som livvakt åt en annan).
+- [ ] Lagspel: en grabb håller fast en fiende medan du slår (grepp + ledaren), dubbelattacker.
+- [ ] Grabbarnas egna initiativ efter personlighet (hetsporren rusar, den fege stannar bak) syns i striden.
 - [ ] Firma på/av och firmans storlek i menyn (finns bara i sparfilen).
 - [ ] Mål i strider utöver "slå ner alla", t.ex. ta läktaren, håll puben eller hämta en skadad kompis (DESIGN-V2 §3.4).
 - [ ] Större strider (6 mot 10) när prestandan tillåter.

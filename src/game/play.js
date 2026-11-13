@@ -50,7 +50,7 @@ export class PlayScene {
     this.firmUI = {};
     if (this.world.firm && this.world.firm.lads.length && !(save.data.seenNew || []).includes('firmHint')) {
       (save.data.seenNew ||= []).push('firmHint'); save.write();
-      setTimeout(() => this.world && this.world.toast('YOUR FIRM: R WITH ME  T GET INTO THEM  H HOLD  Y SING UP  HOLD G = COMMAND'), 4500);
+      setTimeout(() => this.world && this.world.toast(input.lastDevice === 'pad' ? 'YOUR FIRM: D-PAD ORDERS, HOLD RT = COMMAND (STICK AIMS, X = HAVE HIM / GO)' : 'YOUR FIRM: R WITH ME  T GET INTO THEM  H HOLD  Y SING UP  HOLD G = COMMAND (WASD AIMS, J = HAVE HIM / GO)'), 4500);
     }
     audio.music(this.level.music || 'streets');
     audio.crowd(this.level.crowd || 0);
@@ -122,7 +122,7 @@ export class PlayScene {
     if (this.paused) { this.updatePause(dt); return; }
     if (input.pressed('pause')) { this.paused = true; this.page = 'menu'; this.pauseMenu.sel = 0; audio.sfx('pause'); this.duck(); return; }
     if (input.pressed('inventory')) { this.invOpen = true; this.invSel = 0; audio.sfx('pause'); return; }
-    updateFirmInput(w, this.firmUI);
+    updateFirmInput(w, this.firmUI, dt);
     w.update(w.firm && w.firm.command ? dt * COMMAND_SLOW : dt);
     const p = w.player;
     if (this.wasAlive && !p.alive) { const T = (save.data.totals ||= {}); T.deaths = (T.deaths || 0) + 1; }

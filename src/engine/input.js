@@ -49,15 +49,16 @@ const PADMAP = {
   4: ['grab'],
   5: ['block'],
   6: ['dodge'],
-  7: ['block'],
+  7: ['command'],           // RT: hold for command mode (block stays on RB)
   8: ['inventory'],
   9: ['pause'],
   10: ['use'],
   11: ['use'],
-  12: ['up', 'menuUp'],
-  13: ['down', 'menuDown'],
-  14: ['left', 'menuLeft'],
-  15: ['right', 'menuRight'],
+  // d-pad: quick firm orders in a fight (the stick moves), menu navigation in menus
+  12: ['orderCharge', 'menuUp'],
+  13: ['orderFollow', 'menuDown'],
+  14: ['orderHold', 'menuLeft'],
+  15: ['orderSing', 'menuRight'],
 };
 
 const PREVENT = new Set(['Space', 'Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ShiftLeft', 'ShiftRight']);
@@ -170,7 +171,8 @@ class Input {
   // Human readable key hint for an action (first binding).
   hint(a) {
     if (this.lastDevice === 'pad') {
-      const names = { jump: 'A', kick: 'B', punchL: 'X', punchR: 'Y', grab: 'LB', block: 'RB', dodge: 'LT', use: 'L3', pause: 'START', inventory: 'SELECT', confirm: 'A', back: 'B' };
+      const names = { jump: 'A', kick: 'B', punchL: 'X', punchR: 'Y', grab: 'LB', block: 'RB', dodge: 'LT', use: 'L3', pause: 'START', inventory: 'SELECT', confirm: 'A', back: 'B',
+        command: 'RT', orderCharge: 'D-UP', orderFollow: 'D-DOWN', orderHold: 'D-LEFT', orderSing: 'D-RIGHT' };
       return names[a] || a.toUpperCase();
     }
     const c = (KEYMAP[a] || [''])[0];

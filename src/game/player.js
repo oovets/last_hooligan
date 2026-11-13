@@ -91,6 +91,8 @@ export class PlayerController {
     I.attack = null; I.attackName = null; I.jump = false; I.dodge = false; I.grab = false; I.use = false; I.taunt = false;
     const P = this.pollButtons();
     if (!this.enabled) { I.mx = I.my = 0; I.block = false; I.run = false; this.bufAttack = null; return; }
+    // command mode (ui/firmhud.js): the stick and the attack buttons drive the order cursor, the leader stands his ground
+    if (world.firm && world.firm.command) { I.mx = I.my = 0; I.run = false; this.running = false; I.block = input.down('block'); this.bufAttack = null; return; }
 
     const m = input.move();
     const w = moveToWorld(m.x, m.y);

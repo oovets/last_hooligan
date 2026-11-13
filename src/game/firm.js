@@ -39,6 +39,8 @@ const REPLY = {
   flee: ['I\'M OFF!', 'LEG IT!', 'NOT TODAY!'],
   back: ['RIGHT, I\'M BACK!', 'SORTED. AGAIN!'],
   up: ['STILL HERE!', 'IS THAT ALL?', 'ME HEAD...'],
+  help: ['HELP ME OUT HERE!', 'LADS! OVER HERE!', 'GIZ A HAND!', 'I\'M SURROUNDED!'],
+  cover: ['GOT YOUR BACK!', 'OI! LEAVE HIM!', 'I\'M COMING!'],
 };
 const pick = a => a[Math.floor(Math.random() * a.length)];
 
@@ -131,9 +133,32 @@ export class LadController extends AIController {
       return this.nearestFoe(f, world, c, o.type === 'hold' ? (hot ? 3.6 : 2.6) : 1.6);
     }
     if (o.type === 'charge') return this.nearestFoe(f, world, f, 12) || this.nearestFoe(f, world, P, 12);
-    // follow: anything close to me or the leader; spread over targets (fewest lads on it first)
+    // follow: look after the leader first, then a mate who's shouting for help, then anything close (fewest lads on
+    // it first)
     const r = (f.engage || ENGAGE) + (hot ? 1.5 : 0);
+    const onLeader = this.threatOn(f, world, P, r + 1.5);
+    if (onLeader) return onLeader;
+    for (const m of this.firm.lads) {
+      if (m === f || !live(m) || !(m.helpT > 0) || dist(m, f) > r + 3) continue;
+      const t = this.threatOn(f, world, m, r + 3);
+      if (t) { if (!(f.coverT > 0)) { f.coverT = 6; f.say && f.say(pick(REPLY.cover), 1.0); } return t; }
+    }
     return this.nearestFoe(f, world, f, r) || this.nearestFoe(f, world, P, r);
+  }
+
+  // an enemy who is having a go at `who` (aimed at him and close), with at most one other lad already on it
+  threatOn(f, world, who, r) {
+    let best = null, bs = 1e9;
+    for (const e of world.fighters) {
+      if (e.team === f.team || !live(e) || e.routT > 0 || !e.controller || e.controller.curTarget !== who) continue;
+      if (e.controller.goal || dist(e, who) > 3 || dist(e, f) > r) continue;
+      let crowd = 0;
+      for (const l of this.firm.lads) if (l !== f && l.controller && l.controller.foe === e) crowd++;
+      if (crowd >= 2) continue;
+      const s = dist(e, who) + dist(e, f) * 0.3 + crowd * 2.5;
+      if (s < bs) { bs = s; best = e; }
+    }
+    return best;
   }
 
   nearestFoe(f, world, c, r) {
@@ -311,6 +336,21 @@ export class Firm {
     for (const l of this.lads) {
       if (!l.alive || l.removed) continue;
       if (dist(l, P) > 13 || (w.lock && !inside(w.lock, l) && dist(l, P) > 7)) { this.place(l, l.ladIdx); l.controller.foe = null; }
+    }
+    // a lad in trouble (hurt and outnumbered) shouts for help: his mates come over (LadController.chooseFoe) and the
+    // HUD flags him so you can send someone (or go yourself)
+    for (const l of this.lads) {
+      if (l.helpT > 0) l.helpT -= dt;
+      if (l.coverT > 0) l.coverT -= dt;
+      if (l.helpCd > 0) { l.helpCd -= dt; continue; }
+      if (!live(l) || l.routT > 0) continue;
+      let on = 0;
+      for (const e of w.fighters) if (e.team !== 'player' && live(e) && e.controller && e.controller.curTarget === l && dist(e, l) < 3) on++;
+      if (on >= 2 && (l.hp < l.maxHp * 0.45 || on >= 3)) {
+        l.helpT = 4; l.helpCd = 9;
+        l.say && l.say(pick(REPLY.help), 1.3);
+        w.toast && w.toast(`${l.name} NEEDS A HAND!`);
+      }
     }
     // nerve
     for (const f of w.fighters) {
