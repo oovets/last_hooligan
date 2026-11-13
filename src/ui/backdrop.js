@@ -504,8 +504,45 @@ export class Backdrop {
     this.flashes = this.flashes.filter(f => f.life < 0.12);
   }
 
+  // The menus' background: a photo of the North Stand at old Råsunda (AIK, November 2012: flares, smoke, floodlights;
+  // assets/bg/rasunda.jpg, see assets/bg/CREDITS.md), slowly drifting, graded dark at the edges so text reads on it.
+  // Until it has loaded, the drawn stadium below stands in.
+  photo() {
+    if (!this._photo && typeof Image !== 'undefined') {
+      this._photo = new Image();
+      this._photo.src = new URL('../../assets/bg/rasunda.jpg', import.meta.url).href;
+    }
+    const im = this._photo;
+    return im && im.complete && im.naturalWidth ? im : null;
+  }
+
   draw(ctx, opts = {}) {
     if (opts === false || opts === true) opts = { lads: opts };
+    const im = this.photo();
+    if (im) {
+      const t = this.t;
+      // cover the screen, with a slow zoom and pan (Ken Burns)
+      const z = 1.06 + Math.sin(t * 0.045) * 0.04;
+      const k = Math.max(VIEW_W / im.naturalWidth, VIEW_H / im.naturalHeight) * z;
+      const w = im.naturalWidth * k, h = im.naturalHeight * k;
+      const x = (VIEW_W - w) / 2 + Math.sin(t * 0.031) * (w - VIEW_W) * 0.35, y = (VIEW_H - h) / 2 + Math.cos(t * 0.027) * (h - VIEW_H) * 0.25;
+      ctx.save(); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(im, x, y, w, h);
+      // grade: darker top and bottom, a touch of the red flare light breathing
+      const g = ctx.createLinearGradient(0, 0, 0, VIEW_H);
+      g.addColorStop(0, 'rgba(6,3,12,0.62)'); g.addColorStop(0.35, 'rgba(6,3,12,0.18)'); g.addColorStop(0.7, 'rgba(6,3,12,0.25)'); g.addColorStop(1, 'rgba(6,3,12,0.8)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = `rgba(120,20,24,${0.05 + Math.sin(t * 7) * 0.02 + Math.sin(t * 2.3) * 0.02})`; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      ctx.restore();
+      // vignette
+      const v = ctx.createRadialGradient(VIEW_W / 2, VIEW_H / 2, VIEW_H * 0.35, VIEW_W / 2, VIEW_H / 2, VIEW_W * 0.62);
+      v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.55)');
+      ctx.fillStyle = v; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      if (opts.lads) this.drawLads(ctx, t);
+      if (opts.dim) { ctx.fillStyle = `rgba(4,2,10,${opts.dim})`; ctx.fillRect(0, 0, VIEW_W, VIEW_H); }
+      return;
+    }
     const S = devScale(ctx), C = this.cache(S), t = this.t;
     blit(ctx, C.static, 0, 0);
     // twinkling stars
