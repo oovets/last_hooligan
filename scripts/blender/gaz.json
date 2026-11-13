@@ -1,0 +1,69 @@
+{
+  "out": "assets/models/hero/gaz.glb",
+  "preview": "build/mpfb/gaz_preview.png",
+  "tex": "build/mpfb/tex_gaz",
+  "height": 1.78,
+  "macro": {
+    "gender": 1.0,
+    "age": 0.68,
+    "muscle": 0.55,
+    "weight": 0.55,
+    "proportions": 0.55,
+    "height": 0.55
+  },
+  "targets": {
+    "head-square": 0.3,
+    "chin-width-incr": 0.3,
+    "nose-volume-incr": 0.2,
+    "forehead-temple-incr": 0.4
+  },
+  "assets": {
+    "hair": null,
+    "brows": "eyebrow010",
+    "top": null,
+    "pants": null,
+    "skin": "middleage_caucasian_male"
+  },
+  "eye_mat": "grey",
+  "tints": {
+    "body": "#e2a97a",
+    "hair": "#6a6a6a",
+    "top": "#2a3346",
+    "pants": "#c8b48a",
+    "shoes": "#f2f2ee",
+    "sole": "#e8e4dc"
+  },
+  "wardrobe": {
+    "top": {
+      "jacket": "male_casualsuit05"
+    },
+    "legs": {
+      "cargo": "cortu_cargo_pants"
+    },
+    "hair": {
+      "crop": "short02"
+    }
+  },
+  "top_split": {
+    "role": "top_jacket",
+    "drop_pants": true,
+    "shirt": "#f4f1e8"
+  },
+  "shoe_stripes": true,
+  "sole_h": 0.026,
+  "meta": {
+    "build": "m",
+    "torso": "jacket",
+    "girth": 1.0,
+    "hero": "gaz"
+  },
+  "preview_layers": [
+    "top:jacket",
+    "legs:cargo",
+    "hair:crop",
+    "shoes:stripes",
+    "badge:arm"
+  ],
+  "badge": true,
+  "badge_on": "top_jacket"
+}

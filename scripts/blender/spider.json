@@ -1,0 +1,76 @@
+{
+  "out": "assets/models/hero/spider.glb",
+  "preview": "build/mpfb/spider_preview.png",
+  "tex": "build/mpfb/tex_spider",
+  "height": 1.78,
+  "macro": {
+    "gender": 1.0,
+    "age": 0.4,
+    "muscle": 0.45,
+    "weight": 0.25,
+    "proportions": 0.7,
+    "height": 0.85
+  },
+  "targets": {
+    "l-cheek-volume-decr": 0.4,
+    "r-cheek-volume-decr": 0.4,
+    "neck-scale-horiz-decr": 0.3,
+    "head-oval": 0.4
+  },
+  "assets": {
+    "hair": null,
+    "brows": "eyebrow010",
+    "top": null,
+    "pants": null,
+    "skin": "young_caucasian_male2"
+  },
+  "eye_mat": "brown",
+  "tints": {
+    "body": "#d49a6a",
+    "top": "#141416",
+    "pants": "#1c1c20",
+    "shoes": "#f2f2ee",
+    "sole": "#e8e4dc"
+  },
+  "wardrobe": {
+    "top": {
+      "jacket": "male_casualsuit05"
+    },
+    "legs": {
+      "trackies": "mindfront_male_trousers_1"
+    },
+    "hair": {
+      "crop": "short02"
+    }
+  },
+  "top_split": {
+    "role": "top_jacket",
+    "drop_pants": true,
+    "shirt": "#222222"
+  },
+  "shoe_stripes": true,
+  "sole_h": 0.026,
+  "meta": {
+    "build": "m",
+    "torso": "jacket",
+    "girth": 0.9,
+    "hero": "spider"
+  },
+  "preview_layers": [
+    "top:jacket",
+    "legs:trackies",
+    "hair:crop",
+    "hood:up",
+    "mask:snood",
+    "gloves",
+    "shoes:stripes",
+    "badge:arm"
+  ],
+  "hood": {
+    "color": "#141416"
+  },
+  "snood": {
+    "color": "#141416"
+  },
+  "gloves": {}
+}

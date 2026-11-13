@@ -1,0 +1,72 @@
+{
+  "out": "assets/models/hero/decks.glb",
+  "preview": "build/mpfb/decks_preview.png",
+  "tex": "build/mpfb/tex_decks",
+  "height": 1.78,
+  "macro": {
+    "gender": 1.0,
+    "age": 0.45,
+    "muscle": 0.6,
+    "weight": 0.5,
+    "proportions": 0.55,
+    "height": 0.55,
+    "race": {
+      "caucasian": 0.1,
+      "african": 0.9,
+      "asian": 0.0
+    }
+  },
+  "targets": {
+    "measure-shoulder-dist-incr": 0.4
+  },
+  "assets": {
+    "hair": null,
+    "brows": "eyebrow010",
+    "top": null,
+    "pants": null,
+    "skin": "young_african_male"
+  },
+  "eye_mat": "brown",
+  "tints": {
+    "body": "#8a5636",
+    "top": "#1a1a22",
+    "pants": "#3a3c34",
+    "shoes": "#121214",
+    "stripes": "#f2c811",
+    "sole": "#e8e4dc"
+  },
+  "wardrobe": {
+    "top": {
+      "jacket": "male_casualsuit05"
+    },
+    "legs": {
+      "cargo": "cortu_cargo_pants"
+    }
+  },
+  "top_split": {
+    "role": "top_jacket",
+    "drop_pants": true,
+    "shirt": "#222222"
+  },
+  "shoe_stripes": true,
+  "sole_h": 0.026,
+  "meta": {
+    "build": "m",
+    "torso": "jacket",
+    "girth": 1.1,
+    "hero": "decks"
+  },
+  "preview_layers": [
+    "top:jacket",
+    "legs:cargo",
+    "mask:balaclava",
+    "gloves",
+    "shoes:stripes",
+    "badge:arm"
+  ],
+  "balaclava": {
+    "color": "#141416",
+    "layer": "mask:balaclava"
+  },
+  "gloves": {}
+}

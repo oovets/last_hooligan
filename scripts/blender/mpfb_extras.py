@@ -288,7 +288,7 @@ def build(JOB, OBJ, J):
         for p in ob.data.polygons: p.use_smooth = True
         OBJ['balaclava'] = ob
         col, nrm = _knit_images('balaclava_knit')
-        EXTRA['balaclava'] = {'name': 'balaclava', 'tag': 'acc:hat:balaclava', 'force': None,
+        EXTRA['balaclava'] = {'name': 'balaclava', 'tag': 'acc:' + B.get('layer', 'hat:balaclava'), 'force': None,
                               'mat': ('ID_14', hexlin(B.get('color', '#ff5a00')), 0.97, col, False), 'normal': nrm if B.get('knit_normal', True) else None}
         print('BALACLAVA', len(ob.data.polygons), 'faces')
 
@@ -421,6 +421,7 @@ def build(JOB, OBJ, J):
                            'mat': ('ID_26', (0.02, 0.02, 0.025, 1.0), 0.6, None, False)}
         print('CHEST TATTOO', T.get('side'), 'at', (round(cx, 3), round(cz, 3)))
     build_kit(JOB, OBJ, J, L)
+    build_cover(JOB, OBJ, J, L)
     for role in EXTRA:                          # pieces cut from the skin carry its custom normals: drop them (dark blotches)
         me = OBJ[role].data
         if 'custom_normal' in me.attributes: me.attributes.remove(me.attributes['custom_normal'])
@@ -757,3 +758,49 @@ def build_kit(JOB, OBJ, J, L):
         OBJ['mohawk'] = ob
         EXTRA['mohawk'] = {'name': 'mohawk', 'tag': 'acc:hair:mohawk', 'force': 'head', 'mat': ('ID_2', hexlin('#3a2717'), 0.7, None, False)}
         print('MOHAWK', len(ob.data.polygons))
+
+
+def _soft_shell(body, keep, name, off, bvh, smooth=12):
+    """A shell cut from the skin, its lumps smoothed away and held off the skin (fabric over the head / face)."""
+    ob = _shell(body, keep, 0.0, name)
+    bm = bmesh.new(); bm.from_mesh(ob.data)
+    for _ in range(smooth):
+        mv = {}
+        for v in bm.verts:
+            if not v.link_edges: continue
+            if v.is_boundary:
+                nb = [e.other_vert(v) for e in v.link_edges if e.is_boundary]
+                if len(nb) == 2: mv[v] = v.co.lerp((nb[0].co + nb[1].co) * 0.5, 0.5)
+            else:
+                mv[v] = v.co.lerp(sum((e.other_vert(v).co for e in v.link_edges), Vector()) / len(v.link_edges), 0.6)
+        for v, c in mv.items(): v.co = c
+        bm.to_mesh(ob.data)
+        _push_out(ob, bvh, off)
+        bm.free(); bm = bmesh.new(); bm.from_mesh(ob.data)
+    bm.free()
+    for p in ob.data.polygons: p.use_smooth = True
+    return ob
+
+
+def build_cover(JOB, OBJ, J, L):
+    """Hood up (layer hood:up, the top's colour ID_3) and a snood over the nose (layer mask:snood, ID_14)."""
+    body = OBJ['body']; ec, axis = L['eye'], L['axis']; bvh = _bvh(body)
+    def radial(co): return math.hypot(co.x - axis.x, co.y - axis.y)
+    if JOB.get('hood') is not None:
+        o = JOB['hood']; nz = J['neck'].z - 0.02
+        def keep(co, n):
+            if co.z < nz or radial(co) > 0.17: return False
+            face = co.y < axis.y - 0.015 and abs(co.x) < 0.068 and co.z < ec.z + 0.075
+            return not face
+        ob = _soft_shell(body, keep, 'hood', o.get('offset', 0.03), bvh)
+        OBJ['hood'] = ob
+        EXTRA['hood'] = {'name': 'hood', 'tag': 'acc:hood:up', 'force': None, 'mat': ('ID_3', hexlin(o.get('color', '#141416')), 0.9, None, False)}
+        print('HOOD', len(ob.data.polygons))
+    if JOB.get('snood') is not None:
+        o = JOB['snood']
+        def keep(co, n):
+            return J['neck'].z - 0.04 < co.z < L['nose'].z + 0.004 and radial(co) < 0.14
+        ob = _soft_shell(body, keep, 'snood', o.get('offset', 0.012), bvh, 16)
+        OBJ['snood'] = ob
+        EXTRA['snood'] = {'name': 'snood', 'tag': 'acc:mask:snood', 'force': None, 'mat': ('ID_14', hexlin(o.get('color', '#141416')), 0.95, None, False)}
+        print('SNOOD', len(ob.data.polygons))

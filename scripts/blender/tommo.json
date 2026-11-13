@@ -1,0 +1,74 @@
+{
+  "out": "assets/models/hero/tommo.glb",
+  "preview": "build/mpfb/tommo_preview.png",
+  "tex": "build/mpfb/tex_tommo",
+  "height": 1.78,
+  "macro": {
+    "gender": 1.0,
+    "age": 0.42,
+    "muscle": 0.5,
+    "weight": 0.45,
+    "proportions": 0.55,
+    "height": 0.55
+  },
+  "targets": {
+    "mouth-scale-horiz-incr": 0.4,
+    "nose-point-width-incr": 0.3,
+    "l-ear-wing-incr": 0.5,
+    "r-ear-wing-incr": 0.5,
+    "chin-prominent-incr": 0.3
+  },
+  "assets": {
+    "hair": null,
+    "brows": "eyebrow010",
+    "top": null,
+    "pants": null,
+    "skin": "young_caucasian_male"
+  },
+  "eye_mat": "blue",
+  "tints": {
+    "body": "#f0c098",
+    "top": "#c8102e",
+    "pants": "#34507a",
+    "shoes": "#1a3a90",
+    "stripes": "#f4f1e8",
+    "sole": "#e8e4dc"
+  },
+  "wardrobe": {
+    "top": {
+      "jacket": "male_casualsuit05"
+    },
+    "legs": {
+      "jeans": "punkduck_male_classic_jeans"
+    }
+  },
+  "top_split": {
+    "role": "top_jacket",
+    "drop_pants": true,
+    "shirt": "#f4f1e8"
+  },
+  "shoe_stripes": true,
+  "sole_h": 0.026,
+  "meta": {
+    "build": "m",
+    "torso": "jacket",
+    "girth": 1.0,
+    "hero": "tommo"
+  },
+  "preview_layers": [
+    "top:jacket",
+    "legs:jeans",
+    "shoes:stripes",
+    "badge:arm"
+  ],
+  "cranium": {
+    "strength": 0.8,
+    "scale": [
+      1.03,
+      1.05,
+      1.06
+    ],
+    "lift": 0.003,
+    "back": 0.006
+  }
+}

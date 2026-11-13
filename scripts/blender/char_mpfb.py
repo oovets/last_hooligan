@@ -466,9 +466,10 @@ MAT = {
 }
 for role, hx in JOB.get('tints', {}).items():      # preview / baseColorFactor colour of a palette part (the LOOK overrides it)
     if role in MAT: MAT[role] = MAT[role][:2] + (hx,) + MAT[role][3:]     # ('stripes', 'sole': used where those are built)
+WCAP = JOB.get('wardrobe_tex', 1024)               # texture cap (px) for each wardrobe garment / haircut: keeps a full wardrobe small
 for role in list(OBJ):                              # wardrobe garments take their kind's palette material
     for pre, base in (('top_', 'top'), ('legs_', 'pants'), ('hair_', 'hair')):
-        if role.startswith(pre): MAT[role] = MAT[base]
+        if role.startswith(pre): MAT[role] = MAT[base][:3] + (min(MAT[base][3], WCAP),) + MAT[base][4:]
 SKIN_TEX = JOB.get('skin_tex')
 if SKIN_TEX:            # authored skin (a projected likeness): keep its colour, and keep it out of the ID_ tint path
     MAT['body'] = (JOB.get('skin_mat', 'skin'), None, None, 1024, False, 0.55)

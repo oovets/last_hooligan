@@ -1,0 +1,69 @@
+{
+  "out": "assets/models/hero/ronnie.glb",
+  "preview": "build/mpfb/ronnie_preview.png",
+  "tex": "build/mpfb/tex_ronnie",
+  "height": 1.78,
+  "macro": {
+    "gender": 1.0,
+    "age": 0.5,
+    "muscle": 0.35,
+    "weight": 0.4,
+    "proportions": 0.55,
+    "height": 0.55
+  },
+  "targets": {
+    "head-oval": 0.3,
+    "nose-scale-vert-incr": 0.3,
+    "mouth-scale-horiz-decr": 0.3,
+    "chin-prominent-incr": 0.2
+  },
+  "assets": {
+    "hair": null,
+    "brows": "eyebrow010",
+    "top": null,
+    "pants": null,
+    "skin": "young_caucasian_male"
+  },
+  "eye_mat": "brown",
+  "tints": {
+    "body": "#f4d0b0",
+    "hair": "#6a4a2a",
+    "top": "#c8b48a",
+    "pants": "#5a6a7a",
+    "shoes": "#b9a07a",
+    "sole": "#e8d8a8"
+  },
+  "wardrobe": {
+    "top": {
+      "jacket": "male_casualsuit05"
+    },
+    "legs": {
+      "jeans": "punkduck_male_classic_jeans"
+    },
+    "hair": {
+      "mod": "culturalibre_hair_05"
+    }
+  },
+  "top_split": {
+    "role": "top_jacket",
+    "drop_pants": true,
+    "shirt": "#f4f1e8"
+  },
+  "shoe_stripes": true,
+  "sole_h": 0.026,
+  "meta": {
+    "build": "m",
+    "torso": "jacket",
+    "girth": 1.0,
+    "hero": "ronnie"
+  },
+  "preview_layers": [
+    "top:jacket",
+    "legs:jeans",
+    "hair:mod",
+    "face:shades",
+    "shoes:stripes",
+    "badge:arm"
+  ],
+  "shades": {}
+}

@@ -1,0 +1,78 @@
+{
+  "out": "assets/models/hero/paddy.glb",
+  "preview": "build/mpfb/paddy_preview.png",
+  "tex": "build/mpfb/tex_paddy",
+  "height": 1.78,
+  "macro": {
+    "gender": 1.0,
+    "age": 0.48,
+    "muscle": 0.45,
+    "weight": 0.5,
+    "proportions": 0.55,
+    "height": 0.55
+  },
+  "targets": {
+    "nose-scale-vert-incr": 0.3,
+    "l-ear-scale-incr": 0.3,
+    "r-ear-scale-incr": 0.3
+  },
+  "assets": {
+    "hair": null,
+    "brows": "eyebrow010",
+    "top": null,
+    "pants": null,
+    "skin": "toigo_light_skin_male_freckles"
+  },
+  "eye_mat": "green",
+  "tints": {
+    "body": "#f0c098",
+    "hair": "#b4521c",
+    "top": "#d8e83a",
+    "pants": "#34507a",
+    "shoes": "#1a1a1a",
+    "sole": "#3a3a3e"
+  },
+  "wardrobe": {
+    "top": {
+      "jacket": "male_casualsuit05"
+    },
+    "legs": {
+      "jeans": "punkduck_male_classic_jeans"
+    },
+    "hair": {
+      "curtains": "short03"
+    }
+  },
+  "top_split": {
+    "role": "top_jacket",
+    "drop_pants": true,
+    "shirt": "#1d2742"
+  },
+  "shoe_stripes": true,
+  "sole_h": 0.026,
+  "meta": {
+    "build": "m",
+    "torso": "jacket",
+    "girth": 1.0,
+    "hero": "paddy"
+  },
+  "preview_layers": [
+    "top:jacket",
+    "legs:jeans",
+    "hair:curtains",
+    "hat:cap",
+    "face:tache",
+    "shoes:stripes",
+    "badge:arm"
+  ],
+  "cap": {
+    "color": "#1d2742",
+    "offset": 0.016
+  },
+  "tache": {
+    "color": "#b4521c",
+    "below_nose": 0.007,
+    "over_lip": 0.013,
+    "width": 0.031
+  }
+}

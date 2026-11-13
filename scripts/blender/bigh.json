@@ -1,0 +1,83 @@
+{
+  "out": "assets/models/hero/bigh.glb",
+  "preview": "build/mpfb/bigh_preview.png",
+  "tex": "build/mpfb/tex_bigh",
+  "height": 1.78,
+  "macro": {
+    "gender": 1.0,
+    "age": 0.55,
+    "muscle": 0.75,
+    "weight": 0.95,
+    "proportions": 0.55,
+    "height": 0.75,
+    "race": {
+      "caucasian": 0.35,
+      "african": 0.55,
+      "asian": 0.1
+    }
+  },
+  "targets": {
+    "head-round": 0.4,
+    "head-fat-incr": 0.3,
+    "measure-neck-circ-incr": 1.0,
+    "torso-scale-horiz-incr": 0.5,
+    "measure-shoulder-dist-incr": 0.9,
+    "measure-upperarm-circ-incr": 0.7,
+    "stomach-pregnant-incr": 0.3,
+    "nose-flaring-incr": 0.5
+  },
+  "assets": {
+    "hair": null,
+    "brows": "eyebrow010",
+    "top": null,
+    "pants": null,
+    "skin": "middleage_african_male"
+  },
+  "eye_mat": "brown",
+  "tints": {
+    "body": "#b87a50",
+    "top": "#3e4530",
+    "pants": "#2a3346",
+    "shoes": "#1a1a1a",
+    "sole": "#3a3a3e"
+  },
+  "wardrobe": {
+    "top": {
+      "jacket": "male_casualsuit05"
+    },
+    "legs": {
+      "jeans": "punkduck_male_classic_jeans"
+    }
+  },
+  "top_split": {
+    "role": "top_jacket",
+    "drop_pants": true,
+    "shirt": "#2a2a2e"
+  },
+  "shoe_stripes": true,
+  "sole_h": 0.026,
+  "meta": {
+    "build": "h",
+    "torso": "jacket",
+    "girth": 1.5,
+    "hero": "bigh"
+  },
+  "preview_layers": [
+    "top:jacket",
+    "legs:jeans",
+    "face:beard",
+    "shoes:stripes",
+    "badge:arm"
+  ],
+  "beard": {},
+  "cranium": {
+    "strength": 0.8,
+    "scale": [
+      1.04,
+      1.06,
+      1.08
+    ],
+    "lift": 0.003,
+    "back": 0.006
+  }
+}
