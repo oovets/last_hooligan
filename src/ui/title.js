@@ -82,9 +82,17 @@ class TitleScene {
 export const LINEUP = ['oldboy', 'mo', 'kenny', 'hooligan', 'bigal', 'vic', 'stig'];
 // their hero model ids (preloaded before the title: main.js)
 export const lineupHeroes = () => LINEUP.map(id => { const ch = CHARACTERS.find(x => x.id === id); return (ch && ch.look && ch.look.hero) || buildLook(save.data.outfit).hero; }).filter(Boolean);
+// the models load after the title is up (main.js): the mob fades in once the bodies are in, the line-up once all seven
+// of its realistic models are (no plain bodies swapped for the real ones in front of you)
+let mobIn = null, lineIn = null;
 function drawFirm(ctx, t, k) {
   const stage = r3d.menu;
-  if (!(stage && stage.ready)) { drawMob(ctx, t, { charge: k }); return; }
+  if (!stage) { drawMob(ctx, t, { charge: k }); return; }      // (the 2D game)
+  if (!stage.ready) return;
+  if (mobIn === null) mobIn = t;
+  const heroes = lineupHeroes(), lineReady = heroes.every(id => stage.heroReady(id));
+  if (lineReady && lineIn === null) lineIn = t;
+  const mobK = Math.min(1, (t - mobIn) / 0.7), lineK = lineIn === null ? 0 : Math.min(1, (t - lineIn) / 0.7);
   const n = LINEUP.length, gap = 74, x0 = VIEW_W / 2 - gap * (n - 1) / 2, mid = (n - 1) / 2;
   const actors = LINEUP.map((id, i) => {
     const ch = CHARACTERS.find(x => x.id === id);
@@ -98,12 +106,14 @@ function drawFirm(ctx, t, k) {
   const HEAD_ROOM = 114, fit = Math.min(1, ...actors.map(a => (a.feet - HEAD_ROOM) / a.h));
   if (fit < 1) for (const a of actors) a.h *= fit;
   ctx.save();
-  ctx.globalAlpha = k;
+  ctx.globalAlpha = k * mobK;
   drawBackMob(ctx, t, stage);
-  // floor: the key light casts the lads' real shadows on the ground they stand on (menustage opts.floor)
-  const ok = stage.draw(ctx, 'titlefirm', actors, { x: 0, y: 70 + DROP, w: VIEW_W, h: 230 }, t, { light: 'studio', floor: true });
+  if (lineK > 0) {
+    // floor: the key light casts the lads' real shadows on the ground they stand on (menustage opts.floor)
+    ctx.globalAlpha = k * lineK;
+    stage.draw(ctx, 'titlefirm', actors, { x: 0, y: 70 + DROP, w: VIEW_W, h: 230 }, t, { light: 'studio', floor: true });
+  }
   ctx.restore();
-  if (!ok) { drawMob(ctx, t, { charge: k }); return; }
 }
 
 // the mob behind the line-up: rows of masked-up lads (black track tops with white piping, balaclavas, black cargos,

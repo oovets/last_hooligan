@@ -42,7 +42,6 @@ export class MenuStage {
     this.env = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
     pmrem.dispose();
     this.scenes = new Map();
-    this.ready = CHAR2.ready;
     this.size = [0, 0];
   }
 
@@ -74,6 +73,10 @@ export class MenuStage {
     this.scenes.set(key, s);
     return s;
   }
+
+  // ready once the character models are in (they load after the menus are up: main.js)
+  get ready() { return CHAR2.ready; }
+  heroReady(id) { return !!CHAR2.templates['hero:' + id]; }
 
   // one actor: Character2 + a fake fighter for the animator
   actor(s, i, a) {

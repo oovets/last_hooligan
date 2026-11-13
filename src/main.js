@@ -73,25 +73,38 @@ import { lineupHeroes } from './ui/title.js';
 let loadState = { done: 0, total: 1, ready: false };
 const qp0 = new URLSearchParams(location.search);
 const want3d = (qp0.get('renderer') || save.data.settings.renderer) === '3d';
+// The loading screen waits for the 3D CODE only: the character models (~12 MB on a cold cache) load after the title is
+// up, the title fades the lads in as they arrive (ui/title.js), and a level / the pub waits for them (EnvWaitScene).
 async function load3d() {
   try {
     const m = await timed('3d:modules', import('./render3d/renderer.js'));
-    m.HERO_FIRST.push(...lineupHeroes());            // the title's line-up first; the other lads after the title is up
-    await timed('3d:models v2 + heroes', m.loadCharacters2());
-    // the old v1 rigid models are only a fallback for when the v2 skinned models are missing
-    const { CHAR2 } = await import('./render3d/characters2.js');
-    if (!CHAR2.ready) await timed('3d:models v1', m.loadCharacterModels());
     r3d.renderer = new m.Renderer3D(glCanvas, canvas);
     try { const ms = await timed('3d:menu', import('./render3d/menustage.js')); r3d.menu = new ms.MenuStage(); } catch (e) { console.warn('[3d] menu stage unavailable', e); }
     try { const ic = await import('./render3d/itemicons.js'); r3d.itemIcon = ic.itemIcon; } catch (e) { console.warn('[3d] item icons unavailable', e); }
+    r3d.charsP = (async () => {
+      m.HERO_FIRST.push(...lineupHeroes());          // the title's line-up first, the other lads after
+      await timed('3d:models v2 + title lads', m.loadCharacters2());
+      // the old v1 rigid models are only a fallback for when the v2 skinned models are missing
+      const { CHAR2 } = await import('./render3d/characters2.js');
+      if (!CHAR2.ready) await timed('3d:models v1', m.loadCharacterModels());
+    })().catch(e => console.warn('[3d] character models', e));
+    r3d.charsP.then(() => { startEnv(); return m.loadAllHeroes(); }).then(() => console.info(`[load] all heroes ${Math.round(performance.now() - T0)}ms`));
   } catch (e) { console.warn('[3d] renderer unavailable, using 2D', e); }
 }
 // each preload step logs its time ([load] in the console) so slow loads can be diagnosed on the live site
 const T0 = performance.now();
 const timed = (name, p) => p.then(v => { console.info(`[load] ${name} ${Math.round(performance.now() - T0)}ms`); return v; });
-// The Blender environment sprites (~1100 PNGs for every level) load in the BACKGROUND: the title shows as soon as the
-// fonts and the 3D characters are in. A level / the pub waits only for ITS sprites (envNeed: they jump the queue).
-const envP = timed('env', loadEnv());
+// The Blender environment sprites (~1100 PNGs for every level, 29 MB) load in the BACKGROUND, and only once the
+// character models are in, so they don't fight over the bandwidth; a level / the pub waits only for ITS sprites
+// (envNeed: they jump the queue, and start the loading if it hasn't started yet).
+let envStarted = false;
+function startEnv() {
+  if (envStarted) return; envStarted = true;
+  timed('env', loadEnv());
+  const run = save.data.run;              // the pub (where a run starts) and the level you'd continue at go first
+  envNeed(envKeysFor(ALL_LEVELS[(run && run.levelIndex) || 0]));
+  if ((save.data.settings || {}).firm !== false) envNeed(envKeysFor(HUB));
+}
 async function preload() {
   const tasks = [timed('fonts', loadFonts()), timed('bg', backdrop.photoReady())];   // the title's Råsunda photo
   if (want3d) tasks.push(timed('3d', load3d()));
@@ -102,7 +115,6 @@ async function preload() {
   loadState.total = tasks.length;
   await Promise.all(tasks.map(t => t.then(() => { loadState.done++; })));
   loadState.ready = true;
-  if (r3d.renderer) import('./render3d/renderer.js').then(m => m.loadAllHeroes()).then(() => console.info(`[load] all heroes ${Math.round(performance.now() - T0)}ms`));
   console.info(`[load] ready ${Math.round(performance.now() - T0)}ms`);
 }
 const loading = {
@@ -137,9 +149,9 @@ class EnvWaitScene {
   constructor(make, keys) {
     this.make = make; this.t = 0; this.shown = 0;
     const need = envNeed(keys); this.progress = need.progress;
-    need.promise.then(() => { this.ready = true; });
+    Promise.all([need.promise, r3d.charsP]).then(() => { this.ready = true; });   // (and the character models)
   }
-  update(dt) { this.t += dt; if (this.ready || ENV.ready) app.go(this.make(), { fade: false }); }
+  update(dt) { this.t += dt; if (this.ready) app.go(this.make(), { fade: false }); }
   draw(c) { const k = this.progress(); this.shown += (k - this.shown) * 0.15; drawLoading(c, this.t, this.shown); }
 }
 {
@@ -149,12 +161,8 @@ class EnvWaitScene {
   // the briefing doesn't wait: it puts its level's sprites first so they load while you read
   if (intro) app.scenes.levelIntro = i => { if (!ENV.ready) envNeed(envKeysFor(ALL_LEVELS[i])); return intro(i); };
 }
-// at boot: the pub (where a run starts) and the level you'd continue at go first in the queue
-{
-  const run = save.data.run;
-  envNeed(envKeysFor(ALL_LEVELS[(run && run.levelIndex) || 0]));
-  if ((save.data.settings || {}).firm !== false) envNeed(envKeysFor(HUB));
-}
+// no 3D: nothing to wait for, the environment starts right away (3D: after the character models, load3d)
+if (!want3d) startEnv();
 function start() {
   if (started) return; started = true;
   const ov = document.getElementById('loading'); if (ov) ov.remove();
