@@ -178,7 +178,7 @@ class MainMenuScene {
       { label: 'HOW TO PLAY', fn: () => app.go(new HowToPlayScene()), hint: 'CONTROLS, COMBOS AND THE TERRACE CODE' },
       { label: 'CREDITS', fn: () => app.go(new CreditsScene()), hint: 'WHO TO BLAME' },
     ], { onBack: () => app.go(app.scenes.title({ skipIntro: true })) });
-    if (hasRun()) this.menu.sel = 1;
+    this.menu.sel = 0;   // always starts on PICK LAD
   }
   enter() { this.t = 0; audio.music('title'); }
   update(dt) {
