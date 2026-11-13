@@ -1,0 +1,69 @@
+{
+  "out": "assets/models/hero/shaz.glb",
+  "preview": "build/mpfb/shaz_preview.png",
+  "tex": "build/mpfb/tex_shaz",
+  "height": 1.78,
+  "macro": {
+    "gender": 1.0,
+    "age": 0.4,
+    "muscle": 0.62,
+    "weight": 0.35,
+    "proportions": 0.6,
+    "height": 0.4
+  },
+  "targets": {
+    "l-cheek-volume-decr": 0.3,
+    "r-cheek-volume-decr": 0.3,
+    "chin-prominent-incr": 0.3,
+    "nose-point-width-decr": 0.2,
+    "l-ear-wing-incr": 0.4,
+    "r-ear-wing-incr": 0.4
+  },
+  "assets": {
+    "hair": null,
+    "brows": "eyebrow006",
+    "top": null,
+    "pants": null,
+    "skin": "young_caucasian_male"
+  },
+  "eye_mat": "blue",
+  "tints": {
+    "body": "#f0c098",
+    "hair": "#e8d27a",
+    "brows": "#c9b060",
+    "top": "#1a1a20",
+    "pants": "#1e1e26",
+    "shoes": "#f2f2ee",
+    "sole": "#c49a5a"
+  },
+  "wardrobe": {
+    "top": {
+      "jacket": "male_casualsuit05"
+    },
+    "legs": {
+      "jeans": "punkduck_male_classic_jeans"
+    },
+    "hair": {
+      "spiky": "cortu_short_messy_hair"
+    }
+  },
+  "top_split": {
+    "role": "top_jacket",
+    "drop_pants": true,
+    "shirt": "#f4f1e8"
+  },
+  "shoe_stripes": true,
+  "sole_h": 0.026,
+  "meta": {
+    "build": "m",
+    "torso": "jacket",
+    "girth": 0.95,
+    "hero": "shaz"
+  },
+  "preview_layers": [
+    "top:jacket",
+    "legs:jeans",
+    "hair:spiky",
+    "shoes:stripes"
+  ]
+}

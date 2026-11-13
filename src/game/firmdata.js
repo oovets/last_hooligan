@@ -51,8 +51,8 @@ const FOUNDERS = {
   spider: { name: 'SPIDER', nick: 'THE LOOKOUT', stats: { fists: 5, kicks: 7, tough: 4, speed: 8, nerve: 6, loyalty: 6 }, traits: ['lookout'],
     look: { hero: 'spider', skin: '#d49a6a', hair: { style: 'crop', color: '#141016' }, facial: 'none', jacket: { style: 'hoodie', color: '#141416' }, hood: true, mask: 'snood', maskColor: '#141416',
       bag: true, gloves: '#141416', shirt: '#222', pants: { style: 'trackies', color: '#1c1c20' }, shoes: { color: '#f2f2ee', sole: '#e8e4dc' }, build: 0.9, height: 1.1 } },
-  shaz: { name: 'SHAZ', nick: 'THE SCRAPPER', stats: { fists: 7, kicks: 5, tough: 4, speed: 7, nerve: 7, loyalty: 6 }, traits: ['hothead'],
-    look: { female: true, skin: '#f0c098', hair: { style: 'ponytail', color: '#e8d27a' }, facial: 'none', jacket: { style: 'bomber', color: '#1a1a20', lining: '#e07020' },
+  shaz: { name: 'SHAUN', nick: 'THE SCRAPPER', stats: { fists: 7, kicks: 5, tough: 4, speed: 7, nerve: 7, loyalty: 6 }, traits: ['hothead'],   // id kept for old saves
+    look: { hero: 'shaz', skin: '#f0c098', hair: { style: 'spiky', color: '#e8d27a' }, facial: 'stubble', jacket: { style: 'bomber', color: '#1a1a20', lining: '#e07020' },
       shirt: '#f4f1e8', pants: { style: 'jeans', color: '#1e1e26' }, shoes: { color: '#f2f2ee', sole: '#c49a5a' }, build: 0.95, height: 0.96 } },
   bigh: { name: 'BIG H', nick: 'THE WARDROBE', stats: { fists: 8, kicks: 3, tough: 8, speed: 3, nerve: 6, loyalty: 7 }, traits: ['biglad'],
     look: { hero: 'bigh', skin: '#b87a50', hair: { style: 'skinhead', color: '#141016' }, facial: 'beard', jacket: { style: 'parka', color: '#3e4530' },
@@ -219,6 +219,10 @@ export function getFirm(playerChar) {
       F.log && F.log.unshift(`DAY ${F.day}. BIG AL WALKED IN, ORDERED A LAGER AND TOOK HIS SHIRT OFF.`);
     }
     delete save.data.addBigAl; save.write();
+  }
+  // Shaz is a lad now (SHAUN): a firm saved before that still carries her name and look, so refresh them
+  for (const l of save.data.firm.lads || []) {
+    if (l.char === 'shaz' && l.look && l.look.female) { l.name = FOUNDERS.shaz.name; l.look = JSON.parse(JSON.stringify(FOUNDERS.shaz.look)); save.write(); }
   }
   return save.data.firm;
 }
