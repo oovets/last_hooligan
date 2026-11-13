@@ -8,7 +8,8 @@ import { drawText } from '../engine/font.js';
 import { app } from '../app.js';
 import { save } from '../save.js';
 import { audio } from '../audio/audio.js';
-import { CLUBS } from '../content/clubs.js';
+import { CLUBS, clubLogo, drawClubCrest } from '../content/clubs.js';
+import { drawCrest } from './logo.js';
 import { FOUNDER_IDS, founderInfo, TRAITS } from '../game/firmdata.js';
 import { backdrop } from './backdrop.js';
 import { frame, hintBar, heading, Repeater, C, rrect, devScale } from './widgets.js';
@@ -19,6 +20,7 @@ const MAX_LADS = 4, COACH = 3, VIS = 5;      // VIS: lad cards on screen at once
 export class FirmSetupScene {
   constructor(playerChar, onDone) {
     this.onDone = onDone; this.t = 0; this.rep = new Repeater();
+    CLUBS.forEach(clubLogo);                                   // start loading the crests
     this.step = 'club';
     this.clubSel = Math.max(0, CLUBS.findIndex(c => c.id === (save.data.club || 'nordhamn')));
     this.lads = FOUNDER_IDS.filter(id => id !== playerChar).map(founderInfo);
@@ -75,15 +77,16 @@ export class FirmSetupScene {
       const col = i % 4, row = Math.floor(i / 4), sel = i === this.clubSel;
       const x = x0 + col * (cw + gap), y = 46 + row * (ch + 10) + (sel ? -2 : 0);
       frame(ctx, x, y, cw, ch, { fill: sel ? 'rgba(40,10,20,0.95)' : 'rgba(14,9,22,0.92)', accent: sel ? C.gold : c.a, edge: sel ? '#c8a030' : undefined });
-      // the colours: a scarf of bars
+      // the crest, and the colours as a scarf of bars beside it
+      drawClubCrest(ctx, c, x + 6, y + 8, 40, 46, (g, bx, by, bw, bh) => drawCrest(g, bx + 5, by + 6, 2));
       const bars = c.c ? [c.a, c.b, c.c, c.a, c.b, c.c] : [c.a, c.b, c.a, c.b, c.a, c.b];
-      bars.forEach((col2, k) => { ctx.fillStyle = col2; ctx.fillRect(x + 8 + k * 22, y + 12, 22, 26); });
-      ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(x + 8, y + 12, 132, 26);
-      drawText(ctx, c.short, x + cw / 2, y + 18, { color: '#fff', align: 'center', scale: 2, outline: '#000' });
-      drawText(ctx, c.name, x + 8, y + 46, { color: sel ? '#fff' : '#e0d8e8' });
-      drawText(ctx, c.nick, x + 8, y + 58, { color: '#c0b8d0' });
-      drawText(ctx, 'FIRM: ' + c.firm, x + 8, y + 74, { color: sel ? C.gold : '#a89aba' });
-      drawText(ctx, c.city, x + 8, y + 86, { color: '#7a6a8a' });
+      bars.forEach((col2, k) => { ctx.fillStyle = col2; ctx.fillRect(x + 52 + k * 14, y + 14, 14, 12); });
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(x + 52, y + 14, 84, 12);
+      drawText(ctx, c.short, x + 52, y + 32, { color: '#fff', scale: 2, outline: '#000' });
+      drawText(ctx, c.name, x + 8, y + 58, { color: sel ? '#fff' : '#e0d8e8' });
+      drawText(ctx, c.nick, x + 8, y + 69, { color: '#c0b8d0' });
+      drawText(ctx, 'FIRM: ' + c.firm, x + 8, y + 81, { color: sel ? C.gold : '#a89aba' });
+      drawText(ctx, c.city, x + 8, y + 92, { color: '#7a6a8a' });
       if (sel) { ctx.save(); ctx.globalAlpha = 0.65 + Math.sin(this.t * 5) * 0.35; ctx.shadowColor = 'rgba(255,210,58,0.9)'; ctx.shadowBlur = 10 * devScale(ctx); ctx.strokeStyle = C.gold; ctx.lineWidth = 1.2; rrect(ctx, x - 2.5, y - 2.5, cw + 5, ch + 5, 7); ctx.stroke(); ctx.restore(); }
     });
     const c = CLUBS[this.clubSel];
