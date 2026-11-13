@@ -131,7 +131,7 @@ function drawFirm(ctx, t, k) {
     const look = normalizeLook((ch && ch.look) || buildLook(save.data.outfit));
     const d = Math.abs(i - mid);
     const x = x0 + i * gap;
-    return { look, x, feet: 264, h: 150 * (look.height || 1) * (1 - d * 0.035), anim: 'idle', phase: i * 0.9, yaw: (VIEW_W / 2 - x) * 0.0016 };   // all on one floor
+    return { look, x, feet: 264, h: 150 * (look.height || 1) * (1 - d * 0.035), still: true, yaw: (VIEW_W / 2 - x) * 0.0016 };   // all on one floor, standing dead still
   });
   // nobody's head goes behind the logo (its bottom is ~y 108): shrink the whole line-up evenly if the tallest
   // (Big Al) would reach it, so the lads keep their heights relative to each other
@@ -147,7 +147,7 @@ function drawFirm(ctx, t, k) {
 }
 
 // the mob behind the line-up: rows of masked-up lads (black track tops with white piping, balaclavas, olive cargos,
-// white trainers), smaller and darker the further back they stand, all in the same fight stance. A stage of its own (no floor shadows:
+// white trainers), smaller and darker the further back they stand, each in a fight stance of his own. A stage of its own (no floor shadows:
 // cheap), drawn first and then pushed back into the dark, so the firm reads in front.
 const MOB_ROWS = [   // back to front: feet y, body height, how many, darkening on top
   { feet: 204, h: 96, n: 13, dim: 0.35 },
@@ -155,6 +155,7 @@ const MOB_ROWS = [   // back to front: feet y, body height, how many, darkening 
   { feet: 238, h: 126, n: 10, dim: 0.3 },
 ];
 let MOB = null;
+const MOB_STANCES = [{ fight: true }, { fight: true }, { fight: true }, { anim: 'block' }, { anim: 'crouch' }, { anim: 'taunt' }, { anim: 'taunt2' }];
 // all in the same kit: black track top with white piping, black balaclava, olive cargos, white trainers, black gloves
 function mobLook(rng) {
   return normalizeLook({
@@ -174,8 +175,11 @@ function mobActors() {
     const gap = (VIEW_W + 40) / r.n, off = ri % 2 ? gap / 2 : 0;
     for (let i = 0; i < r.n; i++) {
       const x = -20 + off + i * gap;
-      // the same fight stance, in step, everyone squared up to the front
-      MOB.push({ look: mobLook(rng), x, feet: r.feet, h: r.h, anim: 'idle', fight: true, sync: true, phase: 0, yaw: 0, row: ri });
+      // a fight stance each, picked at random from the game's own (guard, covering up, low, "come on then"), every
+      // lad on his own beat and turned a little his own way
+      const st = rng.pick(MOB_STANCES);
+      MOB.push({ look: mobLook(rng), x, feet: r.feet, h: r.h, anim: st.anim || 'idle', fight: !!st.fight, sync: false,
+        phase: rng.range(0, 4), yaw: rng.range(-0.3, 0.3), row: ri });
     }
   });
   return MOB;

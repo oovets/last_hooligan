@@ -7,7 +7,8 @@
 //     actors: [{ look, x, feet, h, anim, phase, yaw, pose?, dark?, run?, fight?, sync? }] in logical screen px: feet position and body height;
 //             run = running speed (tiles/s): the in-game procedural run cycle, charging the way he faces (title screen)
 //             pose = an explicit pose-library pose (overrides anim), dark = a black silhouette (locked characters)
-//             fight = fists up: the in-game guard stance (the title screen's mob), sync = in step with the others
+//             fight = fists up: the in-game guard stance (the title screen's mob), sync = in step with the others,
+//             still = stands dead still (the title line-up)
 //     rect:   logical rect of the 2D canvas the stage covers (also the render viewport)
 //     opts:   { light: 'terrace' | 'studio', persp: bool, shadows?: bool (self-shadows; off unless asked for),
 //               floor?: bool (the lads cast real shadows on the ground they stand on; the camera tips down a little so the
@@ -150,7 +151,7 @@ export class MenuStage {
       A.f.id = a.sync ? 0 : i * 7;                                     // sync = everyone bounces in step
       if (a.run) { A.f.state = 'run'; A.f.y += a.run * dt; }           // treadmill: the animator's run cycle follows distance
       else A.f.state = (a.pose || (a.anim && a.anim !== 'idle' && a.anim !== 'guard')) ? 'menu' : 'idle';   // poses/anims go through the pose library
-      A.char.animate(A.f, { time: t }, dt);
+      A.char.animate(A.f, { time: a.still ? 0 : t }, a.still ? 1 : dt);   // still: the relaxed stance frozen (no sway, no breathing)
     });
     for (let i = actors.length; i < s.actors.length; i++) if (s.actors[i]) { const A = s.actors[i]; s.scene.remove(A.char.group); A.char.dispose(); s.actors[i] = null; }
     if (!any) return false;
