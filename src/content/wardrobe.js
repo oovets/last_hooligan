@@ -6,6 +6,7 @@
 // Jackets may carry pockets (chest pockets), badge (the compass badge on the left arm), pattern: 'check' (trim = the dark
 // bands, lining = the over-check line) and hood: 'down'; shoes may carry stripe (three stripes + heel tab).
 // KITS are whole looks: { sets: { category: optionId, ... } }, worn in one go.
+import { currentClub } from './clubs.js';
 import { UNLOCK_ALL } from '../save.js';
 
 export const CLUB = { name: 'NORDHAMN ATHLETIC', a: '#c8102e', b: '#f4f1e8', nick: 'THE ANCHORS' };
@@ -112,7 +113,7 @@ export const WARDROBE = {
   ],
   scarf: [
     { id: 'none', name: 'NO SCARF', cost: 0, none: true, desc: 'TRAVELLING INCOGNITO.' },
-    { id: 'home', name: 'ANCHORS BAR SCARF', cost: 0, a: '#c8102e', b: '#f4f1e8' },
+    { id: 'home', name: 'CLUB SCARF', cost: 0, a: '#c8102e', b: '#f4f1e8', club: true, desc: 'YOUR CLUB\'S COLOURS (PICKED WHEN THE FIRM WAS FORMED).' },
     { id: 'retro', name: '1986 CUP SCARF', cost: 200, a: '#f4f1e8', b: '#c8102e', req: { level: 2 } },
     { id: 'black', name: 'ULTRAS BLACK', cost: 250, a: '#16161a', b: '#c8102e', req: { level: 4 } },
     { id: 'gold', name: 'CENTENARY SCARF', cost: 600, a: '#d4af37', b: '#c8102e', req: { complete: true }, desc: 'ONLY FOR THOSE WHO SAW THE LAST STAND.' },
@@ -184,7 +185,7 @@ export function buildLook(outfit = {}) {
     shirt: j.shirt || '#e8e4dc',
     pants: { style: p.style, color: p.color, trim: p.trim },
     shoes: { color: sh.color, sole: sh.sole, stripe: sh.stripe || undefined },
-    scarf: sc.none ? null : { a: sc.a, b: sc.b },
+    scarf: sc.none ? null : sc.club ? { a: currentClub().a, b: currentClub().b } : { a: sc.a, b: sc.b },
     shades: !!ex.shades,
     hat: ex.hat || null,
     facial: ex.facial || (fa && fa.facial) || 'stubble',

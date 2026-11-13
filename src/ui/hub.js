@@ -8,6 +8,7 @@
 // After a trip the report (consequences) and any pending event card are shown first.
 // All rules live in game/firmdata.js.
 
+import { clubById } from '../content/clubs.js';
 import { VIEW_W, VIEW_H } from '../engine/constants.js';
 import { input } from '../engine/input.js';
 import { toScreen } from '../engine/iso.js';
@@ -214,7 +215,9 @@ export class HubScene {
   drawTop(ctx) {
     const F = this.F;
     frame(ctx, 6, 6, 250, 40, { accent: C.red, fill: 'rgba(10,6,16,0.9)' });
-    drawText(ctx, `THE ANCHOR  -  DAY ${F.day}`, 14, 11, { color: C.gold });
+    const club = clubById(F.club);
+    ctx.fillStyle = club.a; ctx.fillRect(6, 6, 250, 2); ctx.fillStyle = club.b; ctx.fillRect(6, 8, 250, 1);   // club colours
+    drawText(ctx, `${club.firm}  -  DAY ${F.day}`, 14, 11, { color: C.gold });
     drawText(ctx, fmtCash(save.data.cash || 0), 14, 23, { color: C.cash || '#7aff9a' });
     drawText(ctx, `REP ${F.rep}`, 70, 23, { color: '#ffffff' });
     const hc = F.heat >= 85 ? '#ff3a3a' : F.heat >= 60 ? '#ff8a3a' : F.heat >= 30 ? '#ffe14a' : '#7aff9a';

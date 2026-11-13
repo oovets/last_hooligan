@@ -11,6 +11,7 @@ import { sampleAnim, attackPose } from '../game/poses.js';
 import { buildLook } from '../content/wardrobe.js';
 import { LEVELS } from '../content/levels/index.js';
 import { ALL_LEVELS, isTour, tourFor } from '../content/tour/index.js';
+import './firmsetup.js';
 import { ITEMS } from '../game/items.js';
 import { backdrop } from './backdrop.js';
 import { drawLogo, drawCrest } from './logo.js';
@@ -21,9 +22,13 @@ import { drawHallOfFame } from './attract.js';
 import { frame, MenuList, hintBar, heading, scarfIcon, badgeIcon, lockIcon, secretIcon, Repeater, scanlines, blink, fmtScore, C, ladFigure, rrect, devScale } from './widgets.js';
 
 export function startNewRun(levelIndex = 0) {
-  // pick a character first (src/ui/charselect.js), then kick off
-  if (app.scenes.charSelect) { app.go(app.scenes.charSelect(levelIndex, () => beginRun(levelIndex))); return; }
-  beginRun(levelIndex);
+  // pick a character first (src/ui/charselect.js); a brand new game (level 1) then sets up the firm: club + lads
+  // (src/ui/firmsetup.js); then kick off
+  const next = () => (levelIndex === 0 && app.scenes.firmSetup
+    ? app.go(app.scenes.firmSetup(save.data.character || 'hooligan', () => beginRun(levelIndex)))
+    : beginRun(levelIndex));
+  if (app.scenes.charSelect) { app.go(app.scenes.charSelect(levelIndex, next)); return; }
+  next();
 }
 
 function beginRun(levelIndex) {

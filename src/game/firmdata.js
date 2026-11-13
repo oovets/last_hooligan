@@ -14,6 +14,7 @@
 
 import { save } from '../save.js';
 import { characterById } from '../content/characters.js';
+import { clubById } from '../content/clubs.js';
 
 export const STATS = ['fists', 'kicks', 'tough', 'speed', 'nerve', 'loyalty'];
 export const STAT_NAME = { fists: 'FISTS', kicks: 'KICKS', tough: 'TOUGH', speed: 'SPEED', nerve: 'NERVE', loyalty: 'LOYAL' };
@@ -124,18 +125,29 @@ export function trainCost(l, stat) { return Math.round(10 + l.stats[stat] * 8 * 
 export function squadSize(F) { return F.rep >= 60 ? 4 : 3; }
 export function recruitTier(F) { return F.rep >= 120 ? 3 : F.rep >= 60 ? 2 : F.rep >= 20 ? 1 : 0; }
 
-export function newFirm(playerChar = 'hooligan') {
+// the lads you can found a firm with (FIRM SETUP): the playable characters (more to come)
+export const FOUNDER_IDS = ['mo', 'stig', 'kenny', 'bigal', 'vic', 'hooligan'];
+
+// setup (FIRM SETUP screen, optional): { club, lads: [charId...] } - the founders in the order picked (first ones travel)
+export function newFirm(playerChar = 'hooligan', setup = null) {
   const F = { v: 1, day: 1, rep: 0, heat: 0, nextId: 1, lads: [], squad: [], pool: [], poolDay: 0, log: [], report: null, event: null, trained: {} };
-  for (const id of ['mo', 'stig', 'kenny', 'bigal', 'hooligan'].filter(c => c !== playerChar).slice(0, 4)) F.lads.push(founder(F, id));
-  F.squad = F.lads.slice(0, 3).map(l => l.id);   // four founders, three on the coach
+  const picks = setup && setup.lads && setup.lads.length ? setup.lads : ['mo', 'stig', 'kenny', 'bigal', 'hooligan'];
+  for (const id of picks.filter(c => c !== playerChar && FOUNDERS[c]).slice(0, 4)) F.lads.push(founder(F, id));
+  F.squad = F.lads.slice(0, 3).map(l => l.id);   // up to four founders, the first three on the coach
+  F.club = (setup && setup.club) || save.data.club || 'nordhamn';
   refreshPool(F);
-  F.log.unshift('DAY 1. THE ANCHOR. THE FIRM IS FORMED.');
+  const club = clubById(F.club);
+  F.log.unshift(`DAY 1. THE ANCHOR. ${club.firm} (${club.name}) IS FORMED.`);
   return F;
 }
 
 // save.data.firm, created on first use
 export function getFirm(playerChar) {
-  if (!save.data.firm) { save.data.firm = newFirm(playerChar || save.data.character || 'hooligan'); save.write(); }
+  if (!save.data.firm) {
+    save.data.firm = newFirm(playerChar || save.data.character || 'hooligan', save.data.firmSetup || null);
+    delete save.data.firmSetup;
+    save.write();
+  }
   // save v4: Big Al walks into an existing firm's pub (unless he's the one you play or the roster is full)
   if (save.data.addBigAl) {
     const F = save.data.firm;
