@@ -20,7 +20,7 @@ import { normalizeLook } from '../game/doll.js';
 import { attractCycle } from './attract.js';
 import { startNewRun, LevelSelectScene, OptionsScene, HowToPlayScene, CreditsScene } from './menus.js';
 import { WardrobeScene } from './wardrobe_ui.js';
-import { frame, MenuList, hintBar, scanlines, blink, fmtScore, fmtTime, scarfIcon, badgeIcon, secretIcon, coinIcon, hideLoader, C, rrect, devScale } from './widgets.js';
+import { frame, MenuList, hintBar, scanlines, blink, fmtScore, fmtTime, scarfIcon, badgeIcon, secretIcon, coinIcon, hideLoader, C, rrect, devScale, padIcon } from './widgets.js';
 import { r3d } from '../render3d/index.js';
 import { makeRng } from '../engine/rng.js';
 
@@ -69,6 +69,10 @@ class TitleScene {
       const on = Math.floor(this.t * 2.2) % 2 === 0;
       if (on) drawTagline(ctx, VIEW_W / 2, 310 + DROP, 'PRESS START', { size: 15 });
     }
+    // play with a pad too: says so bottom left, and READY once the browser can see one
+    const pad = input.padCount > 0;
+    padIcon(ctx, 16, VIEW_H - 7, 16, pad ? '#7aff9a' : C.red);
+    drawText(ctx, pad ? 'GAMEPAD READY' : 'KEYBOARD OR GAMEPAD', 28, VIEW_H - 10, { color: pad ? '#7aff9a' : '#f6d0c8', outline: '#000' });
     drawText(ctx, 'V1.0', VIEW_W - 8, VIEW_H - 10, { color: '#f6d0c8', outline: '#000', align: 'right' });
   }
 }

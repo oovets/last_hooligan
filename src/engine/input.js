@@ -75,6 +75,8 @@ class Input {
     this.pad = null;
     this.padAxes = { x: 0, y: 0 };
     this.lastDevice = 'kb';
+    this.padCount = 0;            // gamepads the page can see (browsers only show one after a button press)
+    this.padJoined = 0;           // performance.now() when one turned up (the GAMEPAD CONNECTED message, ui/widgets.js)
     this.anyTap = false;
     this.listeners = [];
     this.codeToActions = {};
@@ -120,6 +122,9 @@ class Input {
     // gamepad
     this.padAxes.x = 0; this.padAxes.y = 0;
     const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    const nPads = [...pads].filter(Boolean).length;
+    if (nPads > this.padCount) this.padJoined = performance.now();
+    this.padCount = nPads;
     for (const p of pads) {
       if (!p) continue;
       p.buttons.forEach((b, i) => {

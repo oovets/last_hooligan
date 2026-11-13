@@ -523,3 +523,30 @@ export function ladFigure(ctx, look, x, feet, scale, t, opts = {}) {
   }
   drawDoll(ctx, x, feet, look, opts.pose || sampleAnim(opts.anim || 'idle', t), { scale, flip: opts.flip, time: t, face: opts.face || 'angry', silhouette: opts.dark ? '#141018' : null });
 }
+
+// ---------------------------------------------------------------- gamepad
+// a little pad: body, two grips, a d-pad and four buttons (x, y = centre; s = width in px)
+export function padIcon(ctx, x, y, s = 16, col = C.red) {
+  const k = s / 16;
+  ctx.save(); ctx.translate(x, y); ctx.scale(k, k);
+  ctx.fillStyle = col;
+  rrect(ctx, -8, -4, 16, 8, 3.5); ctx.fill();
+  ctx.beginPath(); ctx.arc(-5.5, 3, 3, 0, Math.PI * 2); ctx.arc(5.5, 3, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = C.black;
+  ctx.fillRect(-6.5, -1, 4, 1.4); ctx.fillRect(-5.2, -2.3, 1.4, 4);
+  for (const [bx, by] of [[4.5, -2], [6.3, -0.4], [2.7, -0.4], [4.5, 1.2]]) { ctx.beginPath(); ctx.arc(bx, by, 0.75, 0, Math.PI * 2); ctx.fill(); }
+  ctx.restore();
+}
+// "GAMEPAD CONNECTED" across the top for a couple of seconds after a pad turns up (main.js draws it over every scene)
+export function drawPadToast(ctx) {
+  const t = (performance.now() - input.padJoined) / 1000;
+  if (!input.padJoined || t > 2.8) return;
+  const a = Math.min(1, t * 6, (2.8 - t) * 3), y = 10 - (1 - Math.min(1, t * 6)) * 14;
+  const text = 'GAMEPAD CONNECTED', w = measureText(text) + 40, x = VIEW_W / 2 - w / 2;
+  ctx.save(); ctx.globalAlpha = a;
+  ctx.fillStyle = 'rgba(8,8,10,0.92)'; rrect(ctx, x, y, w, 18, 4); ctx.fill();
+  ctx.strokeStyle = C.red; ctx.lineWidth = 1; rrect(ctx, x + 0.5, y + 0.5, w - 1, 17, 4); ctx.stroke();
+  padIcon(ctx, x + 15, y + 9, 16);
+  drawText(ctx, text, x + 28, y + 6, { color: '#ffffff' });
+  ctx.restore();
+}

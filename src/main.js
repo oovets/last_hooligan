@@ -66,6 +66,7 @@ import { loadFonts, setFrameHD } from './engine/font.js';
 import { drawLoading } from './ui/loadscreen.js';
 import { r3d } from './render3d/index.js';
 import { backdrop } from './ui/backdrop.js';
+import { drawPadToast } from './ui/widgets.js';
 import { lineupHeroes } from './ui/title.js';
 
 // ---- asset preload (Blender-rendered environment + character atlases); the game falls back to procedural art
@@ -185,6 +186,7 @@ function frame(now) {
   ctx.imageSmoothingQuality = 'high';
   setFrameHD(hd);
   app.draw(ctx);
+  drawPadToast(ctx);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
