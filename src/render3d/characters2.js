@@ -140,24 +140,53 @@ function badgeTexture() {
   return BADGE;
 }
 
-// ---- checked casual shirt (jacket material ID_3 with look.jacket.pattern 'check', e.g. Big Al): a procedural check in the
-// shader from the bind-pose position (no UVs needed, the pattern stays on the cloth as he moves): the jacket colour,
-// dark bands (trim) across both ways, a thin coloured over-check line (lining)
-function checkMaterial(base, dark, line) {
+// ---- checked cloth (jacket materials ID_3/ID_4 with look.jacket.pattern): a procedural check in the shader from the
+// bind-pose position (no UVs needed, the pattern stays on the cloth as he moves).
+//   'check': the jacket colour, dark bands (trim) across both ways, a thin coloured over-check line (lining)
+//   'nova':  the Burberry check, smaller: a camel ground (jacket colour), groups of black stripes round a cream one
+//            (trim = the black) and a thin red line (lining) half way between. Woven: where two stripes cross, their
+//            colours mix (black on black stays black, black on camel goes dark brown), as in a real tartan.
+// A textured garment (hero models) keeps its fabric detail: the weave is scaled by the map's brightness.
+const PATTERNS = { check: 1, nova: 1 };
+function checkMaterial(base, dark, line, mode = 'check') {
   const m = new THREE.MeshStandardMaterial({ color: base, roughness: 0.9, metalness: 0 });
   m.onBeforeCompile = sh => {
-    sh.uniforms.uCkDark = { value: dark }; sh.uniforms.uCkLine = { value: line };
+    sh.uniforms.uCkDark = { value: dark }; sh.uniforms.uCkLine = { value: line }; sh.uniforms.uCkBase = { value: base.clone() };
     sh.vertexShader = 'varying vec3 vCk;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvCk = position;');
-    sh.fragmentShader = 'varying vec3 vCk;\nuniform vec3 uCkDark;\nuniform vec3 uCkLine;\n' + sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
+    const NOVA = `
+      vec3 novaAxis(float u, vec3 cm, vec3 bk, vec3 wh, vec3 rd) {
+        u = fract(u);
+        vec3 sand = mix(cm, wh, 0.45);
+        if (u < 0.06) return bk;
+        if (u < 0.09) return sand;
+        if (u < 0.13) return bk;
+        if (u < 0.17) return wh;
+        if (u < 0.21) return bk;
+        if (u < 0.24) return sand;
+        if (u < 0.30) return bk;
+        if (abs(u - 0.65) < 0.012) return rd;
+        return cm;
+      }`;
+    const body = mode === 'nova' ? `
+      {
+        vec2 q = vec2(vCk.x + vCk.z * 0.7, vCk.y) * 10.0;
+        vec3 wh = vec3(0.86, 0.82, 0.74);
+        vec3 ax = novaAxis(q.x, uCkBase, uCkDark, wh, uCkLine), ay = novaAxis(q.y + 0.31, uCkBase, uCkDark, wh, uCkLine);
+        vec3 c = mix(0.5 * (ax + ay), min(ax, ay), 0.5);   // the darker thread shows more (twill), as on the real cloth
+        float f = dot(diffuseColor.rgb, vec3(1.0)) / max(dot(uCkBase, vec3(1.0)), 1e-3);
+        diffuseColor.rgb = c * f;
+      }` : `
       {
         vec2 q = vec2(vCk.x + vCk.z * 0.7, vCk.y) * 7.0;
         float bx = step(0.62, fract(q.x)), by = step(0.62, fract(q.y));
         vec3 c = mix(diffuseColor.rgb, uCkDark, 0.38 * bx + 0.38 * by);
         float lx = step(0.94, fract(q.x * 0.5 + 0.13)), ly = step(0.94, fract(q.y * 0.5 + 0.13));
         diffuseColor.rgb = mix(c, uCkLine, 0.75 * max(lx, ly));
-      }`);
+      }`;
+    sh.fragmentShader = 'varying vec3 vCk;\nuniform vec3 uCkDark;\nuniform vec3 uCkLine;\nuniform vec3 uCkBase;\n' + (mode === 'nova' ? NOVA : '') + '\n'
+      + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n' + body);
   };
-  m.customProgramCacheKey = () => 'check-shirt';
+  m.customProgramCacheKey = () => 'cloth-' + mode;
   return m;
 }
 
@@ -279,10 +308,10 @@ export class Character2 {
       let m = this.mats[mk];
       if (!m) {
         const c = spec.pal[id] || [200, 0, 200];
-        if (asAuthored && named && (id === 3 || id === 4) && look.jacket && look.jacket.pattern === 'check') {
+        if (asAuthored && named && (id === 3 || id === 4) && look.jacket && PATTERNS[look.jacket.pattern]) {
           // a realistic hero's shirt (Big Al): the procedural check over the garment's own fabric maps
           const J = look.jacket;
-          m = checkMaterial(toColor(spec.pal[3] || c), new THREE.Color(J.trim || '#2a2420'), new THREE.Color(J.lining || '#a3202a'));
+          m = checkMaterial(toColor(spec.pal[3] || c), new THREE.Color(J.trim || '#2a2420'), new THREE.Color(J.lining || '#a3202a'), J.pattern);
           if (src.map) m.map = src.map;
           if (src.normalMap) { m.normalMap = src.normalMap; m.normalScale = src.normalScale; }
         } else if (asAuthored) {
@@ -293,11 +322,11 @@ export class Character2 {
           // arm tattoo (layer 'tattoo:arm'): ink with alpha over the skin
           m = new THREE.MeshStandardMaterial({ map: tattooTexture(look.tattoo), alphaTest: 0.35, roughness: 0.6, metalness: 0,
             polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
-        } else if ((id === 3 || id === 4) && look.jacket && look.jacket.pattern === 'check') {
+        } else if ((id === 3 || id === 4) && look.jacket && PATTERNS[look.jacket.pattern]) {
           // the whole shirt is the check: body (ID_3) and the jacket model's collar, cuffs, hem band and placket (ID_4,
           // the trim, which on a shirt would otherwise read as dark knitted ribbing and a zip)
           const J = look.jacket;
-          m = checkMaterial(toColor(spec.pal[3] || c), new THREE.Color(J.trim || '#2a2420'), new THREE.Color(J.lining || '#a3202a'));
+          m = checkMaterial(toColor(spec.pal[3] || c), new THREE.Color(J.trim || '#2a2420'), new THREE.Color(J.lining || '#a3202a'), J.pattern);
         } else if (id === 24) {
           m = new THREE.MeshStandardMaterial({ map: badgeTexture(), roughness: 0.92, metalness: 0 });   // the arm badge
         } else {

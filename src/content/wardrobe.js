@@ -57,7 +57,7 @@ export const WARDROBE = {
     { id: 'aqua_check', name: 'AQUASCUTUM CLUB CHECK', cost: 950, style: 'harrington', pattern: 'check', color: '#c4aa7c', trim: '#5c4632', lining: '#1e1a18', desc: 'THE CLUB CHECK. A GENTLEMAN\'S JACKET FOR NOT VERY GENTLEMANLY AFTERNOONS.' },
     { id: 'aqua_mac', name: 'AQUASCUTUM MAC', cost: 1000, style: 'parka', color: '#b9a47e', trim: '#8f7c58', lining: '#c4aa7c', req: { level: 5 }, desc: 'A RAINCOAT FOR THE ROYAL ENCLOSURE. WORN IN THE AWAY END.' },
     { id: 'burberry_harrington', name: 'BURBERRY HARRINGTON', cost: 850, style: 'harrington', color: '#1d2742', trim: '#141a2e', lining: '#c8a86a', desc: 'NAVY OUTSIDE, THE CHECK INSIDE. FLASH IT AT THE BAR.' },
-    { id: 'burberry_nova', name: 'BURBERRY NOVA CHECK SHIRT', cost: 700, style: 'shirt', pattern: 'check', color: '#d2b88a', trim: '#1e1a18', lining: '#b52a26', desc: 'CAMEL, BLACK AND A RED LINE. THE PUB KNOWS.' },
+    { id: 'burberry_nova', name: 'BURBERRY NOVA CHECK SHIRT', cost: 700, style: 'shirt', pattern: 'nova', color: '#bd9d66', trim: '#16120e', lining: '#c0281e', desc: 'CAMEL, BLACK AND A RED LINE. THE PUB KNOWS.' },
     { id: 'lacoste_white', name: 'LACOSTE POLO (WHITE)', cost: 400, style: 'polo', color: '#f2f0ea', shirt: '#f2f0ea', trim: '#f2f0ea', desc: 'THE CROCODILE. COLLAR UP.' },
     { id: 'lacoste_bottle', name: 'LACOSTE POLO (BOTTLE)', cost: 400, style: 'polo', color: '#1f4a32', shirt: '#1f4a32', trim: '#1f4a32', desc: 'BOTTLE GREEN, CROCODILE, TUCKED IN. OR NOT.' },
     { id: 'perry_white', name: 'FRED PERRY TWIN TIPPED', cost: 350, style: 'polo', color: '#f2f0ea', shirt: '#f2f0ea', trim: '#141416', desc: 'THE LAUREL WREATH. BLACK TIPPING.' },

@@ -44,7 +44,7 @@ if (!ATTACK_POSES.al_strip) registerAttackPose('al_strip', {
 });
 
 // ---- the shirt as a thrown thing and as a thing on the floor
-const SHIRT = { base: '#cdb58c', dark: '#2a2420', red: '#a3202a' };
+const SHIRT = { base: '#bd9d66', dark: '#16120e', red: '#c0281e' };   // his Burberry check (characters.js look)
 function drawShirt(ctx, x, y, s = 1, crumpled = false) {
   const w = 12 * s, h = (crumpled ? 6 : 9) * s;
   ctx.fillStyle = '#120c14'; ctx.fillRect(x - w / 2 - 1, y - h - 1, w + 2, h + 2);
