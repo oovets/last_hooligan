@@ -26,6 +26,7 @@ import { CHARACTERS, characterById } from '../content/characters.js';
 import { audio } from '../audio/audio.js';
 import { save } from '../save.js';
 import { input } from '../engine/input.js';
+import { setupStrip, startStrip, shirtOn } from './bigal.js';
 import { getFirm, squadLads, fighterParams } from './firmdata.js';
 
 export const ORDER_TEXT = { follow: 'WITH ME!', charge: 'GET INTO THEM!', hold: 'HOLD!', move: 'OVER THERE!', attack: 'HAVE HIM!', sing: 'SING UP!', pin: 'GRAB HIM!', regroup: 'BACK TO ME!' };
@@ -61,6 +62,7 @@ const LAD_AI = {
   hooligan: { attacks: [['jab', 3], ['cross', 2], ['hook', 1], ['kick', 2]], comboLen: [1, 3], aggression: 0.62, reaction: 0.28, blockChance: 0.18, dodgeChance: 0.06 },
   mo: { attacks: [['jab', 2], ['cross', 2], ['mo_hammer', 3], ['kick', 1]], comboLen: [1, 2], aggression: 0.55, reaction: 0.34, blockChance: 0.22, grabChance: 0.05 },
   stig: { attacks: [['stig_flurry', 4], ['cross', 1], ['lowKick', 1], ['stig_slide', 1]], comboLen: [2, 4], aggression: 0.72, reaction: 0.22, dodgeChance: 0.16, blockChance: 0.08 },
+  bigal: { attacks: [['al_stepladder', 3], ['jab', 2], ['cross', 2], ['roundhouse', 1]], comboLen: [1, 3], aggression: 0.6, reaction: 0.27, blockChance: 0.16, dodgeChance: 0.08 },
   kenny: { attacks: [['kenny_bomb', 3], ['cross', 2], ['hook', 2], ['uppercut', 1], ['kick', 1]], comboLen: [1, 3], aggression: 0.85, reaction: 0.26, blockChance: 0.06, dodgeChance: 0.04 },
   vic: { attacks: [['jab', 2], ['cross', 2], ['kick', 1]], comboLen: [1, 2], aggression: 0.5, reaction: 0.32, grabChance: 0.12, blockChance: 0.12 },
   oldboy: { attacks: [['old_headbutt', 3], ['jab', 2], ['cross', 1]], comboLen: [1, 2], aggression: 0.55, reaction: 0.3, blockChance: 0.2 },
@@ -120,6 +122,8 @@ export class LadController extends AIController {
     o = this.order;
     // holding a man for the others
     if (this.holdPin(f, world, dt)) return;
+    // Big Al: the shirt comes off when the firm sings up, when his blood's up, or when he's hurt
+    if (f.strip && !f.shirtOff && f.canAct && this.foe && (f.stripNow || (f.nerve ?? 100) > 92 || f.hp < f.maxHp * 0.5) && startStrip(f, world)) { f.stripNow = false; return; }
     // a man coming his way (a pass) or flattened by a double team: catch / finish him
     if (this.catchFor && this.stompFollow(f, world, dt)) return;
     // BACK TO ME!: drop everything and get round the leader (swat away anyone right on top of you)
@@ -407,6 +411,7 @@ export class Firm {
     f.koLines = (ch && ch.koLines) || null; f.rage = !!(ch && ch.rage);
     // pr.kickMul is an offset (kicks stat 5 = 0, 3 = -0.1); combat multiplies kick damage by f.kickMul
     f.kickMul = ((ch && ch.kickMul) || 1) * (1 + pr.kickMul); f.punchMul = (ch && ch.punchMul) || 0;
+    if (ch && ch.strip) setupStrip(f);
     f.nerve = pr.nerve; f.nerveMul = pr.nerveMul; f.engage = pr.engage;
     f.traits = new Set(rec.traits); f.bonds = rec.bonds || {};
     f.fight = { kos: 0, downs: 0 };
@@ -434,6 +439,7 @@ export class Firm {
       f.isLad = true; f.character = id; f.ladIdx = i;
       f.grabCfg = ch.grab || null;
       f.koLines = ch.koLines || null; f.rage = !!ch.rage;
+      if (ch.strip) setupStrip(f);
       f.kickMul = ch.kickMul || 0; f.punchMul = ch.punchMul || 0;
       f.nerve = 100; f.fight = { kos: 0, downs: 0 };
       f.controller = new LadController({ ai: { ...LAD_AI[id], sight: 99, shouts: false } }, this, i);
@@ -521,7 +527,7 @@ export class Firm {
     this.singCd = 15;
     let n = 0;
     const bonus = this.active.some(l => l.traits && l.traits.has('singer')) ? 15 : 0;
-    for (const l of this.active) if (dist(l, P) < 9) { l.nerve = Math.min(100, (l.nerve ?? 100) + 35 + bonus); n++; if (l.routT > 0) l.routT = 0.3; }
+    for (const l of this.active) if (dist(l, P) < 9) { l.nerve = Math.min(100, (l.nerve ?? 100) + 35 + bonus); n++; if (l.routT > 0) l.routT = 0.3; if (l.strip) l.stripNow = true; }
     for (const e of w.fighters) if (e.team !== 'player' && live(e) && !e.boss && dist(e, P) < 7) e.nerve = Math.max(5, (e.nerve ?? 100) - 10);
     P.say && P.say(ORDER_TEXT.sing, 1.4);
     this.active.forEach((l, i) => setTimeout(() => l.alive && l.say && l.say(pick(REPLY.sing), 1.6), 200 + i * 220));
@@ -764,7 +770,7 @@ export class Firm {
       this.revive(l, 0.45, 70);
       setTimeout(() => l.alive && l.say && l.say(pick(REPLY.up), 1.4), 700);
     }
-    for (const l of this.lads) l.revivedThisFight = false;
+    for (const l of this.lads) { l.revivedThisFight = false; l.stripNow = false; if (l.strip && l.shirtOff) shirtOn(l, this.world, true); }
     for (const l of this.lads) { if (l.alive) { l.hp = Math.min(l.maxHp, l.hp + l.maxHp * 0.25); l.nerve = Math.max(l.nerve ?? 0, 80); } }
   }
 

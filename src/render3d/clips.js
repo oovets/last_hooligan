@@ -322,6 +322,25 @@ export const CLIPS = {
       hip: [0, -0.17, 0.14], ikR: [0.12, 0.8, 0.62] }),
     k(1.0, {}, 'out'),
   ],
+  // -------------------------------------------------------------- Big Al's TOP OFF: arms crossed to the hem, shirt up over the
+  // head, a helicopter twirl overhead with a full turn of the body (hits all round), then flung at someone's face
+  al_strip: [
+    k(0.0, {}),
+    k(0.14, { hips: [6, 0, 0], spine: [10, 0, 0], chest: [12, 0, 0], head: [10, 0, 0], hip: [0, -0.06, 0], ikL: [-0.12, 0.98, 0.18], ikR: [0.12, 0.98, 0.18] }, 'out'),
+    k(0.35, { hips: [-6, 0, 0], spine: [-8, 0, 0], chest: [-12, 0, 0], neck: [-10, 0, 0], head: [-14, 0, 0], shoulder_L: [0, 0, 24], shoulder_R: [0, 0, 24],
+      hip: [0, 0.02, -0.02], ikL: [0.1, 2.02, 0.02], ikR: [-0.1, 2.02, 0.02] }, 'io'),
+    k(0.39, { yaw: -60, hips: [-4, 10, 0], chest: [-8, 10, 6], head: [-10, -10, 0], shoulder_R: [0, 0, 30], upperArm_L: [20, 0, 70], forearm_L: [30, 0, 0],
+      thigh_R: [16, 0, 10], shin_R: [-20, 0, 0], thigh_L: [-10, 0, 10], shin_L: [-16, 0, 0], hip: [0, -0.02, 0], ikR: [0.3, 2.1, 0.22] }, 'lin'),
+    k(0.43, { yaw: -170, hips: [-4, 10, 0], chest: [-8, 10, 6], head: [-10, -10, 0], shoulder_R: [0, 0, 30], upperArm_L: [20, 0, 74], forearm_L: [30, 0, 0],
+      thigh_R: [10, 0, 10], shin_R: [-24, 0, 0], thigh_L: [-14, 0, 10], shin_L: [-12, 0, 0], hip: [0, -0.04, 0], ikR: [-0.12, 2.16, 0.38] }, 'lin'),
+    k(0.47, { yaw: -280, hips: [-4, 10, 0], chest: [-8, 10, 6], head: [-10, -10, 0], shoulder_R: [0, 0, 30], upperArm_L: [20, 0, 70], forearm_L: [30, 0, 0],
+      thigh_R: [16, 0, 10], shin_R: [-20, 0, 0], thigh_L: [-10, 0, 10], shin_L: [-16, 0, 0], hip: [0, -0.02, 0], ikR: [-0.4, 2.1, 0.0] }, 'lin'),
+    k(0.5, { yaw: -360, hips: [-4, 10, 0], chest: [-8, 10, 6], head: [-10, -10, 0], shoulder_R: [0, 0, 30], upperArm_L: [20, 0, 72], forearm_L: [30, 0, 0],
+      hip: [0, -0.03, 0], ikR: [-0.04, 2.1, -0.32] }, 'lin'),
+    k(0.62, { yaw: -360, hips: [14, 22, 0], spine: [10, 10, 0], chest: [16, 30, 0], head: [-4, -12, 0], shoulder_R: [24, 0, 8], upperArm_L: [30, 0, 30], forearm_L: [100, 0, 0],
+      thigh_R: [34, 0, 3], shin_R: [-26, 0, 0], thigh_L: [-30, 0, 3], shin_L: [-10, 0, 0], foot_L: [40, 0, 0], hip: [0, -0.07, 0.12], ikR: [-0.06, 1.6, 0.8] }, 'in'),
+    k(1.0, { yaw: -360 }, 'out'),
+  ],
   // -------------------------------------------------------------- Fat Vic: squeeze (STRYPGREPP tightens: shrug, lean back, hands up and in)
   vic_tighten: [
     k(0.0, CHOKER),

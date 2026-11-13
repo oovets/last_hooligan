@@ -21,13 +21,14 @@ const MOVES = {
   hooligan: ['J J J / J K L / K J K COMBOS', 'L L = SPIN KICK', 'RUN + J = SHOULDER CHARGE', 'WARDROBE: DRESS HIM UP'],
   mo: ['K = HAMMER FIST (KNOCKDOWN)', 'RUN + J = FRIDGE CHARGE', 'SHRUGS OFF LIGHT HITS', 'SLOW BUT HUGE HEALTH'],
   stig: ['J = LIGHTNING FLURRY', 'RUN + L = SLIDE TACKLE', 'FASTEST RUNNER IN TOWN', 'GLASS JAW - KEEP MOVING'],
+  bigal: ['E = TOP OFF: HELICOPTER TWIRL, SHIRT IN THE FACE', 'THE REVEAL FREEZES THEM. LADS GO AL! AL! AL!', 'BARE-CHESTED: HITS HARDER, TAKES MORE', 'L = THE STEPLADDER. LONGEST REACH IN TOWN'],
   kenny: ['K = SHOWTIME BOMB (KNOCKDOWN)', 'RUN + J = SPEAR TACKLE', 'THE MORE HE BLEEDS, THE HARDER HE HITS', 'NEVER BLOCKS. NEVER BACKS DOWN.'],
   vic: ['I = STRYPGREPP (CHOKEHOLD) - LIFTS AND STRANGLES', 'IN THE GRIP: J/K = TIGHTEN, 3RD = CHOKESLAM', 'RUN + I = LUNGE FOR THE THROAT', 'WINS A FIGHT? "VILL DU DÖ ELLER?"'],
   oldboy: ['K = OLD-SCHOOL HEADBUTT', 'TOUGH AS OLD BOOTS', 'SEEN IT ALL', 'UNLOCK: FINISH THE GAME'],
 };
 const DEMO = {
   hooligan: ['jab', 'cross', 'hook', 'uppercut'], mo: ['haymaker', 'bodySlam'], stig: ['jab', 'hook', 'jab', 'flyingKick'],
-  kenny: ['cross', 'kenny_bomb', 'shoulder'], vic: ['choking', 'vic_tighten', 'vic_tighten', 'vic_chokeslam'], oldboy: ['jab', 'headbutt', 'kick'],
+  kenny: ['cross', 'kenny_bomb', 'shoulder'], bigal: ['jab', 'al_stepladder', 'al_strip'], vic: ['choking', 'vic_tighten', 'vic_tighten', 'vic_chokeslam'], oldboy: ['jab', 'headbutt', 'kick'],
 };
 const DIRS = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
 

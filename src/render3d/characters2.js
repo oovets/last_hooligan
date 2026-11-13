@@ -140,6 +140,27 @@ function badgeTexture() {
   return BADGE;
 }
 
+// ---- checked casual shirt (jacket material ID_3 with look.jacket.pattern 'check', e.g. Big Al): a procedural check in the
+// shader from the bind-pose position (no UVs needed, the pattern stays on the cloth as he moves): the jacket colour,
+// dark bands (trim) across both ways, a thin coloured over-check line (lining)
+function checkMaterial(base, dark, line) {
+  const m = new THREE.MeshStandardMaterial({ color: base, roughness: 0.9, metalness: 0 });
+  m.onBeforeCompile = sh => {
+    sh.uniforms.uCkDark = { value: dark }; sh.uniforms.uCkLine = { value: line };
+    sh.vertexShader = 'varying vec3 vCk;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvCk = position;');
+    sh.fragmentShader = 'varying vec3 vCk;\nuniform vec3 uCkDark;\nuniform vec3 uCkLine;\n' + sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
+      {
+        vec2 q = vec2(vCk.x + vCk.z * 0.7, vCk.y) * 7.0;
+        float bx = step(0.62, fract(q.x)), by = step(0.62, fract(q.y));
+        vec3 c = mix(diffuseColor.rgb, uCkDark, 0.38 * bx + 0.38 * by);
+        float lx = step(0.94, fract(q.x * 0.5 + 0.13)), ly = step(0.94, fract(q.y * 0.5 + 0.13));
+        diffuseColor.rgb = mix(c, uCkLine, 0.75 * max(lx, ly));
+      }`);
+  };
+  m.customProgramCacheKey = () => 'check-shirt';
+  return m;
+}
+
 // ---- arm tattoos (material ID_26, layer 'tattoo:arm'), drawn once per design. 'clockwork': the four droogs walking
 // at you as black silhouettes (bowler, bowler with a bat across his shoulders, tall hat, flat cap; clubs and canes),
 // long shadows stretching down behind them, in worn black ink.
@@ -266,6 +287,11 @@ export class Character2 {
           // arm tattoo (layer 'tattoo:arm'): ink with alpha over the skin
           m = new THREE.MeshStandardMaterial({ map: tattooTexture(look.tattoo), alphaTest: 0.35, roughness: 0.6, metalness: 0,
             polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+        } else if ((id === 3 || id === 4) && look.jacket && look.jacket.pattern === 'check') {
+          // the whole shirt is the check: body (ID_3) and the jacket model's collar, cuffs, hem band and placket (ID_4,
+          // the trim, which on a shirt would otherwise read as dark knitted ribbing and a zip)
+          const J = look.jacket;
+          m = checkMaterial(toColor(spec.pal[3] || c), new THREE.Color(J.trim || '#2a2420'), new THREE.Color(J.lining || '#a3202a'));
         } else if (id === 24) {
           m = new THREE.MeshStandardMaterial({ map: badgeTexture(), roughness: 0.92, metalness: 0 });   // the arm badge
         } else {
@@ -288,7 +314,7 @@ export class Character2 {
     this.rootInv = this.B.root ? this.B.root.quaternion.clone().invert() : new THREE.Quaternion();
     this.handR = this.B.hand_R;
     const h = look.height || 1;
-    const bw = this.model.startsWith('hero:') ? 1 : clamp((look.build || 1) / ({ m: 1.0, h: 1.4, f: 0.95, b: 1.2 }[this.model[0]] || 1), 0.88, 1.18);   // hero models are authored to size
+    const bw = this.model.startsWith('hero:') ? 1 : clamp((look.build || 1) / ({ m: 1.0, h: 1.4, f: 0.95, b: 1.2 }[this.model[0]] || 1), 0.78, 1.18);   // hero models are authored to size
     // girth widens the body side to side; depth only a little, or the feet stretch into clown shoes
     inner.scale.set(CHAR2_SCALE * h * bw, CHAR2_SCALE * h, CHAR2_SCALE * h * (1 + (bw - 1) * 0.3));
     this.group.add(inner);

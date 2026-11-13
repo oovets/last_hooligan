@@ -422,6 +422,39 @@ const jabAt = (w, P, e) => {
   check(F.lads.every(l => l.kickMul > 0.5 && l.kickMul < 1.6), `KICKS: every lad's kicks do real damage (kickMul ${F.lads.map(l => l.kickMul.toFixed(2)).join('/')})`);
 }
 
+// BIG AL: top off (twirl, reveal, shirt in the face), bare-chested stats, buttoning it back up
+{
+  const { setupStrip } = await import('../src/game/bigal.js');
+  const w = fresh(), F = w.firm, P = w.player;
+  holdAll(F);
+  setupStrip(P);
+  const p0 = P.power;
+  const farS = spots(w, P.x, P.y, 5, 7)[0];   // the lads stand off (so nobody pins or flattens the man first), but within cheering range
+  for (const l of F.lads) { l.x = farS.x; l.y = farS.y; l.controller.order = { type: 'hold', x: l.x, y: l.y }; }
+  const sp = spots(w, P.x, P.y, 1.2, 1.8)[0];
+  const e = w.spawnEnemy('rival', sp.x, sp.y, { aggro: false }); e.maxHp = e.hp = 400; e.power = 0;
+  P.face2(e.x - P.x, e.y - P.y);
+  for (const l of F.lads) l.nerve = 50;
+  check(P.startAttack && (P.startAttack('al_strip', w), P.state === 'attack'), 'BIG AL: the strip starts');
+  let froze = false, flung = false;
+  step(w, 0.5, () => { if (e.state === 'dizzy') froze = true; if (w.projectiles.some(pr => pr.type === 'alshirt')) flung = true; });
+  check(P.shirtOff && P.look === P.lookOff && P.power > p0, `BIG AL: shirt off, bare look, hits harder (power ${p0.toFixed(2)} -> ${P.power.toFixed(2)})`);
+  check(froze, 'BIG AL: the reveal freezes the man next to him');
+  check(F.lads.some(l => l.nerve > 50), 'BIG AL: the lads get a lift (AL! AL! AL!)');
+  step(w, 1.2, () => { if (w.projectiles.some(pr => pr.type === 'alshirt')) flung = true; });
+  const shirt = w.items.find(it => it.type === 'alshirt' && !it.removed);
+  check(flung && !!shirt && P.shirtItem === shirt, 'BIG AL: the shirt is flung and lands on the floor');
+  for (const f of w.fighters) if (f.team !== 'player') f.removed = true;   // (the man next to the shirt could grab Al mid-buttoning)
+  step(w, 0.1);
+  P.x = shirt.x + 0.5; P.y = shirt.y; P.setState('idle'); shirt.pickDelay = 0;
+  w.playerUse(P);
+  check(P.state === 'pickup' && P.shirtOff, 'BIG AL: USE by the shirt starts buttoning it back up');
+  step(w, 1.2);
+  check(!P.shirtOff && P.look === P.lookOn && Math.abs(P.power - p0) < 1e-9 && shirt.removed, 'BIG AL: shirt back on, stats back to normal');
+  P.setState('idle'); w.playerUse(P);
+  check(P.state === 'attack' && P.attack && P.attack.name === 'al_strip', 'BIG AL: USE with nothing else to use takes it off again');
+}
+
 // controls copy matches the bindings
 {
   check(BIND_ROWS.every(r => !r[1] || r[1].every(a => KEYMAP[a])), 'CONTROLS: every bindings row names a real action');

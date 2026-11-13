@@ -445,6 +445,7 @@ export class World {
   playerUse(f) {
     // 0. a mate out cold at your feet: haul him up (game/firm.js)
     if (this.firm && this.firm.tryRevive(f)) return;
+    if (f.onUse && f.onUse(this, 'first')) return;   // character-specific USE (Big Al: put the shirt back on)
     // 1. interactive props
     for (const p of this.props) {
       if (p.removed || p.open || !p.def.interact) continue;
@@ -463,7 +464,7 @@ export class World {
     // 2. items needing USE
     let best = null, bd = 1.0;
     for (const it of this.items) {
-      if (it.removed || !it.def || it.def.auto || it.pickDelay > 0) continue;
+      if (it.removed || !it.def || it.def.auto || it.def.noUse || it.pickDelay > 0) continue;
       const d = Math.hypot(it.x - f.x, it.y - f.y);
       if (d < bd) { bd = d; best = it; }
     }
@@ -494,7 +495,9 @@ export class World {
       return;
     }
     // 4. drop weapon
-    if (f.weapon) this.dropWeapon(f);
+    if (f.weapon) { this.dropWeapon(f); return; }
+    // 5. nothing else to use: character-specific (Big Al: top off)
+    if (f.onUse) f.onUse(this, 'last');
   }
 
   useItemSlot(i) {
@@ -723,7 +726,11 @@ export class World {
       if (f.removed) continue;
       f.combat = f.isPlayer ? this.enemiesNear(f, 4.5) : f.combat;
       const prevPhase = f.attack ? f.attack.phase : -1;
+      const prevAtk = f.attack;
       f.update(this, dt);
+      // attack phase hooks (def.onPhase(f, world, phase)), e.g. Big Al's strip; per-fighter tick (f.onTick)
+      if (f.attack && f.attack.def.onPhase && (f.attack !== prevAtk || f.attack.phase !== prevPhase)) f.attack.def.onPhase(f, this, f.attack.phase);
+      if (f.onTick) f.onTick(this, dt);
       if (f.state === 'attack' && f.attack && f.attack.def.spawnProjectile && prevPhase === 0 && f.attack.phase >= 1) {
         const th = f.data.throwing;
         if (th) { // player weapon throw

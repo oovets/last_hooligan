@@ -16,10 +16,12 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 | Overhaul: skinnade v2-karaktärer, animator, AO, bloom | klar i grunden, polering kvar |
 | Overhaul: handkeyade klipp (slag, tillstånd, luft, grepp, Kenny och Vic) | klar |
 | Kenny Showtime ersätter Terrace Tina (muskelbygge `b_*`, balaklava, egna slag) | klar, ej provspelad |
+| Big Al (THE STEPLADDER, ny spelbar figur och grundare, TOP OFF-mekaniken) | klar och testad, ej provspelad |
+| Realistiska hjältemodeller i menyerna (MPFB2) | Fat Vic klar (kraftig kropp, Stone Island-overshirt med märke), övriga saknas |
 | Overhaul: procedurell rörelse (fightstance, steg, acceleration) | klar, ej provspelad |
 | Fullskaliga fordon, nya menyer i full upplösning | klar |
 | Fas E: THE TERRACES | pausad (motorstöd för trappsteg finns) |
-| Fas F: Football Tour-kartan och arenorna | ej påbörjad |
+| Fas F: Football Tour-kartan och arenorna | kartan och registret klara, alla fem arenor är stubbar |
 
 ## Först: provspela och städa
 
@@ -31,7 +33,8 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 - [ ] 2D-läget: sprite-bygget stannade halvvägs (bland annat `m_jacket` saknas och `assets/sprites/index.json` skrevs
       aldrig), så 2D ritar procedurfigurer. Bygg om spritarna eller pensionera 2D.
 - [ ] Bundla Three.js lokalt (i dag laddas det från jsDelivr), kräver ett OK för nedladdningen.
-- [ ] `.claude/launch.json` har en extra serverkonfiguration (port 8643) från utvecklingen. Behåll eller ta bort.
+- [ ] `.claude/launch.json` har en extra serverkonfiguration (`hooligan-3d`, port 8643) från utvecklingen. Behåll
+      eller ta bort.
 
 ## Spelkänsla och rörelse
 
@@ -60,6 +63,13 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 - [ ] Provspela klippen live och finjustera tajming och räckvidd. `tools/anim3d.html` visar klipp som filmremsor:
       `filmstrip(['hurtFront', 'atk:spinKick', 'move:guard:left'], { frames: 7, facing: 0, look: 'vic' })`.
 - [ ] Bättre händer (knytnäve, fingrar) och ansikten med uttryck (skrik, ont, KO).
+- [ ] Realistiska hjältemodeller (MPFB2, `scripts/blender/char_mpfb.py`) för resten av figurerna. I dag finns bara
+      `vic` i `assets/models/hero/index.json`.
+- [ ] Big Al: provspela TOP OFF (skräckfrysen, skjortan i ansiktet, att knäppa igen). I 3D är den rutiga skjortan
+      klar (även krage och muddar). Den bara överkroppen är tee-modellen i hudfärg, smalare: den blir aldrig riktigt
+      "blek och tanig" (m-modellen har bröst- och magmuskler) och fållen ligger kvar som en kant över jeansen. En egen
+      bar överkropp i `char_v2.py` skulle lösa båda.
+- [ ] Vic (hero): skorna är enfärgade i lookens blå, utan den orange randen och gummisulan från v2-modellen.
 - [ ] Riktiga 3D-vapen i handen, i dag visas föremålets ikon som en sprite.
 - [ ] Prestanda: slå ihop meshar per figur (färre draw calls inför stora firmastrider), samt halv upplösning eller
       ett kvalitetsval för GTAO på stora skärmar (`?post=0` är enda reglaget i dag).
@@ -89,13 +99,12 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
       annan grabb eller dig), TOOLED UP (ta den med vapnet; kräver pickDelay i world.nearestWeapon först).
 - [ ] Egen 3D-animation för att låsa fast / bli fastlåst (i dag används grabbing/grabbed-klippen).
 - [ ] Grabbarna siktar egna kast mot fiendeklungor.
-- [ ] Firma på/av och firmans storlek i alternativmenyn (behöver tätare rader i menyn), en THE FIRM-flik i HOW TO PLAY.
-- [ ] Personlighet i striden: hetsporren rusar in ensam, den fege stannar bak, lookout ropar BEHIND YA, singer drar
+- [ ] Firma på/av och firmans storlek i alternativmenyn (finns bara i sparfilen i dag, behöver tätare rader i menyn),
+      och en THE FIRM-flik i HOW TO PLAY.
+- [ ] Personlighet och egna initiativ i striden: hetsporren rusar in ensam, den fege stannar bak, lookout ropar BEHIND YA, singer drar
       igång en ramsa, bästa kompisar slåss bättre sida vid sida och blir galna när den andra slås ut, liability går
       för långt (heat). Rättning: oldschool-nervbonusen staplas i dag per grabb (firm.js nerve-loopen).
 - [ ] Testerna: seeda Math.random i test_firm.mjs; walkPlayer bevisar inget när PlayerController är avstängd.
-- [ ] Grabbarnas egna initiativ efter personlighet (hetsporren rusar, den fege stannar bak) syns i striden.
-- [ ] Firma på/av och firmans storlek i menyn (finns bara i sparfilen).
 - [ ] Mål i strider utöver "slå ner alla", t.ex. ta läktaren, håll puben eller hämta en skadad kompis (DESIGN-V2 §3.4).
 - [ ] Större strider (6 mot 10) när prestandan tillåter.
 - [ ] Gör relationerna synligare och påverkbara.
@@ -115,10 +124,12 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 
 ## Fas F: The Football Tour
 
-- [ ] Football Tour-kartan i 90-talsmatchprogramstil (ersätter listan på korktavlan i puben), där rykte låser upp
-      resmål.
-- [ ] England: Old Trafford, Stamford Bridge, The Den, Anfield och Ibrox, var och en som ett eget level-paket med tema,
-      boss och musik. Obs: du valde riktiga namn; risken med varumärken och licenser kvarstår om spelet släpps.
+- [x] Football Tour-kartan i 90-talsmatchprogramstil (ersätter listan på korktavlan i puben), där rykte låser upp
+      resmål (`src/content/tour/index.js`, `src/ui/hub.js`). Tourvinster ger dubbelt rykte och +15 första gången.
+- [x] Level-registret: varje arena är ett eget paket i `src/content/arenas/<id>/`, ofärdiga är `{ stub: true }` och
+      visas som SOON på kartan.
+- [ ] Bygg arenorna (tema, bana, boss och musik i varje paket): The Den, Stamford Bridge, Anfield, Old Trafford och
+      Ibrox. Alla fem är stubbar i dag.
 - [ ] Europa: Tyskland, Italien, Spanien och Sverige.
 
 ## Visionen i övrigt

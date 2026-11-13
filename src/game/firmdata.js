@@ -36,6 +36,7 @@ const TRAIT_IDS = Object.keys(TRAITS);
 const FOUNDERS = {
   mo: { nick: 'THE FRIDGE', stats: { fists: 7, kicks: 3, tough: 8, speed: 3, nerve: 7, loyalty: 8 }, traits: ['biglad'] },
   stig: { nick: 'THE TERRACE RAT', stats: { fists: 6, kicks: 4, tough: 3, speed: 8, nerve: 5, loyalty: 6 }, traits: ['hothead'] },
+  bigal: { nick: 'THE STEPLADDER', stats: { fists: 5, kicks: 7, tough: 4, speed: 6, nerve: 7, loyalty: 8 }, traits: ['singer'] },
   kenny: { nick: 'ULTRAVIOLENCE', stats: { fists: 8, kicks: 4, tough: 7, speed: 5, nerve: 8, loyalty: 5 }, traits: ['liability'] },
   vic: { nick: 'THE PYTHON', stats: { fists: 6, kicks: 3, tough: 7, speed: 3, nerve: 6, loyalty: 7 }, traits: ['biglad'] },
   hooligan: { nick: 'DEZ', stats: { fists: 6, kicks: 6, tough: 5, speed: 5, nerve: 6, loyalty: 8 }, traits: ['oldschool'] },
@@ -125,8 +126,8 @@ export function recruitTier(F) { return F.rep >= 120 ? 3 : F.rep >= 60 ? 2 : F.r
 
 export function newFirm(playerChar = 'hooligan') {
   const F = { v: 1, day: 1, rep: 0, heat: 0, nextId: 1, lads: [], squad: [], pool: [], poolDay: 0, log: [], report: null, event: null, trained: {} };
-  for (const id of ['mo', 'stig', 'kenny', 'hooligan'].filter(c => c !== playerChar).slice(0, 3)) F.lads.push(founder(F, id));
-  F.squad = F.lads.map(l => l.id);
+  for (const id of ['mo', 'stig', 'kenny', 'bigal', 'hooligan'].filter(c => c !== playerChar).slice(0, 4)) F.lads.push(founder(F, id));
+  F.squad = F.lads.slice(0, 3).map(l => l.id);   // four founders, three on the coach
   refreshPool(F);
   F.log.unshift('DAY 1. THE ANCHOR. THE FIRM IS FORMED.');
   return F;
@@ -135,6 +136,15 @@ export function newFirm(playerChar = 'hooligan') {
 // save.data.firm, created on first use
 export function getFirm(playerChar) {
   if (!save.data.firm) { save.data.firm = newFirm(playerChar || save.data.character || 'hooligan'); save.write(); }
+  // save v4: Big Al walks into an existing firm's pub (unless he's the one you play or the roster is full)
+  if (save.data.addBigAl) {
+    const F = save.data.firm;
+    if (!F.lads.some(l => l.char === 'bigal') && (playerChar || save.data.character) !== 'bigal' && F.lads.length < MAX_ROSTER) {
+      F.lads.push(founder(F, 'bigal'));
+      F.log && F.log.unshift(`DAY ${F.day}. BIG AL WALKED IN, ORDERED A LAGER AND TOOK HIS SHIRT OFF.`);
+    }
+    delete save.data.addBigAl; save.write();
+  }
   return save.data.firm;
 }
 

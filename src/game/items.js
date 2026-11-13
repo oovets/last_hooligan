@@ -402,6 +402,7 @@ export class Projectile {
       if (!f.alive || f.team === this.team || this.hit.has(f) || f.invuln > 0 || f.state === 'down') continue;
       if (Math.hypot(f.x - this.x, f.y - this.y) < f.r + 0.25 && this.z > f.z - 0.2 && this.z < f.z + 2.4) {
         this.hit.add(f);
+        if (this.def && this.def.onHitFighter) { this.def.onHitFighter(this, f, world); this.removed = true; return; }   // (e.g. Big Al's shirt)
         const sp = Math.hypot(this.vx, this.vy) || 1;
         const res = f.takeHit({ attacker: this.owner, def: { hz: 1.5, sfx: 'hitHeavy', score: 30, hitstop: 0.05, shake: 3 }, dmg: this.dmg, dir: { x: this.vx / sp, y: this.vy / sp }, kb: 3, stun: 0.45, knockdown: this.dmg >= 14, launch: 1, guardDmg: this.dmg }, world);
         world.onHit(this.owner || this, f, { hz: 1.5, sfx: 'hitHeavy', score: 30, hitstop: 0.05, shake: 3 }, res, this.dmg);
@@ -409,8 +410,12 @@ export class Projectile {
         return;
       }
     }
-    world.breakPropsAt && world.breakPropsAt(this.x, this.y, this.z, this.owner, this.dmg) && this.shatter(world);
+    if (world.breakPropsAt && world.breakPropsAt(this.x, this.y, this.z, this.owner, this.dmg)) {
+      if (this.def && this.def.onLand) { this.def.onLand(this, world); this.removed = true; return; }
+      this.shatter(world);
+    }
     const g = world.groundHeight(this.x, this.y, this.z);
+    if ((blocked || this.z <= g) && this.def && this.def.onLand) { this.def.onLand(this, world); this.removed = true; return; }
     if (blocked || this.z <= g) this.shatter(world);
   }
   shatter(world) {

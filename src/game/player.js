@@ -11,6 +11,7 @@ import { screenDirToWorld } from '../engine/iso.js';
 import { Fighter } from './fighter.js';
 import { save } from '../save.js';
 import { characterById } from '../content/characters.js';
+import { setupStrip } from './bigal.js';
 
 export const PLAYER_BASE = { hp: 100, speed: 3.1, runSpeed: 5.6, power: 1, defense: 0.85, guard: 40 };
 
@@ -32,6 +33,7 @@ export function createPlayer(game, x, y) {
   f.kickMul = ch.kickMul || 0; f.punchMul = ch.punchMul || 0;
   f.winLine = ch.winLine || null;
   f.koLines = ch.koLines || null; f.rage = !!ch.rage;
+  if (ch.strip) setupStrip(f);
   f.controller = new PlayerController();
   return f;
 }

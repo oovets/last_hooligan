@@ -44,7 +44,7 @@ console.log('\n== THE FIRM between matches');
 // ---- a new firm
 save.data.firm = null; save.data.cash = 200;
 const F = FD.getFirm('hooligan');
-check(F.lads.length === 3 && F.squad.length === 3, `new firm: ${F.lads.map(l => l.name).join(', ')} (all on the coach)`);
+check(F.lads.length === 4 && F.squad.length === 3 && F.lads.some(l => l.char === 'bigal'), `new firm: ${F.lads.map(l => l.name).join(', ')} (four founders incl. BIG AL, three on the coach)`);
 check(F.pool.length === 4, `four new faces at the bar (${F.pool.map(c => `${c.name} £${c.cost}`).join(', ')})`);
 
 // ---- the pub itself
@@ -66,7 +66,7 @@ check(F.pool.length === 4, `four new faces at the bar (${F.pool.map(c => `${c.na
 {
   const cash0 = save.data.cash, cost0 = F.pool[0].cost;
   const r = FD.hire(F, 0);
-  check(r.ok && F.lads.length === 4 && save.data.cash === cash0 - cost0, `hire: ${r.msg} (-£${cost0})`);
+  check(r.ok && F.lads.length === 5 && save.data.cash === cash0 - cost0, `hire: ${r.msg} (-£${cost0})`);
   const l = F.lads[0], v0 = l.stats.fists, cost = FD.trainCost(l, 'fists');
   const t1 = FD.train(F, l.id, 'fists');
   check(t1.ok && l.stats.fists === v0 + 1, `train: ${t1.msg} (-£${cost})`);

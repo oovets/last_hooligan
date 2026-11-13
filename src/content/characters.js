@@ -12,6 +12,7 @@
 // }
 import { registerAttack } from '../game/combat.js';
 import { registerAttackPose, registerAnim, ATTACK_POSES } from '../game/poses.js';
+import '../game/bigal.js';   // Big Al's strip (al_strip, al_stepladder, the shirt)
 
 // ---- signature moves
 registerAttack('mo_hammer', { pose: 'haymaker', startup: 0.2, active: 0.1, recovery: 0.28, dmg: 13, reach: 1.15, arc: 0.8, kb: 4, stun: 0.5, knockdown: true, launch: 2, sfx: 'hitHeavy', whiff: 'whooshBig', hz: 1.6, hitstop: 0.09, shake: 5, score: 45, next: { punchL: 'jab', kick: 'kick' } });
@@ -108,6 +109,21 @@ export const CHARACTERS = [
       jacket: { style: 'vest', color: '#ecebe4' }, shirt: '#ecebe4',
       pants: { style: 'cargo', color: '#3e4632' }, shoes: { color: '#f4f4f0', sole: '#ecebe6' },   // clean white trainers
       scarf: null, build: 1.2, height: 1.08,
+    },
+    unlock: null,
+  },
+  {
+    id: 'bigal', name: 'BIG AL', nick: 'THE STEPLADDER', tagline: 'SIX FOOT SIX OF ELBOWS. THE SHIRT COMES OFF.',
+    bio: ['TALLEST LAD AT THE ANCHOR.', 'HAS NOT WORN A COAT SINCE 1989.', 'THE SHIRT ALWAYS COMES OFF. ALWAYS.'],
+    stats: { power: 3, speed: 4, toughness: 2, technique: 4 },
+    fighter: { hp: 95, speed: 3.25, runSpeed: 5.9, power: 1.0, defense: 0.95, weight: 0.82, guard: 38, reachMul: 1.22 },
+    moves: { kick: 'al_stepladder' }, kickMul: 1.1, strip: true,
+    winLine: 'ANYONE GOT A JUMPER? IT\'S BALTIC.', koLines: ['ANYONE GOT A JUMPER?', 'IT\'S BALTIC!', 'GET IN!', 'LOOK AT THE STATE OF YOU!', 'SIX FOOT SIX, SON!'],
+    look: {
+      skin: '#f3d9c8', hair: { style: 'curtains', color: '#5a3a1e' }, facial: 'none',
+      jacket: { style: 'shirt', color: '#cdb58c', trim: '#2a2420', lining: '#a3202a', pattern: 'check' }, shirt: '#cdb58c',
+      pants: { style: 'jeans', color: '#8aa6c8' }, shoes: { color: '#f4f4f0', sole: '#d8d0c0' },
+      scarf: null, build: 0.86, height: 1.18,
     },
     unlock: null,
   },

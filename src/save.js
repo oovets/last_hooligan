@@ -19,7 +19,7 @@ export const DEFAULT_HISCORES = [
 
 export function defaultSave() {
   return {
-    version: 3,                  // 2: 3D renderer became the default; 3: Terrace Tina replaced by Kenny Showtime
+    version: 4,                  // 2: 3D renderer became the default; 3: Terrace Tina replaced by Kenny Showtime; 4: Big Al joins
     unlocked: 1,                 // number of levels unlocked (1..8)
     character: 'hooligan',       // last selected playable character (content/characters.js)
     best: {},                    // levelId -> best score
@@ -80,6 +80,7 @@ export const save = {
       // v1 saves stored renderer '2d' because that was the default: switch them to 3D once (OPTIONS > GRAPHICS can go back)
       if ((this.data.version || 1) < 2) { this.data.settings.renderer = '3d'; this.data.version = 2; }
       if (this.data.version < 3) { migrateTina(this.data); this.data.version = 3; }
+      if (this.data.version < 4) { this.data.addBigAl = true; this.data.version = 4; }   // firmdata.getFirm adds him to an existing firm
     } catch (e) { console.warn('save load failed', e); }
     if (!Array.isArray(this.data.hiscores) || !this.data.hiscores.length) this.data.hiscores = DEFAULT_HISCORES.map(h => ({ ...h }));
     return this.data;
