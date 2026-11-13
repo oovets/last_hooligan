@@ -14,6 +14,8 @@ echo "deploying $REV to $HOST:$DEST"
 git archive --format=tar HEAD index.html src assets | ssh "$HOST" "set -e
   sudo mkdir -p '$DEST.new' && sudo rm -rf '$DEST.new'/* && sudo tar -x -C '$DEST.new'
   echo '$REV' | sudo tee '$DEST.new/REVISION' >/dev/null
+  # the public build has sound (src/devflags.js keeps the dev checkout silent)
+  sudo sed -i 's/mute: true/mute: false/' '$DEST.new/src/devflags.js'
   sudo chown -R root:root '$DEST.new' && sudo chmod -R a+rX '$DEST.new'
   if [ -d '$DEST' ]; then sudo rm -rf '$DEST.old' && sudo mv '$DEST' '$DEST.old'; fi
   sudo mv '$DEST.new' '$DEST' && sudo rm -rf '$DEST.old'
