@@ -125,6 +125,7 @@ export const CHARACTERS = [
       skin: '#f2c4a6', hair: { style: 'shaved', color: '#c9a184' }, facial: 'none',
       jacket: { style: 'overshirt', color: '#a3ad97', trim: '#88937d', lining: '#a3ad97', hood: 'down', pockets: true }, shirt: '#f4f1e8',
       badge: { base: '#141416', mark: '#c8d43a' },
+      hero: 'vic',                                           // realistic menu model (assets/models/hero/vic.glb)
       pants: { style: 'jeans', color: '#7d97bf' }, shoes: { color: '#2d5bb3', sole: '#b5793a', stripe: '#f07a1a' },
       bag: true, scarf: null, build: 1.65, height: 1.08,
     },

@@ -16,7 +16,7 @@
 // Actors are posed from the game's pose library (sampleAnim) through the same layered animator as in the game.
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { CHAR2, Character2, modelFor2 } from './characters2.js';
+import { CHAR2, Character2, modelFor2, heroTemplate } from './characters2.js';
 import { sampleAnim } from '../game/poses.js';
 
 const devScale = ctx => (ctx.getTransform ? ctx.getTransform().a : 2) || 2;
@@ -71,12 +71,14 @@ export class MenuStage {
 
   // one actor: Character2 + a fake fighter for the animator
   actor(s, i, a) {
-    const lk = JSON.stringify(a.look) + (a.dark ? '|dark' : '');
+    // menus show the realistic hero model when the character has one; the key changes when it finishes loading
+    const hero = a.look && a.look.hero && !a.dark ? heroTemplate(a.look.hero) : null;
+    const lk = JSON.stringify(a.look) + (a.dark ? '|dark' : '') + (hero ? '|' + hero : '');
     let A = s.actors[i];
     if (A && A.lk === lk) return A;
     if (A) { s.scene.remove(A.char.group); A.char.dispose(); }
     if (!modelFor2(a.look)) return (s.actors[i] = null);
-    const char = new Character2(a.look);
+    const char = new Character2(a.look, { hero: !!hero });
     if (a.dark) {
       // locked characters: a flat black silhouette (unlit, so the room environment can't put sheen on it). Keep the map
       // only for its alpha (cut-out brows / hair cards keep their shape); black colour x map stays black.

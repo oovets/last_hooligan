@@ -24,7 +24,7 @@ import { specForLook } from '../game/sprites.js';
 import { fillPose } from '../game/poses.js';
 import { CLIPS, evalClip, attackU, stateClipFor, GUARD_RIG } from './clips.js';
 
-export const CHAR2 = { templates: {}, meta: {}, ready: false };
+export const CHAR2 = { templates: {}, meta: {}, ready: false, heroes: {}, heroLoading: {} };
 export const CHAR2_SCALE = 1.27;          // the game's chunky character scale (matches the sprites)
 const K = 0.046;                          // metres per pose-library pixel (hip offsets)
 const TORSO_OF = { harrington: 'jacket', bomber: 'jacket', track: 'jacket', leather: 'jacket', suit: 'jacket', shirt: 'jacket', parka: 'parka', tee: 'tee', polo: 'tee', vest: 'tee', hivis: 'hivis', hoodie: 'hoodie', overshirt: 'jacket' };
@@ -55,10 +55,33 @@ export async function loadCharacters2() {
       } catch (e) { console.warn('[3d v2] model failed', name, e); }
     }));
     CHAR2.ready = Object.keys(CHAR2.templates).length > 0;
+    CHAR2.loader = loader;
+    // hero models (realistic MPFB2 characters, scripts/blender/char_mpfb.py): only the index now, each model is
+    // fetched the first time a menu asks for it (heroTemplate), so the game's start-up download doesn't grow
+    try {
+      const hr = await fetch(new URL('../../assets/models/hero/index.json', import.meta.url));
+      if (hr.ok) CHAR2.heroes = (await hr.json()).models || {};
+    } catch (e) { /* no heroes */ }
   } catch (e) { console.warn('[3d v2] no models', e); }
 }
 
-export function modelFor2(look) {
+// the hero template for a character id ('vic'), or null while it loads / if there is none (callers fall back to v2)
+export function heroTemplate(id) {
+  const key = 'hero:' + id;
+  if (CHAR2.templates[key]) return key;
+  const file = CHAR2.heroes[id];
+  if (!file || CHAR2.heroLoading[id] || !CHAR2.loader) return null;
+  CHAR2.heroLoading[id] = true;
+  CHAR2.loader.loadAsync(new URL('../../assets/models/hero/' + file, import.meta.url).href).then(g => {
+    g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = false; o.frustumCulled = false; } });
+    CHAR2.templates[key] = g.scene;
+    CHAR2.meta[key] = { girth: 1, build: 'hero' };
+  }).catch(e => console.warn('[3d hero] model failed', id, e));
+  return null;
+}
+
+export function modelFor2(look, opts = {}) {
+  if (opts.hero && look.hero) { const h = heroTemplate(look.hero); if (h) return h; }
   const b = look.build || 1;
   const pre = look.female ? 'f' : look.muscle ? 'b' : b >= 1.28 ? 'h' : 'm';
   const torso = TORSO_OF[(look.jacket && look.jacket.style) || 'harrington'] || 'jacket';
@@ -192,9 +215,11 @@ const E = new THREE.Euler();
 const Q = new THREE.Quaternion();
 
 export class Character2 {
-  constructor(look) {
+  // opts.hero: use the character's realistic hero model (look.hero) when it has loaded (menus)
+  constructor(look, opts = {}) {
     this.group = new THREE.Group();
     this.mats = {};
+    this.opts = opts;
     this.build(look);
     this.blob = new THREE.Mesh(BLOB_GEO, BLOB_MAT);
     this.blob.rotation.x = -Math.PI / 2;
@@ -213,7 +238,7 @@ export class Character2 {
     if (this.inner) { this.group.remove(this.inner); for (const m of Object.values(this.mats)) m.dispose(); this.mats = {}; }
     const spec = specForLook(look);
     this.key = spec.key; this.look = look;
-    this.model = modelFor2(look);
+    this.model = modelFor2(look, this.opts || {});
     const inner = this.inner = SkeletonUtils.clone(CHAR2.templates[this.model]);
     const layers = new Set(spec.layers);
     inner.traverse(o => {
@@ -263,7 +288,7 @@ export class Character2 {
     this.rootInv = this.B.root ? this.B.root.quaternion.clone().invert() : new THREE.Quaternion();
     this.handR = this.B.hand_R;
     const h = look.height || 1;
-    const bw = clamp((look.build || 1) / ({ m: 1.0, h: 1.4, f: 0.95, b: 1.2 }[this.model[0]] || 1), 0.88, 1.18);
+    const bw = this.model.startsWith('hero:') ? 1 : clamp((look.build || 1) / ({ m: 1.0, h: 1.4, f: 0.95, b: 1.2 }[this.model[0]] || 1), 0.88, 1.18);   // hero models are authored to size
     // girth widens the body side to side; depth only a little, or the feet stretch into clown shoes
     inner.scale.set(CHAR2_SCALE * h * bw, CHAR2_SCALE * h, CHAR2_SCALE * h * (1 + (bw - 1) * 0.3));
     this.group.add(inner);
