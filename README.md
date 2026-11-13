@@ -10,18 +10,29 @@ is 90s football-casual culture in the fictional city of Nordhamn.
 > **Work in progress.** The game is moving from its original retro 2D look to real 3D, with a firm-management layer
 > on top. Plan: [`docs/DESIGN-V2.md`](docs/DESIGN-V2.md). What's left: [`docs/TODO.md`](docs/TODO.md).
 
-* 8 levels: THE STREETS, THE PUB, THE UNDERGROUND, THE AWAY END, THE CITY, THE INDUSTRIAL ZONE, THE DERBY and
-  THE LAST STAND. Each has unique enemies, hazards, secrets, 5 lost scarves, a pin badge and a boss.
-* 6 playable characters: The Last Hooligan, Big Mo, Little Stig, Kenny Showtime (masked, roided, ultraviolent), Fat Vic and The Old Boy (unlockable).
+* 8 story levels in Nordhamn: THE STREETS, THE PUB, THE UNDERGROUND, THE AWAY END, THE CITY, THE INDUSTRIAL ZONE,
+  THE DERBY and THE LAST STAND. Each has unique enemies, hazards, secrets, 5 lost scarves, a pin badge and a boss.
+* **The Football Tour:** away days at real grounds, picked from a 1994/95 matchday-programme map in the pub and
+  unlocked by your firm's reputation: STAMFORD BRIDGE (the Headhunters), ANFIELD, OLD TRAFFORD and IBROX, each with
+  its own theme, boss and music. THE DEN (Millwall) is still to come.
+* 7 playable characters: The Last Hooligan (Dez, dressed in the wardrobe), Big Mo, Little Stig, Kenny Showtime
+  (masked, roided, ultraviolent), Big Al (six foot six, the toughest man in the firm, and the shirt comes off),
+  Fat Vic and The Old Boy (unlockable).
 * **Two renderers:**
   * **3D (Three.js, default):** wall blocks, real lights and shadows, ambient occlusion, bloom and colour grading.
     The characters are skinned Blender models on a 22-bone rig, animated by a layered animator: hand-keyed clips
     with fist IK for strikes, hit reactions, knockdowns, grabs, chokeholds and air attacks; a procedural fighting
-    stance, side-steps, walk and run that blend by speed and don't slide; counter-twist and head tracking. Props are
+    stance, side-steps, walk and run that blend by speed and don't slide; counter-twist and head tracking. Builds
+    from lanky to husky to roided; trainers with three stripes, Stone Island badges and a woven Burberry check are
+    drawn on the models. The menus show realistic hero models (MakeHuman via MPFB2) for Fat Vic and Big Al. Props are
     still flat billboards of the 2D art.
   * **2D (classic):** pre-rendered Blender sprites, procedural pixel art as fallback.
 * Fully synthesized WebAudio soundtrack, crowd ambience and original terrace chants.
-* Wardrobe unlocks, save/continue, level select, hall of fame, gamepad support.
+* **Wardrobe:** the casual labels (Stone Island, C.P. Company, Aquascutum, Burberry, Lacoste, Fred Perry, Sergio
+  Tacchini, Fila, Ellesse, adidas, Lyle & Scott, Pringle, Henri Lloyd, Barbour, Paul & Shark, Levi's, Armani, Lois,
+  Farah, Diadora, Reebok, New Balance, Clarks, Kangol) and KITS, whole looks in one go (the Perry boy, the scally,
+  Stone Island casual, terrace 1996 ...).
+* Save/continue, level select, hall of fame, gamepad support.
 * **The firm, in the fight:** 3–4 lads with their own stats and traits fight on your side. Give quick orders, or
   hold G (pad: RT) for a slow-motion command mode with an order cursor you aim with the movement keys, stick or mouse. Lads look after you first and shout for help when they're in trouble. They fight *with* you: a lad pins a man so you get free hits, you and a lad on the same man trigger a DOUBLE TEAM launch, a throw towards a lad is caught straight into a pin, you can haul a knocked-out lad back up, and BACK TO ME pulls everyone round you. Nerve decides who stands and who runs, on both sides.
 * **The firm, between matches:** THE ANCHOR, your local, is a walkable pub. Recruit at the bar, train in the back
@@ -47,6 +58,8 @@ For the classic pixel-art renderer pick OPTIONS → GRAPHICS → 2D, or add `?re
 THE ANCHOR with a report. Walk to the map on the wall (or press **M**) to pick the next trip.
 
 During development the game is **muted** by `src/devflags.js` (`DEV.mute = true`). Set it to `false` for sound.
+`UNLOCK_ALL` in `src/save.js` is on for playtesting: every level, the whole tour and the whole wardrobe are open.
+Set it to `false` to earn them.
 
 ### Controls (keyboard; a gamepad also works)
 | | |
@@ -58,7 +71,7 @@ During development the game is **muted** by `src/devflags.js` (`DEV.mute = true`
 | Block (tap = parry) | Shift |
 | Dodge | O |
 | Grab / throw weapon | I |
-| Pick up / use | E |
+| Pick up / use (Big Al: shirt off, or back on by the shirt) | E |
 | Eat & drink | 1 2 3 |
 | Kit bag / pause | Tab / Esc |
 | **Firm:** with me / get into them / hold / sing up | R / T / H / Y (pad: d-pad down / up / left / right) |
@@ -72,7 +85,8 @@ During development the game is **muted** by `src/devflags.js` (`DEV.mute = true`
 
 * `node scripts/check.mjs [levelId] [--sim]`: validates levels and runs a headless simulation of the whole level
   (with the firm along).
-* `node scripts/test_firm.mjs [levelId]`: headless test of the lads' orders, nerve, routs and knockouts.
+* `node scripts/test_firm.mjs [levelId]`: headless test of the lads' orders, nerve, routs, knockouts and teamwork
+  (Math.random is seeded: `FIRM_SEED=n` for another run).
 * `node scripts/test_firmloop.mjs`: headless test of the pub → trip → level → pub loop and its consequences.
 * `node scripts/env_coverage.mjs [levelId] [--missing]`: shows which walls, floors and props have Blender sprites.
 * `tools/sprites.html?model=m_jacket`: character sprite viewer.
@@ -87,10 +101,17 @@ During development the game is **muted** by `src/devflags.js` (`DEV.mute = true`
 
 ### Rebuilding the Blender art (needs Blender 4.2+, Python with Pillow + numpy)
 
-3D characters (skinned v2 models for the 3D renderer, about 1 s each):
+3D characters (skinned v2 models for the 3D renderer, builds m/h/f/b/l, about 30 s each, four at a time):
 
 ```bash
-python3 scripts/build_models_v2.py
+python3 scripts/build_models_v2.py [--only l_jacket,l_bare]
+```
+
+Realistic hero models for the menus (Blender 5.x with the MPFB 2.0.18 extension and the MakeHuman asset packs; see
+the header of `scripts/blender/char_mpfb.py` and `assets/models/CREDITS.md`):
+
+```bash
+/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup --python scripts/blender/char_mpfb.py -- scripts/blender/bigal.json
 ```
 
 2D character sprites:
@@ -103,4 +124,6 @@ python3 scripts/build_sprites.py --jobs 3
 /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup --python scripts/blender/render_env.py -- scripts/blender/env_common.py
 ```
 
-All clubs, firms, people and places are fictional.
+Nordhamn, its club and its story are fictional. The Football Tour visits real grounds, clubs and firms, and the
+wardrobe carries real labels; every named person in the game (lads, bosses, faces) is invented. A private game for
+friends, not for sale.
