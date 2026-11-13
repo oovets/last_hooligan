@@ -14,13 +14,14 @@ import { ALL_LEVELS } from '../content/tour/index.js';
 import { buildLook, progressTotals } from '../content/wardrobe.js';
 import { Backdrop, backdrop } from './backdrop.js';
 import { drawLogo, drawCrest, LOGO_LAND_TIMES, LOGO_INTRO_LEN } from './logo.js';
+import { drawPosterBg, drawMob, drawPosterTitle, drawTagline, drawPressQuote } from './poster.js';
 import { attractCycle } from './attract.js';
 import { startNewRun, LevelSelectScene, OptionsScene, HowToPlayScene, CreditsScene } from './menus.js';
 import { WardrobeScene } from './wardrobe_ui.js';
 import { frame, MenuList, hintBar, scanlines, blink, fmtScore, fmtTime, scarfIcon, badgeIcon, secretIcon, coinIcon, hideLoader, C, rrect, devScale } from './widgets.js';
 import { r3d } from '../render3d/index.js';
 
-const SUB = 'NO RULES. NO FEAR. JUST FOOTBALL.';
+const TAG = 'WHAT ELSE ARE YOU GONNA DO ON A SATURDAY?';
 
 // ---------------------------------------------------------------- boot splash
 class BootScene {
@@ -98,39 +99,24 @@ class TitleScene {
   draw(ctx) {
     const sh = this.shake > 0 ? Math.round((Math.random() * 2 - 1) * this.shake * 14) : 0;
     ctx.save(); ctx.translate(sh, sh ? Math.round((Math.random() * 2 - 1) * this.shake * 8) : 0);
-    backdrop.draw(ctx, { lads: true });
-    const bottom = drawLogo(ctx, VIEW_W / 2, 18, this.t, { intro: this.intro });
+    // the poster: red paper, the mob charging in from below, the title slammed on, the line in a black box
+    drawPosterBg(ctx, this.t);
+    const ch = Math.min(1, Math.max(0, this.intro / 1.1));
+    drawMob(ctx, this.t, { charge: 1 - Math.pow(1 - ch, 3) });
+    if (this.intro > 0.4) drawPressQuote(ctx, this.t);
+    drawPosterTitle(ctx, VIEW_W / 2, 36, this.t, { intro: this.intro });
     ctx.restore();
     const ti = this.intro - LOGO_INTRO_LEN;
-    if (ti > 0) {
-      const n = Math.min(SUB.length, Math.floor(ti * 30));
-      const sub = SUB.slice(0, n);
-      const sw = measureText(SUB);
-      const pg = ctx.createLinearGradient(VIEW_W / 2 - sw / 2 - 30, 0, VIEW_W / 2 + sw / 2 + 30, 0);
-      pg.addColorStop(0, 'rgba(0,0,0,0)'); pg.addColorStop(0.15, 'rgba(0,0,0,0.6)'); pg.addColorStop(0.85, 'rgba(0,0,0,0.6)'); pg.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = pg; ctx.fillRect(VIEW_W / 2 - sw / 2 - 30, bottom + 3, sw + 60, 14);
-      drawText(ctx, sub, VIEW_W / 2 - sw / 2, bottom + 6.5, { color: '#ffffff' });
-      if (ti > 1.4) {
-        const p = 0.5 + Math.sin(this.t * 4.2) * 0.5;
-        { // dark halo so the prompt reads over the LED boards
-          ctx.save(); ctx.translate(VIEW_W / 2, 215); ctx.scale(1, 0.32);
-          const hg = ctx.createRadialGradient(0, 0, 0, 0, 0, 130);
-          hg.addColorStop(0, 'rgba(4,2,10,0.82)'); hg.addColorStop(0.6, 'rgba(4,2,10,0.55)'); hg.addColorStop(1, 'rgba(4,2,10,0)');
-          ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(0, 0, 130, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-        }
-        ctx.save();
-        ctx.shadowColor = `rgba(255,190,40,${0.35 + p * 0.5})`; ctx.shadowBlur = (10 + p * 14) * devScale(ctx);
-        ctx.globalAlpha = 0.55 + p * 0.45;
-        drawText(ctx, 'PRESS START', VIEW_W / 2, 196, { color: C.gold, align: 'center', scale: 3, soft: false });
-        ctx.restore();
-        const top = (save.data.hiscores || [])[0] || { name: '---', score: 0 };
-        const hs = Math.max(top.score, save.data.highScore || 0);
-        drawText(ctx, 'HI-SCORE ' + fmtScore(hs) + '  ' + (hs > top.score ? 'YOU' : top.name), VIEW_W / 2, 226, { color: '#ffb0bc', align: 'center' });
-      }
+    if (ti > -0.4) drawTagline(ctx, VIEW_W / 2, 258, TAG);
+    if (ti > 0.6) {
+      const on = Math.floor(this.t * 2.2) % 2 === 0;
+      if (on) drawTagline(ctx, VIEW_W / 2, 296, 'PRESS START', { size: 15 });
+      const top = (save.data.hiscores || [])[0] || { name: '---', score: 0 };
+      const hs = Math.max(top.score, save.data.highScore || 0);
+      drawText(ctx, 'HI-SCORE ' + fmtScore(hs) + '  ' + (hs > top.score ? 'YOU' : top.name), VIEW_W / 2, 326, { color: '#f6f2ec', align: 'center', outline: '#000' });
     }
-    drawText(ctx, '(C) 1994 STEVOO STUDIOS', 8, VIEW_H - 10, { color: '#8a7a9a', outline: '#000' });
-    drawText(ctx, 'V1.0', VIEW_W - 8, VIEW_H - 10, { color: '#8a7a9a', outline: '#000', align: 'right' });
-    scanlines(ctx);
+    drawText(ctx, '(C) 1994 STEVOO STUDIOS', 8, VIEW_H - 10, { color: '#f6d0c8', outline: '#000' });
+    drawText(ctx, 'V1.0', VIEW_W - 8, VIEW_H - 10, { color: '#f6d0c8', outline: '#000', align: 'right' });
   }
 }
 
@@ -157,8 +143,10 @@ class MainMenuScene {
     this.menu.update(dt);
   }
   draw(ctx) {
-    backdrop.draw(ctx, { dim: 0.45 });
-    drawLogo(ctx, VIEW_W / 2, 8, this.t, { small: true });
+    drawPosterBg(ctx, this.t, { dim: 0.25 });
+    drawMob(ctx, this.t * 0.6);
+    ctx.fillStyle = 'rgba(8,2,3,0.35)'; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    drawPosterTitle(ctx, VIEW_W / 2, 8, this.t, { small: true });
     // menu panel
     const mx = 46, my = 92, mw = 250;
     frame(ctx, mx, my, mw, 150, { title: 'MAIN MENU', fill: 'rgba(14,9,22,0.9)' });
