@@ -91,11 +91,36 @@ let mobIn = null, lineIn = null;
 function drawFirm(ctx, t, k) {
   const stage = r3d.menu;
   if (!stage) { drawMob(ctx, t, { charge: k }); return; }      // (the 2D game)
+  const heroes = lineupHeroes(), lineReady = stage.ready && heroes.every(id => stage.heroReady(id));
+  // until the seven models are in, a picture of them (rendered from these very models, standing exactly as they will):
+  // it loads with the photo behind it, so the line-up is there at once and the 3D lads take over without a visible swap
+  const snap = lineupSnap();
+  if (!lineReady && snap) {
+    if (snapIn === null) snapIn = t;
+    ctx.save(); ctx.globalAlpha = k * Math.min(1, (t - snapIn) / 0.4);
+    if (stage.ready) { if (mobIn === null) mobIn = t; ctx.globalAlpha *= 1; drawBackMob(ctx, t, stage); }
+    ctx.globalAlpha = k * Math.min(1, (t - snapIn) / 0.4);
+    ctx.drawImage(snap, 0, 70 + DROP, VIEW_W, 230);
+    ctx.restore();
+    return;
+  }
   if (!stage.ready) return;
   if (mobIn === null) mobIn = t;
-  const heroes = lineupHeroes(), lineReady = heroes.every(id => stage.heroReady(id));
-  if (lineReady && lineIn === null) lineIn = t;
+  if (lineReady && lineIn === null) lineIn = snapIn !== null ? t - 1 : t;     // straight in when it replaces the picture
   const mobK = Math.min(1, (t - mobIn) / 0.7), lineK = lineIn === null ? 0 : Math.min(1, (t - lineIn) / 0.7);
+  const actors = lineupActors();
+  ctx.save();
+  ctx.globalAlpha = k * mobK;
+  drawBackMob(ctx, t, stage);
+  if (lineK > 0) {
+    // floor: the key light casts the lads' real shadows on the ground they stand on (menustage opts.floor)
+    ctx.globalAlpha = k * lineK;
+    stage.draw(ctx, 'titlefirm', actors, { x: 0, y: 70 + DROP, w: VIEW_W, h: 230 }, t, { light: 'studio', floor: true });
+  }
+  ctx.restore();
+}
+// the line-up's actors (also used to render assets/bg/lineup.webp, the picture shown while their models load)
+export function lineupActors() {
   const n = LINEUP.length, gap = 74, x0 = VIEW_W / 2 - gap * (n - 1) / 2, mid = (n - 1) / 2;
   const actors = LINEUP.map((id, i) => {
     const ch = CHARACTERS.find(x => x.id === id);
@@ -108,24 +133,25 @@ function drawFirm(ctx, t, k) {
   // (Big Al) would reach it, so the lads keep their heights relative to each other
   const HEAD_ROOM = 114, fit = Math.min(1, ...actors.map(a => (a.feet - HEAD_ROOM) / a.h));
   if (fit < 1) for (const a of actors) a.h *= fit;
-  ctx.save();
-  ctx.globalAlpha = k * mobK;
-  drawBackMob(ctx, t, stage);
-  if (lineK > 0) {
-    // floor: the key light casts the lads' real shadows on the ground they stand on (menustage opts.floor)
-    ctx.globalAlpha = k * lineK;
-    stage.draw(ctx, 'titlefirm', actors, { x: 0, y: 70 + DROP, w: VIEW_W, h: 230 }, t, { light: 'studio', floor: true });
-  }
-  ctx.restore();
+  return actors;
 }
+// assets/bg/lineup.webp: re-render it when a line-up look changes (else the swap to 3D shows): on the dev server, with the
+// models loaded and save.data.outfit = {} (the default Dez), stage.draw 'titlefirm' lineupActors() at 3x into a clear
+// 1920 x 690 canvas (rect { x: 0, y: 70 + DROP, w: 640, h: 230 }, light 'studio', floor), then PNG -> WebP
+let snapIn = null, SNAP = null;
+function lineupSnap() {
+  if (!SNAP && typeof Image !== 'undefined') { SNAP = new Image(); SNAP.src = new URL('../../assets/bg/lineup.webp', import.meta.url).href; }
+  return SNAP && SNAP.complete && SNAP.naturalWidth ? SNAP : null;
+}
+lineupSnap();                                       // start fetching it with the title's other images
 
 // the mob behind the line-up: rows of masked-up lads (black track tops with white piping, balaclavas, black cargos,
 // white trainers), smaller and darker the further back they stand, each in a fight stance of his own. A stage of its own (no floor shadows:
 // cheap), drawn first and then pushed back into the dark, so the firm reads in front.
 const MOB_ROWS = [   // back to front: feet y, body height, how many, darkening on top
-  { feet: 204 + DROP, h: 96, n: 13, dim: 0.35 },
-  { feet: 220 + DROP, h: 110, n: 11, dim: 0.3 },
-  { feet: 238 + DROP, h: 126, n: 10, dim: 0.3 },
+  { feet: 234 + DROP, h: 100, n: 13, dim: 0.35 },     // feet on the grass of the photo, in front of the advertising boards
+  { feet: 246 + DROP, h: 112, n: 11, dim: 0.3 },
+  { feet: 258 + DROP, h: 126, n: 10, dim: 0.3 },
 ];
 let MOB = null;
 const MOB_STANCES = [{ fight: true }, { fight: true }, { fight: true }, { anim: 'block' }, { anim: 'crouch' }, { anim: 'taunt' }, { anim: 'taunt2' }];
@@ -170,6 +196,14 @@ function drawBackMob(ctx, t, stage) {
   m.setTransform(ctx.getTransform());
   for (let ri = 0; ri < MOB_ROWS.length; ri++) {
     const r = MOB_ROWS[ri];
+    // feet on the grass: a soft contact shadow under each of them (the mob has no floor of its own)
+    for (const a of actors) {
+      if (a.row !== ri) continue;
+      const rx = a.h * 0.2, ry = a.h * 0.045, cy = a.feet - ry * 0.25;
+      const g0 = m.createRadialGradient(a.x, cy, 0, a.x, cy, rx);
+      g0.addColorStop(0, 'rgba(0,0,0,0.6)'); g0.addColorStop(0.6, 'rgba(0,0,0,0.3)'); g0.addColorStop(1, 'rgba(0,0,0,0)');
+      m.save(); m.translate(a.x, cy); m.scale(1, ry / rx); m.translate(-a.x, -cy); m.fillStyle = g0; m.beginPath(); m.arc(a.x, cy, rx, 0, Math.PI * 2); m.fill(); m.restore();
+    }
     if (!stage.draw(m, 'titlemob' + ri, actors.filter(a => a.row === ri), { x: 0, y: 70 + DROP, w: VIEW_W, h: 230 }, t, { light: 'studio' })) return;
     m.save(); m.globalCompositeOperation = 'source-atop';
     const g = m.createLinearGradient(0, 90 + DROP, 0, 250 + DROP);
