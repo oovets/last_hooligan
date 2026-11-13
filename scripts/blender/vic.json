@@ -12,9 +12,9 @@
     "height": 0.55
   },
   "targets": {
-    "head-round": 0.6,
+    "head-round": 0.85,
     "head-fat-incr": 0.2,
-    "head-scale-horiz-incr": 0.4,
+    "head-scale-horiz-incr": 0.6,
     "head-scale-depth-incr": 0.3,
     "chin-width-incr": 0.5,
     "neck-double-incr": 0.0,
@@ -40,7 +40,7 @@
     "forehead-scale-vert-incr": 0.3,
     "forehead-temple-incr": 1.0,
     "nose-scale-depth-incr": 0.8,
-    "head-square": 0.0,
+    "head-square": 0.15,
     "mouth-trans-forward": 0.3,
     "head-angle-out": 0.6,
     "mouth-angles-up": 0.7,
@@ -60,8 +60,8 @@
     "measure-knee-circ-incr": 0.3,
     "l-cheek-volume-incr": 0.5,
     "r-cheek-volume-incr": 0.5,
-    "head-oval": 0.5,
-    "head-scale-vert-incr": 0.35
+    "head-oval": 0.2,
+    "head-scale-vert-incr": 0.12
   },
   "assets": {
     "hair": null,
@@ -239,9 +239,9 @@
   "cranium": {
     "strength": 0.95,
     "scale": [
-      1.03,
+      1.06,
       1.13,
-      1.24
+      1.17
     ],
     "lift": 0.004,
     "back": 0.008
