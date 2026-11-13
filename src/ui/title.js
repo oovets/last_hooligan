@@ -69,7 +69,6 @@ class TitleScene {
       const on = Math.floor(this.t * 2.2) % 2 === 0;
       if (on) drawTagline(ctx, VIEW_W / 2, 310 + DROP, 'PRESS START', { size: 15 });
     }
-    drawText(ctx, '(C) 1994 STEVOO STUDIOS', 8, VIEW_H - 10, { color: '#f6d0c8', outline: '#000' });
     drawText(ctx, 'V1.0', VIEW_W - 8, VIEW_H - 10, { color: '#f6d0c8', outline: '#000', align: 'right' });
   }
 }

@@ -14,7 +14,7 @@ import { ALL_LEVELS, isTour, tourFor } from '../content/tour/index.js';
 import './firmsetup.js';
 import { ITEMS } from '../game/items.js';
 import { backdrop } from './backdrop.js';
-import { drawLogo, drawCrest } from './logo.js';
+import { drawLogo } from './logo.js';
 import { drawLevelPreview } from './minimap.js';
 import { optionItems, drawBindings, drawControlCard } from './options.js';
 import { drawComboList } from '../game/play.js';
@@ -240,9 +240,7 @@ export class HowToPlayScene {
 export const CREDITS = [
   ['T', 'THE LAST HOOLIGAN'],
   ['', ''],
-  ['H', 'A STEVOO STUDIOS PRODUCTION'],
-  ['', ''],
-  ['H', 'GAME DESIGN, CODE, PIXELS & NOISE'], ['N', 'STEVOO STUDIOS'], ['N', 'BUILT WITH CLAUDE'],
+  ['H', 'GAME DESIGN, CODE, PIXELS & NOISE'], ['N', 'BUILT WITH CLAUDE'],
   ['', ''],
   ['H', 'LEVEL DESIGN'], ['N', 'EIGHT LADS IN A LOCK-UP GARAGE'],
   ['', ''],
@@ -289,7 +287,6 @@ export class CreditsScene {
     backdrop.draw(ctx, { lads: true, dim: 0.35 });
     ctx.fillStyle = 'rgba(6,6,8,0.5)'; ctx.fillRect(VIEW_W / 2 - 180, 0, 360, VIEW_H);
     drawCreditsRoll(ctx, this.scroll || 0);
-    drawCrest(ctx, 14, 12, 2);
     hintBar(ctx, [['confirm', 'FAST'], ['back', 'BACK']], VIEW_H - 14);
     scanlines(ctx);
   }
