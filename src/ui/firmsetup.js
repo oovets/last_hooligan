@@ -89,10 +89,6 @@ export class FirmSetupScene {
       drawText(ctx, c.city, x + 8, y + 92, { color: '#7a6a8a' });
       if (sel) { ctx.save(); ctx.globalAlpha = 0.65 + Math.sin(this.t * 5) * 0.35; ctx.shadowColor = 'rgba(255,210,58,0.9)'; ctx.shadowBlur = 10 * devScale(ctx); ctx.strokeStyle = C.gold; ctx.lineWidth = 1.2; rrect(ctx, x - 2.5, y - 2.5, cw + 5, ch + 5, 7); ctx.stroke(); ctx.restore(); }
     });
-    const c = CLUBS[this.clubSel];
-    frame(ctx, 16, 288, VIEW_W - 32, 40, { fill: 'rgba(14,9,22,0.94)' });
-    drawText(ctx, `${c.name}: ${c.nick}`, 26, 296, { color: C.gold });
-    drawText(ctx, `${c.firm}. ${c.chant}`, 26, 309, { color: '#c0b8d0' });
     hintBar(ctx, [['menuLeft', 'CHOOSE'], ['confirm', 'NEXT: THE LADS'], ['back', 'BACK']], VIEW_H - 14);
   }
 

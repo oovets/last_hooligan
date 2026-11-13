@@ -105,8 +105,8 @@ export const CHARACTERS = [
     look: {
       skin: '#d99a6c', hair: { style: 'skinhead', color: '#2a1a10' }, facial: 'none', muscle: true,
       hat: { style: 'balaclava', color: '#ff5a00', neon: true },   // NEON orange balaclava (glows a little in 3D)
-      tattoo: 'clockwork',                                   // A Clockwork Orange on his left arm (3D)
-      jacket: { style: 'vest', color: '#ecebe4' }, shirt: '#ecebe4',
+      tattoo: 'clockwork', tattooCrest: 'aik',            // tattoos: the droogs (right pec) and the AIK crest in ink (left pec)
+      jacket: { style: 'bare', color: '#d99a6c', trim: '#d99a6c', lining: '#d99a6c' }, shirt: '#d99a6c',   // bare chest (v2 b_bare)
       pants: { style: 'cargo', color: '#3e4632' }, shoes: { color: '#f4f4f0', sole: '#ecebe6', stripe: '#141416' },   // white three-stripes, black stripes
       scarf: null, build: 1.2, height: 1.08, hero: 'kenny',      // realistic menu model (assets/models/hero/kenny.glb)
     },

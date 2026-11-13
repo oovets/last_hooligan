@@ -249,6 +249,15 @@ function tattooTexture(kind = 'clockwork') {
   return t;
 }
 
+const CRESTS = {};
+function crestInkTexture(name = 'aik') {
+  if (CRESTS[name]) return CRESTS[name];
+  const t = CRESTS[name] = new THREE.TextureLoader().load(new URL('../../assets/tattoos/' + name + '_ink.png', import.meta.url).href);
+  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  t.flipY = false;                                       // glTF UVs have v pointing down (like canvas rows)
+  return t;
+}
+
 let RAMP = null;
 function ramp() {
   if (RAMP) return RAMP;
@@ -327,6 +336,10 @@ export class Character2 {
           // the trim, which on a shirt would otherwise read as dark knitted ribbing and a zip)
           const J = look.jacket;
           m = checkMaterial(toColor(spec.pal[3] || c), new THREE.Color(J.trim || '#2a2420'), new THREE.Color(J.lining || '#a3202a'), J.pattern);
+        } else if (id === 27) {
+          // chest crest tattoo (bare chests, layer 'tattoo:arm'): a club crest in black ink (assets/tattoos/<crest>_ink.png)
+          m = new THREE.MeshStandardMaterial({ map: crestInkTexture(look.tattooCrest), alphaTest: 0.35, roughness: 0.6, metalness: 0,
+            polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
         } else if (id === 24) {
           m = new THREE.MeshStandardMaterial({ map: badgeTexture(), roughness: 0.92, metalness: 0 });   // the arm badge
         } else {

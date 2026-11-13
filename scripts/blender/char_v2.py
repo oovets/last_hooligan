@@ -33,7 +33,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 def P(p): return p if os.path.isabs(p) else os.path.join(ROOT, p)
 
 ID = dict(skin=1, hair=2, jacket=3, trim=4, lining=5, shirt=6, pants=7, pantsTrim=8, shoes=9, sole=10,
-          scarfA=11, scarfB=12, eye=13, hat=14, hatTrim=15, glove=16, band=17, facial=18, shades=19, mouth=20, belt=21, stripe=22, shoeStripe=23, badge=24, badgeMark=25, tattoo=26)
+          scarfA=11, scarfB=12, eye=13, hat=14, hatTrim=15, glove=16, band=17, facial=18, shades=19, mouth=20, belt=21, stripe=22, shoeStripe=23, badge=24, badgeMark=25, tattoo=26, crest=27)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -657,7 +657,30 @@ def arm_decal(name, idn, size, at=0.32, lift=0.0012, cols=8, rows=8):
             f = bmq.faces.new([q[0] for q in quad])
             for loop, (_, uv) in zip(f.loops, quad): loop[uvl].uv = uv
     return bm_obj(name, bmq, idn, 'upperArm_L')
-if not SLEEVED:
+def chest_decal(name, idn, cx, cz, w, h, cols=8, rows=8, lift=0.0012):
+    """A UV-mapped patch cast onto the chest from the front, centred at (cx, cz*H) (u to the character's left)."""
+    bmq = bmesh.new(); uvl = bmq.loops.layers.uv.new('UVMap'); grid = {}
+    for i in range(cols + 1):
+        for j in range(rows + 1):
+            q = Vector((cx + (i / cols - 0.5) * w, 0, cz * H + (j / rows - 0.5) * h))
+            hq = surf(q, FRONT, lift, 0.35)
+            if not hq: return None
+            grid[i, j] = (bmq.verts.new(hq[0]), (i / cols, j / rows))
+    for i in range(cols):
+        for j in range(rows):
+            quad = [grid[i, j], grid[i + 1, j], grid[i + 1, j + 1], grid[i, j + 1]]
+            f = bmq.faces.new([q[0] for q in quad])
+            for loop, (_, uv) in zip(f.loops, quad): loop[uvl].uv = uv
+            f.normal_update()
+            if f.normal.y > 0: f.normal_flip()
+    return bm_obj(name, bmq, idn, 'chest')
+if not SLEEVED and BARE:
+    # bare chest (Kenny): the tattoos sit on the pecs, above the nipples (layer 'tattoo:arm', shown for look.tattoo):
+    # look.tattoo's design on his right pec (ID 26), a club crest in black ink on his left (ID 27, look.tattooCrest)
+    ox = 0.08 * G
+    tt = [chest_decal('tattoo', ID['tattoo'], -ox, 1.322, 0.095, 0.095), chest_decal('crest', ID['crest'], ox, 1.326, 0.075, 0.094)]
+    acc('tattoo:arm', [t for t in tt if t])
+elif not SLEEVED:
     # bare-armed builds: an arm tattoo (layer 'tattoo:arm'); the design is a runtime texture with alpha (ID 26)
     tt = arm_decal('tattoo', ID['tattoo'], 0.13 if MUS else 0.095)
     if tt: acc('tattoo:arm', [tt])
