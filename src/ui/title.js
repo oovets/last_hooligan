@@ -78,7 +78,9 @@ class TitleScene {
 
 // the firm, lined up under the logo: the real 3D lads standing still, a soft shadow round them, legs fading into the
 // dark (the drawn poster mob is only a fallback without the 3D renderer)
-const LINEUP = ['oldboy', 'mo', 'kenny', 'hooligan', 'bigal', 'vic', 'stig'];
+export const LINEUP = ['oldboy', 'mo', 'kenny', 'hooligan', 'bigal', 'vic', 'stig'];
+// their hero model ids (preloaded before the title: main.js)
+export const lineupHeroes = () => LINEUP.map(id => { const ch = CHARACTERS.find(x => x.id === id); return (ch && ch.look && ch.look.hero) || buildLook(save.data.outfit).hero; }).filter(Boolean);
 function drawFirm(ctx, t, k) {
   const stage = r3d.menu;
   if (!(stage && stage.ready)) { drawMob(ctx, t, { charge: k }); return; }

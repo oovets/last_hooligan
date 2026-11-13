@@ -49,9 +49,9 @@ import { hash2 } from '../engine/rng.js';
 import { hexToRgb } from '../engine/color.js';
 import { setQuant } from '../game/poses.js';
 import { CHAR, Character3D, modelFor, loadCharacterModels } from './characters.js';
-import { CHAR2, Character2, modelFor2, loadCharacters2 } from './characters2.js';
+import { CHAR2, Character2, modelFor2, loadCharacters2, loadAllHeroes, HERO_FIRST } from './characters2.js';
 
-export { loadCharacterModels, loadCharacters2 };
+export { loadCharacterModels, loadCharacters2, loadAllHeroes, HERO_FIRST };
 
 const ELEV = Math.PI / 6;                         // camera elevation (30°) -> 2:1 dimetric
 const K = HALF_W * Math.SQRT2;                    // screen px per world unit across the screen (22.63)

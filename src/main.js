@@ -66,6 +66,7 @@ import { loadFonts, setFrameHD } from './engine/font.js';
 import { drawLoading } from './ui/loadscreen.js';
 import { r3d } from './render3d/index.js';
 import { backdrop } from './ui/backdrop.js';
+import { lineupHeroes } from './ui/title.js';
 
 // ---- asset preload (Blender-rendered environment + character atlases); the game falls back to procedural art
 let loadState = { done: 0, total: 1, ready: false };
@@ -74,6 +75,7 @@ const want3d = (qp0.get('renderer') || save.data.settings.renderer) === '3d';
 async function load3d() {
   try {
     const m = await timed('3d:modules', import('./render3d/renderer.js'));
+    m.HERO_FIRST.push(...lineupHeroes());            // the title's line-up first; the other lads after the title is up
     await timed('3d:models v2 + heroes', m.loadCharacters2());
     // the old v1 rigid models are only a fallback for when the v2 skinned models are missing
     const { CHAR2 } = await import('./render3d/characters2.js');
@@ -98,6 +100,7 @@ async function preload() {
   loadState.total = tasks.length;
   await Promise.all(tasks.map(t => t.then(() => { loadState.done++; })));
   loadState.ready = true;
+  if (r3d.renderer) import('./render3d/renderer.js').then(m => m.loadAllHeroes()).then(() => console.info(`[load] all heroes ${Math.round(performance.now() - T0)}ms`));
   console.info(`[load] ready ${Math.round(performance.now() - T0)}ms`);
 }
 const loading = {

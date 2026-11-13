@@ -32,6 +32,9 @@ const BONES = ['root', 'hips', 'spine', 'chest', 'neck', 'head', 'shoulder_L', '
   'thigh_L', 'shin_L', 'foot_L', 'toe_L', 'thigh_R', 'shin_R', 'foot_R', 'toe_R'];
 const ANIMATED = ['hips', 'spine', 'chest', 'neck', 'head', 'shoulder_L', 'shoulder_R', 'upperArm_L', 'forearm_L', 'hand_L', 'upperArm_R', 'forearm_R', 'hand_R', 'thigh_L', 'shin_L', 'foot_L', 'thigh_R', 'shin_R', 'foot_R'];
 
+// heroes that must be in before the title shows (its line-up); set by main.js before loading. The rest load in the
+// background once the title is up (loadAllHeroes), so the loading screen doesn't grow with every new lad.
+export const HERO_FIRST = [];
 export async function loadCharacters2() {
   try {
     const base = new URL('../../assets/models/v2/', import.meta.url);
@@ -44,11 +47,11 @@ export async function loadCharacters2() {
     draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
     loader.setDRACOLoader(draco);
     CHAR2.loader = loader;
-    // hero models (realistic MPFB2 characters, scripts/blender/char_mpfb.py): the title's line-up is all heroes, so
-    // they load here with the v2 models, during the loading screen (otherwise the title shows the plain v2 bodies and
-    // swaps them a second or two later)
+    // hero models (realistic MPFB2 characters, scripts/blender/char_mpfb.py): the title's line-up (HERO_FIRST) loads here
+    // with the v2 models, during the loading screen (otherwise the title shows the plain v2 bodies and swaps them a
+    // second or two later)
     const heroesP = fetch(new URL('../../assets/models/hero/index.json', import.meta.url))
-      .then(hr => (hr.ok ? hr.json() : {})).then(j => { CHAR2.heroes = j.models || {}; return Promise.all(Object.keys(CHAR2.heroes).map(loadHero)); })
+      .then(hr => (hr.ok ? hr.json() : {})).then(j => { CHAR2.heroes = j.models || {}; return Promise.all(Object.keys(CHAR2.heroes).filter(id => !HERO_FIRST.length || HERO_FIRST.includes(id)).map(loadHero)); })
       .catch(() => { /* no heroes: the v2 models stand in */ });
     await Promise.all([heroesP, ...models.map(async name => {
       try {
@@ -63,6 +66,12 @@ export async function loadCharacters2() {
     })]);
     CHAR2.ready = Object.keys(CHAR2.templates).length > 0;
   } catch (e) { console.warn('[3d v2] no models', e); }
+}
+
+// every other hero, a couple at a time (character select, firm screens): call once the title is up
+export async function loadAllHeroes() {
+  const ids = Object.keys(CHAR2.heroes).filter(id => !heroP[id]);
+  for (let i = 0; i < ids.length; i += 2) await Promise.all(ids.slice(i, i + 2).map(loadHero));
 }
 
 // load one hero model (once); resolves when it's in CHAR2.templates (or failed)
