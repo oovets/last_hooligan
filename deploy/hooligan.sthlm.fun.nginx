@@ -1,4 +1,13 @@
 # THE LAST HOOLIGAN (static game, deployed by scripts/deploy.sh from the hooligan repo)
+
+# code and assets with ?v=... in the URL (a release / a content hash, written by scripts/release.mjs) never change:
+# keep them forever. Everything else (index.html, index files, unhashed images) is revalidated on every load (cheap
+# 304s), so a deploy shows up on the next reload instead of after a stale cached copy has been used.
+map $arg_v $hooligan_asset_cc {
+    ""      "no-cache";
+    default "public, max-age=31536000, immutable";
+}
+
 server {
     server_name hooligan.sthlm.fun;
 
@@ -25,10 +34,19 @@ server {
         add_header X-Frame-Options "SAMEORIGIN" always;
         add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     }
-    # code and data: 5 minutes in the browser and at Cloudflare (a deploy shows up within 5 minutes)
-    location ~ ^/(src|assets)/ {
+    # code: release builds import every module as ?v=<release> (scripts/release.mjs): kept forever, a deploy brings
+    # new URLs. Without ?v (a dev copy) it's revalidated on every load.
+    location /src/ {
         try_files $uri =404;
-        add_header Cache-Control "public, max-age=300, stale-while-revalidate=86400";
+        add_header Cache-Control $hooligan_asset_cc;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    }
+    # assets: hashed URLs forever, the rest revalidated (see the map above)
+    location /assets/ {
+        try_files $uri =404;
+        add_header Cache-Control $hooligan_asset_cc;
         add_header X-Content-Type-Options "nosniff" always;
         add_header X-Frame-Options "SAMEORIGIN" always;
         add_header Referrer-Policy "strict-origin-when-cross-origin" always;

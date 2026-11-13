@@ -14,7 +14,7 @@ REV="$(git rev-parse --short HEAD)"
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 git archive --format=tar HEAD index.html src assets | tar -x -C "$STAGE"
-node scripts/release.mjs "$STAGE"
+REV="$REV" node scripts/release.mjs "$STAGE"
 echo "$REV" > "$STAGE/REVISION"
 echo "deploying $REV to $HOST:$DEST"
 COPYFILE_DISABLE=1 tar --no-xattrs -c -C "$STAGE" . | ssh "$HOST" "set -e

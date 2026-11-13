@@ -57,7 +57,10 @@ window.addEventListener('mousedown', unlockAudio);
 window.addEventListener('touchstart', unlockAudio);
 canvas.focus();
 
-import { loadEnv, ENV } from './engine/envsprites.js';
+import { loadEnv, envNeed, ENV } from './engine/envsprites.js';
+import { TileMap } from './engine/tilemap.js';
+import { ALL_LEVELS } from './content/tour/index.js';
+import HUB from './content/hub.js';
 import { loadModels, EXTRAS } from './game/sprites.js';
 import { loadFonts, setFrameHD } from './engine/font.js';
 import { drawLoading } from './ui/loadscreen.js';
@@ -81,8 +84,8 @@ async function load3d() {
 // each preload step logs its time ([load] in the console) so slow loads can be diagnosed on the live site
 const T0 = performance.now();
 const timed = (name, p) => p.then(v => { console.info(`[load] ${name} ${Math.round(performance.now() - T0)}ms`); return v; });
-// The Blender environment sprites (~1000 PNGs for every level) load in the BACKGROUND: the title shows as soon as the
-// fonts and the 3D characters are in; a level / the pub waits for them only if you get there first (gated scenes below).
+// The Blender environment sprites (~1100 PNGs for every level) load in the BACKGROUND: the title shows as soon as the
+// fonts and the 3D characters are in. A level / the pub waits only for ITS sprites (envNeed: they jump the queue).
 const envP = timed('env', loadEnv());
 async function preload() {
   const tasks = [timed('fonts', loadFonts())];
@@ -111,14 +114,40 @@ preload();
 let started = false;
 const qp = new URLSearchParams(location.search);
 // scenes that build a World wait for the environment sprites (floors are baked when a level is built)
-class EnvWaitScene {
-  constructor(make) { this.make = make; this.t = 0; this.shown = 0; envP.then(() => { this.ready = true; }); }
-  update(dt) { this.t += dt; if (this.ready || ENV.ready) app.go(this.make(), { fade: false }); }
-  draw(c) { const k = ENV.total ? ENV.done / ENV.total : 0; this.shown += (k - this.shown) * 0.15; drawLoading(c, this.t, this.shown); }
+// the env sprites one level uses (walls, floors, props): starting it waits for these only, not every level's
+const keyCache = new Map();
+function envKeysFor(level) {
+  if (!level) return [];
+  if (keyCache.has(level)) return keyCache.get(level);
+  const k = new Set();
+  try {
+    const m = new TileMap(level);
+    for (let i = 0; i < m.w * m.h; i++) { if (m.floor[i]) k.add('floor:' + m.floor[i]); const w = m.wall[i]; if (w && w.style) k.add('wall:' + w.style); }
+    for (const p of [...(m.propSpawns || []), ...(level.props || [])]) if (p && p.type) k.add('prop:' + p.type);
+  } catch (e) { console.warn('[env] keys for', level.id, e); }
+  const out = [...k]; keyCache.set(level, out); return out;
 }
-for (const name of ['play', 'hub', 'levelIntro']) {
-  const make = app.scenes[name];
-  if (make) app.scenes[name] = (...a) => (ENV.ready ? make(...a) : new EnvWaitScene(() => make(...a)));
+class EnvWaitScene {
+  constructor(make, keys) {
+    this.make = make; this.t = 0; this.shown = 0;
+    const need = envNeed(keys); this.progress = need.progress;
+    need.promise.then(() => { this.ready = true; });
+  }
+  update(dt) { this.t += dt; if (this.ready || ENV.ready) app.go(this.make(), { fade: false }); }
+  draw(c) { const k = this.progress(); this.shown += (k - this.shown) * 0.15; drawLoading(c, this.t, this.shown); }
+}
+{
+  const play = app.scenes.play, hub = app.scenes.hub, intro = app.scenes.levelIntro;
+  if (play) app.scenes.play = i => (ENV.ready ? play(i) : new EnvWaitScene(() => play(i), envKeysFor(ALL_LEVELS[i])));
+  if (hub) app.scenes.hub = () => (ENV.ready ? hub() : new EnvWaitScene(() => hub(), envKeysFor(HUB)));
+  // the briefing doesn't wait: it puts its level's sprites first so they load while you read
+  if (intro) app.scenes.levelIntro = i => { if (!ENV.ready) envNeed(envKeysFor(ALL_LEVELS[i])); return intro(i); };
+}
+// at boot: the pub (where a run starts) and the level you'd continue at go first in the queue
+{
+  const run = save.data.run;
+  envNeed(envKeysFor(ALL_LEVELS[(run && run.levelIndex) || 0]));
+  if ((save.data.settings || {}).firm !== false) envNeed(envKeysFor(HUB));
 }
 function start() {
   if (started) return; started = true;

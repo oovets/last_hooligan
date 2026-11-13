@@ -37,7 +37,7 @@ export async function loadCharacters2() {
     const base = new URL('../../assets/models/v2/', import.meta.url);
     const r = await fetch(new URL('index.json', base));
     if (!r.ok) return;
-    const { models = [] } = await r.json();
+    const { models = [], v = {} } = await r.json();   // v: name -> content hash (release build: cache-busting query)
     const loader = new GLTFLoader();
     // models are Draco-compressed (scripts/blender/char_v2.py); the decoder comes from the same three.js release
     const draco = new DRACOLoader();
@@ -45,7 +45,7 @@ export async function loadCharacters2() {
     loader.setDRACOLoader(draco);
     await Promise.all(models.map(async name => {
       try {
-        const g = await loader.loadAsync(new URL(name + '.glb', base).href);
+        const g = await loader.loadAsync(new URL(name + '.glb' + (v[name] ? '?v=' + v[name] : ''), base).href);
         g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = false; o.frustumCulled = false; } });
         CHAR2.templates[name] = g.scene;
         const rig = g.scene.getObjectByName('rig');
