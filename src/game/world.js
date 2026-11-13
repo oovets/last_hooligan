@@ -15,6 +15,7 @@ import { Prop, PROPS } from './props.js';
 import { WorldItem, Projectile, ITEMS } from './items.js';
 import { createPlayer } from './player.js';
 import { spawnEnemy, ENEMIES } from '../content/enemies.js';
+import { homeColours, setStoryDecor, paintHomeCrestIso } from '../content/rivals.js';
 import { audio } from '../audio/audio.js';
 import { save } from '../save.js';
 import { isoBox } from '../engine/gfx.js';
@@ -53,11 +54,13 @@ export class World {
   constructor(level, game, callbacks = {}) {
     this.level = level;
     this.game = game;
+    setStoryDecor(!level.tour);          // the story levels' home decor is black and yellow (content/rivals.js)
     this.cb = callbacks;
     this.diff = DIFF[save.data.settings.difficulty] || DIFF.normal;
     this.time = 0;
     this.map = new TileMap(level);
     this.floor = renderFloor(this.map);
+    if (level.crest) paintHomeCrestIso(this.floor, level.crest);
     this.camera = new Camera();
     const W = this.map.w, H = this.map.h;
     let maxWall = 0;
@@ -150,6 +153,7 @@ export class World {
   // ================================================================== spatial queries
   addProp(spec) {
     if (!PROPS[spec.type]) { console.warn('[world] unknown prop type', spec.type); }
+    if (!this.level.tour) spec = homeColours(spec);   // old home red/white -> black and yellow
     // signs, tickers, fanzines: the story's old made-up names -> your club and its real rivals (content/rivals.js)
     if (typeof spec.text === 'string' || typeof spec.title === 'string') {
       spec = { ...spec };

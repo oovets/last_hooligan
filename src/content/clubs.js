@@ -2,26 +2,26 @@
 // The club gives the firm its name and colours: the CLUB SCARF in the wardrobe, the pub's banner, chants.
 // save.data.club = club id (kept between games); save.data.firm.club = the club the current firm was formed for.
 //
-// CLUB = { id, short, name, nick, firm, city, venue (the ground in 1994), a, b, c? (colours: main, second, accent), chant }
+// CLUB = { id, short, name, nick, firm, army (the supporters' club), city, venue (the ground in 1994), a, b, c? (colours: main, second, accent), chant }
 // Firm names: the well-known ones are the real terrace names (it's a private game); the rest are made up and marked.
 // Your club is the story's home side (content/rivals.js swaps it into the levels); AIK until you pick one.
 import { save } from '../save.js';
 
 export const CLUBS = [
-  { id: 'aik', logo: 'aik', short: 'AIK', name: 'AIK', nick: 'GNAGET', firm: 'FIRMAN BOYS', city: 'SOLNA', venue: 'RÅSUNDA',
+  { id: 'aik', logo: 'aik', short: 'AIK', name: 'AIK', nick: 'GNAGET', firm: 'FIRMAN BOYS', army: 'BLACK ARMY', city: 'SOLNA', venue: 'RÅSUNDA',
     a: '#141416', b: '#f2c811', chant: 'AIK! AIK! AIK!' },
-  { id: 'dif', logo: 'dif', short: 'DIF', name: 'DJURGÅRDENS IF', nick: 'JÄRNKAMINERNA', firm: 'DFG', city: 'STOCKHOLM', venue: 'STOCKHOLMS STADION',
+  { id: 'dif', logo: 'dif', short: 'DIF', name: 'DJURGÅRDENS IF', nick: 'JÄRNKAMINERNA', firm: 'DFG', army: 'JÄRNKAMINERNA', city: 'STOCKHOLM', venue: 'STOCKHOLMS STADION',
     a: '#003c8f', b: '#d0102a', c: '#f2c811', chant: 'DJURGÅR\'N! DJURGÅR\'N!' },
-  { id: 'bajen', logo: 'bajen', short: 'BAJEN', name: 'HAMMARBY IF', nick: 'BAJEN', firm: 'KGB', city: 'SÖDERMALM', venue: 'SÖDERSTADION',
+  { id: 'bajen', logo: 'bajen', short: 'BAJEN', name: 'HAMMARBY IF', nick: 'BAJEN', firm: 'KGB', army: 'BAJEN FANS', city: 'SÖDERMALM', venue: 'SÖDERSTADION',
     a: '#00843d', b: '#f4f4f0', chant: 'BAJEN! BAJEN!' },
-  { id: 'blavitt', logo: 'blavitt', short: 'IFK', name: 'IFK GÖTEBORG', nick: 'BLÅVITT', firm: 'WISEMEN', city: 'GÖTEBORG', venue: 'ULLEVI',
+  { id: 'blavitt', logo: 'blavitt', short: 'IFK', name: 'IFK GÖTEBORG', nick: 'BLÅVITT', firm: 'WISEMEN', army: 'ÄNGLARNA', city: 'GÖTEBORG', venue: 'ULLEVI',
     a: '#0a3d91', b: '#f4f4f0', chant: 'BLÅVITT! BLÅVITT!' },
-  { id: 'mff', logo: 'mff', short: 'MFF', name: 'MALMÖ FF', nick: 'DI BLÅE', firm: 'TRUE ROCKERS', city: 'MALMÖ', venue: 'MALMÖ STADION',
+  { id: 'mff', logo: 'mff', short: 'MFF', name: 'MALMÖ FF', nick: 'DI BLÅE', firm: 'TRUE ROCKERS', army: 'MFF SUPPORT', city: 'MALMÖ', venue: 'MALMÖ STADION',
     a: '#7fb8e6', b: '#f4f4f0', chant: 'MALMÖ! MALMÖ!' },
-  { id: 'hbg', logo: 'hbg', short: 'HIF', name: 'HELSINGBORGS IF', nick: 'DI RÖE', firm: 'FRONTLINE', city: 'HELSINGBORG', venue: 'OLYMPIA',
+  { id: 'hbg', logo: 'hbg', short: 'HIF', name: 'HELSINGBORGS IF', nick: 'DI RÖE', firm: 'FRONTLINE', army: 'KÄRNAN', city: 'HELSINGBORG', venue: 'OLYMPIA',
     a: '#d0102a', b: '#0a3d91', chant: 'DI RÖE! DI RÖE!' },
   // made-up firm name
-  { id: 'peking', logo: 'peking', short: 'IFKN', name: 'IFK NORRKÖPING', nick: 'PEKING', firm: 'PEKING FIRM', city: 'NORRKÖPING', venue: 'IDROTTSPARKEN',
+  { id: 'peking', logo: 'peking', short: 'IFKN', name: 'IFK NORRKÖPING', nick: 'PEKING', firm: 'PEKING FIRM', army: 'PEKING FANZ', city: 'NORRKÖPING', venue: 'IDROTTSPARKEN',
     a: '#f4f4f0', b: '#0a3d91', chant: 'PEKING! PEKING!' },
 ];
 
@@ -33,6 +33,12 @@ export function clubLogo(club) {
   let im = LOGOS[club.logo];
   if (!im) { im = LOGOS[club.logo] = new Image(); im.src = new URL('../../assets/logos/' + club.logo + '.png', import.meta.url).href; }
   return im.complete && im.naturalWidth ? im : null;
+}
+// cb(image) as soon as the club's crest has loaded (right away if it already has)
+export function whenClubLogo(club, cb) {
+  if (clubLogo(club)) { cb(clubLogo(club)); return; }
+  const im = club && club.logo && LOGOS[club.logo];
+  if (im) im.addEventListener('load', () => cb(im), { once: true });
 }
 // draw a crest fitted into a w x h box (bottom-centred); logo not loaded yet -> drawFallback
 export function drawClubCrest(ctx, club, x, y, w, h, drawFallback) {

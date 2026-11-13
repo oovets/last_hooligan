@@ -25,6 +25,8 @@ import { hash2 } from '../../engine/rng.js';
 import { drawText } from '../../engine/font.js';
 import { Z_PX, HALF_W, HALF_H } from '../../engine/constants.js';
 import { toScreen } from '../../engine/iso.js';
+import { homeKit } from '../rivals.js';
+import { currentClub, drawClubCrest } from '../clubs.js';
 
 const OL = '#120c14';
 const n2 = (a, b, s = 0) => hash2(Math.floor(a), Math.floor(b), s);
@@ -1107,7 +1109,7 @@ registerProp('city_bigScreen', { // big outdoor screen on a wall's +y face (plac
       const off = Math.floor(t * 22) % tw;
       drawText(g, text + text, -off, 3, { color: '#ffd23a' });
       // crest-ish anchor icon blink
-      if (Math.floor(t * 2) % 2) { fr(g, '#c8102e', 3, 14, 8, 8); fr(g, '#f4f1e8', 6, 15, 2, 6); fr(g, '#f4f1e8', 4, 19, 6, 1); }
+      if (Math.floor(t * 2) % 2) drawClubCrest(g, currentClub(), 2, 13, 10, 10, () => { fr(g, homeKit.main, 3, 14, 8, 8); fr(g, homeKit.second, 6, 15, 2, 6); fr(g, homeKit.second, 4, 19, 6, 1); });   // your club's crest blinks
       drawText(g, 'ANCHORS WIN!', 15, 15, { color: '#ffffff' });
       g.restore();
     });

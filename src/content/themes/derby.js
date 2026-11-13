@@ -15,9 +15,11 @@ import { drawDoll } from '../../game/doll.js';
 import { sampleAnim, fillPose, animDuration, ANIMS, STAND } from '../../game/poses.js';
 import { casualLook } from '../enemies.js';
 import { audio } from '../../audio/audio.js';
+import { homeKit } from '../rivals.js';
+import { currentClub, drawClubCrest } from '../clubs.js';
 
 const OL = '#120c14';
-const RED = '#c8102e', WHITE = '#f4f1e8', BLUE = '#1f4fb4', YEL = '#f0c020', BLK = '#141414';
+const RED = homeKit.main, WHITE = homeKit.second, BLUE = '#1f4fb4', YEL = '#f0c020', BLK = '#141414';
 const n2 = (a, b, s = 0) => hash2(Math.floor(a), Math.floor(b), s);
 
 // =====================================================================================================
@@ -453,7 +455,7 @@ function crowdState(world) {
 }
 const BOO = ['BOO!', 'OFF!', 'GET OUT!', 'SCUM!', 'WHO ARE YA?', 'BOOOO!', 'OUT!'];
 const CHEER = ['GET IN!', 'YES!!', 'ANCHORS!', 'GO ON SON!', 'LOVELY!', 'HAVE IT!', '★ ★ ★'];
-const IDLE = ['ANCHORS!', 'COME ON!', 'NORDHAMN!', 'RED ARMY!', 'OI OI!'];
+const IDLE = ['ANCHORS!', 'COME ON!', 'NORDHAMN!', 'ANCHORS ARMY!', 'OI OI!'];   // (-> AIK! ... BLACK ARMY!: content/rivals.js)
 
 function fanUpdate(p, world, dt) {
   const S = crowdState(world);
@@ -882,7 +884,7 @@ registerProp('derby_merchBox', {
     isoBox(ctx, ax, ay, 0.08, 0.1, 0, 0.84, 0.8, 0.7, { top: '#c09a68', left: '#a8824e', right: '#7a5e38', outline: OL });
     isoBox(ctx, ax, ay, 0.15, 0.18, 0.7, 0.7, 0.66, 0.6, { top: '#b8925e', left: '#9e7846', right: '#745632', outline: OL });
     const m = proj(ax, ay, 0.5, 0.9, 0.35);
-    drawText(ctx, 'NAFC', m.x - 9, m.y - 3, { color: RED });
+    drawClubCrest(ctx, currentClub(), m.x - 5, m.y - 6, 10, 10, () => drawText(ctx, 'NAFC', m.x - 9, m.y - 3, { color: RED }));   // your club's crest
     const m2 = proj(ax, ay, 0.5, 0.84, 1.0);
     ctx.fillStyle = '#e8e4d8'; ctx.fillRect(m2.x - 5, m2.y - 2, 10, 3);
     drawText(ctx, 'X', m2.x - 2, m2.y - 3, { color: '#1a1a1a' });
@@ -1326,7 +1328,7 @@ spriteOverlay('derby_tannoy', (ctx, ax, ay, p, t, world) => {
 
 spriteOverlay('derby_merchBox', (ctx, ax, ay) => {
   const m = proj(ax, ay, 0.5, 0.9, 0.35);
-  drawText(ctx, 'NAFC', m.x - 9, m.y - 3, { color: RED });
+  drawClubCrest(ctx, currentClub(), m.x - 5, m.y - 6, 10, 10, () => drawText(ctx, 'NAFC', m.x - 9, m.y - 3, { color: RED }));
   const m2 = proj(ax, ay, 0.5, 0.84, 1.0);
   drawText(ctx, 'X', m2.x - 2, m2.y - 3, { color: '#1a1a1a' });
 });

@@ -44,6 +44,7 @@ import { VIEW_W, VIEW_H, HALF_W, HALF_H, Z_PX } from '../engine/constants.js';
 import { toScreen } from '../engine/iso.js';
 import { FLOORS, WALLS } from '../engine/tiles.js';
 import { envFloor } from '../engine/envsprites.js';
+import { paintHomeCrest } from '../content/rivals.js';
 import { hash2 } from '../engine/rng.js';
 import { hexToRgb } from '../engine/color.js';
 import { setQuant } from '../game/poses.js';
@@ -167,7 +168,10 @@ export class Renderer3D {
       }
     }
     g.putImageData(img, 0, 0);
-    const tex = this.track(new THREE.CanvasTexture(c));
+    let tex = null;
+    // your club's crest painted on the floor (level.crest, e.g. the last stand's plaza); re-upload if it loads late
+    if (world.level.crest) paintHomeCrest(g, [T, 0, 0, T, 0, 0], world.level.crest, () => { if (tex) tex.needsUpdate = true; });
+    tex = this.track(new THREE.CanvasTexture(c));
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = this.maxAniso;
     const mat = this.track(new THREE.MeshLambertMaterial({ map: tex }));

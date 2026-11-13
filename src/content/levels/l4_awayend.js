@@ -13,6 +13,8 @@ import '../bosses/awayend.js';
 import { toScreen } from '../../engine/iso.js';
 import { audio } from '../../audio/audio.js';
 import { hash2 } from '../../engine/rng.js';
+import { RIVAL } from '../enemies.js';
+import { homeKit } from '../rivals.js';
 
 const OL = '#120c14';
 const AWAY_ROWS = [[13, 34]], HOME_ROWS = [[36, 45]];
@@ -24,8 +26,8 @@ const SKINS = ['#e2a97a', '#d49a6a', '#f0c098', '#b87a50', '#8a5636', '#f4d0b0']
 const HAIRS = ['#141016', '#3a2717', '#6a4a2a', '#b4521c', '#e8d27a', '#5a5a5a'];
 function makeFan(tx, ty, k, home) {
   const h = s => hash2(tx * 7 + k, ty * 13 + k * 3, s);
-  const team = home ? ['#1f4fb4', '#f2f2f2'] : ['#c8102e', '#f4f1e8'];
-  const jackets = home ? ['#1f4fb4', '#1d2742', '#3a3a3e', '#b5a98a', '#f2f2f2'] : ['#c8102e', '#2b3a2a', '#1d2742', '#3a3a3e', '#f4f1e8', '#4a4030'];
+  const team = home ? [RIVAL.a, RIVAL.b] : [homeKit.main, homeKit.second];   // their lot in the rival club's colours, ours in black and yellow
+  const jackets = home ? [RIVAL.a, '#1d2742', '#3a3a3e', '#b5a98a', RIVAL.b] : [homeKit.main, '#2b3a2a', '#1d2742', '#3a3a3e', homeKit.second, '#4a4030'];
   const armsR = h(5);
   return {
     skin: SKINS[Math.floor(h(1) * SKINS.length)], hair: HAIRS[Math.floor(h(2) * HAIRS.length)], hairH: 1 + Math.floor(h(3) * 3),

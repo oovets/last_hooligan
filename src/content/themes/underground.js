@@ -12,6 +12,7 @@ import { drawText } from '../../engine/font.js';
 import { drawDoll } from '../../game/doll.js';
 import { sampleAnim } from '../../game/poses.js';
 import { audio } from '../../audio/audio.js';
+import { homeKit } from '../rivals.js';
 
 const OL = '#120c14';
 const n2 = (a, b, s = 0) => hash2(Math.floor(a), Math.floor(b), s);
@@ -792,10 +793,10 @@ registerProp('underground_guitarCase', { // open case, flat
 // The busker: a doll strumming a guitar (solid so you can't walk through him)
 const BUSKER_LOOK = {
   skin: '#f0c098', hair: { style: 'long', color: '#b4521c' }, facial: 'beard',
-  hat: { style: 'beanie', color: '#c8102e', trim: '#f4f1e8' },
+  hat: { style: 'beanie', color: homeKit.main, trim: homeKit.second },   // the game's black and yellow
   jacket: { style: 'parka', color: '#4a5a3a' }, shirt: '#e8e4dc',
   pants: { style: 'jeans', color: '#3a4a6a' }, shoes: { color: '#5a3a20', sole: '#2a2a2a' },
-  scarf: { a: '#c8102e', b: '#f4f1e8' }, build: 1.05, height: 1,
+  scarf: { a: homeKit.main, b: homeKit.second }, build: 1.05, height: 1,
 };
 registerProp('underground_busker', {
   h: 1.4,

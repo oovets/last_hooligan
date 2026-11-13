@@ -9,6 +9,9 @@
 
 const BASE = new URL('../../assets/env/', import.meta.url);
 export const ENV = { walls: {}, floors: {}, props: {}, ready: false, done: 0, total: 0 };   // done/total: load progress
+// optional recolouring of loaded sprites (content/rivals.js: the home stadiums' red -> the game's yellow)
+let tintFn = null;
+export function setEnvTint(fn) { tintFn = fn; }
 
 function loadImg(file) {
   return new Promise(res => {
@@ -60,10 +63,10 @@ export function envWall(styleId, h, variant) {
   const rec = w[String(h)];
   if (!rec || !rec.imgs.length) return null;
   const img = rec.imgs[((variant % rec.imgs.length) + rec.imgs.length) % rec.imgs.length];
-  return img ? { img, padX: rec.padX, extraTop: rec.extraTop } : null;
+  return img ? { img: tintFn ? tintFn('wall', styleId, img) : img, padX: rec.padX, extraTop: rec.extraTop } : null;
 }
 
-export function envFloor(id) { return ENV.floors[id] || null; }
+export function envFloor(id) { const f = ENV.floors[id] || null; return f && tintFn ? tintFn('floor', id, f) : f; }
 
 export function envProp(type, o = {}) {
   const list = ENV.props[type];
@@ -78,5 +81,9 @@ export function envProp(type, o = {}) {
     if (s > bs) { bs = s; best = v; }
   }
   if ((best.dir || 'x') !== (o.dir || 'x') && (o.dir !== undefined || best.dir !== undefined)) return null;
+  if (tintFn) {
+    const im = tintFn('prop', type, best.img);
+    if (im !== best.img) { if (!best.tinted || best.tinted.src !== best.img || best.tinted.v.img !== im) best.tinted = { src: best.img, v: { ...best, img: im } }; return best.tinted.v; }
+  }
   return best;
 }

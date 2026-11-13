@@ -21,9 +21,10 @@ import { drawText } from '../../engine/font.js';
 import { Z_PX } from '../../engine/constants.js';
 import { drawDoll, normalizeLook } from '../../game/doll.js';
 import { sampleAnim } from '../../game/poses.js';
+import { homeKit } from '../rivals.js';
 
 const OL = '#120c14';
-const RED = '#c8102e', WHITE = '#f4f1e8', NAVY = '#1a1a40', GOLD = '#d4af37';
+const RED = homeKit.main, WHITE = homeKit.second, NAVY = '#1a1a40', GOLD = '#d4af37';
 const n2 = (a, b, s = 0) => hash2(Math.floor(a), Math.floor(b), s);
 
 // Crest placement (world tile coords) — the plaza in l8_laststand.js is built around this.

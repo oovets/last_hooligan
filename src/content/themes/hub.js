@@ -12,8 +12,10 @@ import { proj, ellipse, line, thick, isoBox } from '../../engine/gfx.js';
 import { drawText } from '../../engine/font.js';
 import { shade } from '../../engine/color.js';
 import { cylinder, OL } from '../../game/props.js';
+import { homeKit } from '../rivals.js';
+import { currentClub, drawClubCrest } from '../clubs.js';
 
-const RED = '#c8102e', WHITE = '#f4f1e8';
+const RED = homeKit.main, WHITE = homeKit.second;   // the game's colours: black and yellow
 const px = (g, c, x, y, w, h) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
 
 function onFace(ctx, ax, ay, side, u, z, fn) {
@@ -67,7 +69,7 @@ registerProp('hub_punchbag', {
     ellipse(ctx, b.x, b.y, 8, 4, 'rgba(0,0,0,0.3)');
     cylinder(ctx, b.x + sw, b.y - 12, 7, 3.5, 34, '#7a1a1a');
     ctx.fillStyle = '#e8c040'; ctx.fillRect(b.x + sw - 6, b.y - 32, 12, 2);
-    drawText(ctx, 'N.A.', b.x + sw, b.y - 26, { color: WHITE, align: 'center' });
+    drawClubCrest(ctx, currentClub(), b.x + sw - 5, b.y - 30, 10, 10, () => drawText(ctx, 'N.A.', b.x + sw, b.y - 26, { color: WHITE, align: 'center' }));   // your club's crest
   },
 });
 

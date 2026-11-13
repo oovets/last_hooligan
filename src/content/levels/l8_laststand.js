@@ -12,7 +12,7 @@
 //   -> STAIR PLAZA up to the gates              enc 'stairs'
 //   -> ARENA FORECOURT: BOSS THE GENERAL (3 phases) -> the arena gates open -> through the tunnel onto the pitch.
 import '../themes/common.js';
-import '../themes/laststand.js';
+import { CREST } from '../themes/laststand.js';
 import { ensureFlareSystem } from '../bosses/laststand.js';
 import { ENEMIES } from '../enemies.js';
 import { toScreen } from '../../engine/iso.js';
@@ -86,6 +86,7 @@ function reunionWave() {
 }
 
 export default {
+  crest: CREST,          // your club's crest is painted over the plaza's old one (content/rivals.js paintHomeCrest)
   id: 'laststand',
   num: 8,
   name: 'THE LAST STAND',
