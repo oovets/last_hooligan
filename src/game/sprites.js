@@ -129,7 +129,7 @@ const HERO_TOP = { tee: 'tee', polo: 'polo', shirt: 'shirt', vest: 'tee' };
 
 export function modelForLook(look) {
   const b = look.build || 1;
-  const pre = look.female ? 'f' : look.muscle ? 'b' : look.lanky ? 'l' : b >= 1.28 ? 'h' : 'm';
+  const pre = look.muscle ? 'b' : look.lanky ? 'l' : b >= 1.28 ? 'h' : 'm';
   const torso = TORSO_OF[(look.jacket && look.jacket.style) || 'harrington'] || 'jacket';
   const cands = [`${pre}_${torso}`, `${pre}_jacket`, `m_${torso}`, 'm_jacket'];
   for (const c of cands) if (MODELS[c]) return c;
@@ -140,7 +140,7 @@ export function modelsForLooks(looks) {
   const set = new Set();
   for (const L of looks) {
     const b = L.build || 1;
-    const pre = L.female ? 'f' : L.muscle ? 'b' : L.lanky ? 'l' : b >= 1.28 ? 'h' : 'm';
+    const pre = L.muscle ? 'b' : L.lanky ? 'l' : b >= 1.28 ? 'h' : 'm';
     const torso = TORSO_OF[(L.jacket && L.jacket.style) || 'harrington'] || 'jacket';
     set.add(`${pre}_${torso}`); set.add(`${pre}_jacket`); set.add('m_jacket');
   }

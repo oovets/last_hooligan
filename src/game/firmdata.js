@@ -80,7 +80,7 @@ const pick = a => a[Math.floor(rnd() * a.length)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 // ------------------------------------------------------------------ names & looks (fictional)
-const FIRST = ['GAZ', 'BAZ', 'DAZ', 'KEV', 'TEL', 'MICK', 'SPUD', 'NOBBY', 'LEE', 'DEANO', 'STU', 'ROB', 'JONNO', 'BENNO', 'MAGS', 'PELLE', 'JOCKE', 'NIKLAS', 'OLLE', 'KALLE', 'SHAZ', 'TRACE', 'BEV', 'JUNE'];
+const FIRST = ['GAZ', 'BAZ', 'DAZ', 'KEV', 'TEL', 'MICK', 'SPUD', 'NOBBY', 'LEE', 'DEANO', 'STU', 'ROB', 'JONNO', 'BENNO', 'MAGS', 'PELLE', 'JOCKE', 'NIKLAS', 'OLLE', 'KALLE'];   // lads only
 const NICK = ['THE BRICK', 'SPANNER', 'TWO DINNERS', 'THE ACCOUNTANT', 'CHOPPER', 'PIE', 'THE VICAR', 'BIG H', 'LITTLE H', 'DOORMAT', 'THE POSTMAN', 'ROADRUNNER', 'MOUSE', 'THE BEAR', 'NO NECK', 'DIESEL', 'SMUDGE', 'TOPPER'];
 const SKINS = ['#e2a97a', '#d49a6a', '#f0c098', '#b87a50', '#8a5636', '#5e3a24', '#f4d0b0'];
 const HAIRC = ['#141016', '#3a2717', '#6a4a2a', '#b4521c', '#e8d27a', '#5a5a5a'];
@@ -89,12 +89,12 @@ const JACKETS = [
   { style: 'bomber', color: '#1a1a20', lining: '#e07020' }, { style: 'track', color: '#c8102e', trim: '#f4f1e8' },
   { style: 'parka', color: '#4a5a3a' }, { style: 'tee', color: '#f4f1e8' }, { style: 'track', color: '#1a1a22', trim: '#c8102e' },
 ];
-function randomLook(female, big) {
-  const hair = female ? pick(['ponytail', 'long', 'bob', 'crop', 'curtains']) : pick(['crop', 'shaved', 'skinhead', 'curtains', 'mod', 'spiky', 'flattop']);
+function randomLook(big) {
+  const hair = pick(['crop', 'shaved', 'skinhead', 'curtains', 'mod', 'spiky', 'flattop']);
   return {
-    skin: pick(SKINS), female: !!female,
+    skin: pick(SKINS),
     hair: { style: hair, color: pick(HAIRC) },
-    facial: female ? 'none' : pick(['none', 'stubble', 'stubble', 'beard', 'tache']),
+    facial: pick(['none', 'stubble', 'stubble', 'beard', 'tache']),
     hat: rnd() < 0.2 ? { style: pick(['cap', 'beanie', 'bucket']), color: pick(['#c8102e', '#1d2742', '#e8e0cc']) } : null,
     shades: rnd() < 0.12,
     jacket: { ...pick(JACKETS) },
@@ -128,8 +128,7 @@ export function founder(F, charId) {
 
 // a recruit; tier 0..3 (better with reputation)
 export function recruit(F, tier = 0) {
-  const female = rnd() < 0.25;
-  const big = !female && rnd() < 0.25;
+  const big = rnd() < 0.25;
   const base = 2 + tier;
   const stats = {};
   for (const s of STATS) stats[s] = clamp(base + Math.floor(rnd() * 4) - 1, 1, 10);
@@ -140,11 +139,11 @@ export function recruit(F, tier = 0) {
   for (let i = 0; i < n; i++) { const t = pick(TRAIT_IDS.filter(x => !traits.includes(x) && x !== 'biglad')); if (t) traits.push(t); }
   // names and nicknames nobody in the firm (or at the bar) already has
   const used = new Set([...F.lads, ...(F.pool || [])].flatMap(l => [l.name, l.nick]));
-  const names = FIRST.filter(n2 => female === ['SHAZ', 'TRACE', 'BEV', 'JUNE'].includes(n2));
+  const names = FIRST;
   const name = pick(names.filter(n2 => !used.has(n2)).length ? names.filter(n2 => !used.has(n2)) : names);
   const nick = pick(NICK.filter(n2 => !used.has(n2)).length ? NICK.filter(n2 => !used.has(n2)) : NICK);
   const lad = {
-    id: newId(F), name, nick, char: null, look: randomLook(female, big),
+    id: newId(F), name, nick, char: null, look: randomLook(big),
     stats, traits, xp: 0, lvl: 1, kos: 0, trips: 0, injury: 0, banned: 0, mood: 65, bonds: {}, hired: F.day, tier,
   };
   lad.cost = recruitCost(lad);
@@ -220,10 +219,20 @@ export function getFirm(playerChar) {
     }
     delete save.data.addBigAl; save.write();
   }
-  // Shaz is a lad now (SHAUN): a firm saved before that still carries her name and look, so refresh them
-  for (const l of save.data.firm.lads || []) {
-    if (l.char === 'shaz' && l.look && l.look.female) { l.name = FOUNDERS.shaz.name; l.look = JSON.parse(JSON.stringify(FOUNDERS.shaz.look)); save.write(); }
+  // lads only: a firm saved before that may still have women in it (the old Shaz, recruits): they become lads
+  const OLD_NAMES = ['SHAZ', 'TRACE', 'BEV', 'JUNE'];
+  const F0 = save.data.firm; let changed = false;
+  for (const l of [...(F0.lads || []), ...(F0.pool || [])]) {
+    if (!(l.look && l.look.female) && !OLD_NAMES.includes(l.name)) continue;
+    if (l.char === 'shaz') { l.name = FOUNDERS.shaz.name; l.look = JSON.parse(JSON.stringify(FOUNDERS.shaz.look)); }
+    else {
+      const used = new Set([...(F0.lads || []), ...(F0.pool || [])].map(x => x.name));
+      if (OLD_NAMES.includes(l.name)) l.name = FIRST.find(n => !used.has(n)) || pick(FIRST);
+      if (l.look && l.look.female) l.look = randomLook((l.traits || []).includes('biglad'));
+    }
+    changed = true;
   }
+  if (changed) save.write();
   return save.data.firm;
 }
 
@@ -469,7 +478,7 @@ export const EVENTS = {
   },
   paper: {
     title: 'THE NORDHAMN ECHO',
-    text: () => 'A REPORTER FROM THE LOCAL RAG IS AT THE BAR. SHE WANTS A QUOTE ABOUT "THE FIRM".',
+    text: () => 'A REPORTER FROM THE LOCAL RAG IS AT THE BAR. HE WANTS A QUOTE ABOUT "THE FIRM".',
     cond: F => F.rep >= 10,
     options: [
       { label: 'MOUTH OFF', effect: F => { F.rep += 8; F.heat = clamp(F.heat + 12, 0, 100); return 'FRONT PAGE. +8 REP, +12 HEAT.'; } },

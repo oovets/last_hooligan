@@ -98,7 +98,7 @@ export function heroTemplate(id) {
 export function modelFor2(look, opts = {}) {
   if (opts.hero && look.hero) { const h = heroTemplate(look.hero); if (h) return h; }
   const b = look.build || 1;
-  const pre = look.female ? 'f' : look.muscle ? 'b' : look.lanky ? 'l' : b >= 1.28 ? 'h' : 'm';   // l: lanky (Big Al)
+  const pre = look.muscle ? 'b' : look.lanky ? 'l' : b >= 1.28 ? 'h' : 'm';   // l: lanky (Big Al)
   const torso = TORSO_OF[(look.jacket && look.jacket.style) || 'harrington'] || 'jacket';
   for (const c of [`${pre}_${torso}`, `${pre}_jacket`, `m_${torso}`, 'm_jacket']) if (CHAR2.templates[c]) return c;
   return null;
