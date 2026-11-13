@@ -1,7 +1,7 @@
 # THE LAST HOOLIGAN — att göra
 
 Det här är backloggen över det som återstår. Planen och bakgrunden finns i [`DESIGN-V2.md`](DESIGN-V2.md).
-Senast uppdaterad 2026-11-13.
+Senast uppdaterad 2026-11-13 (avstämd mot koden).
 
 ## Läget just nu
 
@@ -18,10 +18,11 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 | Kenny Showtime ersätter Terrace Tina (muskelbygge `b_*`, balaklava, egna slag) | klar, ej provspelad |
 | Big Al (THE STEPLADDER, ny spelbar figur och grundare, TOP OFF-mekaniken) | klar och testad, ej provspelad |
 | Realistiska hjältemodeller i menyerna (MPFB2) | Fat Vic och Big Al klara, övriga saknas |
+| Wardrobe: märkeskläder och KITS | klar (allt upplåst via `UNLOCK_ALL`) |
 | Overhaul: procedurell rörelse (fightstance, steg, acceleration) | klar, ej provspelad |
 | Fullskaliga fordon, nya menyer i full upplösning | klar |
 | Fas E: THE TERRACES | pausad (motorstöd för trappsteg finns) |
-| Fas F: Football Tour-kartan och arenorna | kartan och registret klara, alla fem arenor är stubbar |
+| Fas F: Football Tour-kartan och arenorna | kartan, registret och fyra arenor klara; The Den är en stubbe |
 
 ## Först: provspela och städa
 
@@ -35,7 +36,6 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 - [ ] Bundla Three.js lokalt (i dag laddas det från jsDelivr), kräver ett OK för nedladdningen.
 - [ ] `.claude/launch.json` har en extra serverkonfiguration (`hooligan-3d`, port 8643) från utvecklingen. Behåll
       eller ta bort.
-
 - [ ] `UNLOCK_ALL` i `src/save.js` är på: alla banor (även tour-gränsen för rykte) och allt i wardrobe är upplåst
       för provspelning. Stäng av före en release.
 
@@ -70,8 +70,9 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
       (hel snurr via klippens `yaw`-spår).
 - [x] Klipp för knee, throw, push, slap, counter, backElbow, backKick, bodySlam, throwItem, Kennys SHOWTIME BOMB och flex, Vics
       vic_tighten, vic_chokeslam och vic_lunge. Taunt, victory och dizzy.
-- [ ] Klipp för bossarnas och banornas specialattacker (`awayend_*`, `city_*`, `derby_*`, `industrial_*`,
-      `laststand_*`, `pub_*`, `underground_*`, `cheer`), i dag faller de tillbaka på pose-biblioteket.
+- [ ] Klipp för bossarnas och banornas specialattacker, i dag faller de tillbaka på pose-biblioteket. 70 attacker
+      saknar klipp: story-banorna (`pub_*` 4, `underground_*` 4, `awayend_*` 6, `city_*` 8, `industrial_*` 7,
+      `derby_*` 9, `laststand_*` 6) och tour-arenorna (`stamfordbridge_*` 5, `anfield_*` 5, `ot_*` 3, `ibrox_*` 3).
 - [ ] Idle-variationer utöver viktskiftet (se sig om, spotta, sträcka på sig).
 - [ ] Provspela klippen live och finjustera tajming och räckvidd. `tools/anim3d.html` visar klipp som filmremsor:
       `filmstrip(['hurtFront', 'atk:spinKick', 'move:guard:left'], { frames: 7, facing: 0, look: 'vic' })`.
@@ -79,7 +80,8 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 - [ ] Realistiska hjältemodeller (MPFB2, `scripts/blender/char_mpfb.py`) för resten av figurerna. I dag finns
       `vic` och `bigal` i `assets/models/hero/index.json`.
 - [x] Big Al har en egen kroppstyp i 3D (`l`, lanky: `l_jacket`, `l_bare`): lång och smal med ett magrare ansikte,
-      och en riktig bar överkropp (blek, tanig, nyckelben, ren livrem) när skjortan åker av.
+      och en riktig bar överkropp (tanig, nyckelben, ren livrem) när skjortan åker av. Burberry-rutig skjorta
+      (mönstret `nova` i `characters2.js`), svarta skor med gula ränder, normal hudton.
 - [ ] Big Al: provspela TOP OFF (skräckfrysen, skjortan i ansiktet, att knäppa igen).
 - [ ] Riktiga 3D-vapen i handen, i dag visas föremålets ikon som en sprite.
 - [ ] Prestanda: slå ihop meshar per figur (färre draw calls inför stora firmastrider), samt halv upplösning eller
@@ -110,11 +112,13 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
       annan grabb eller dig), TOOLED UP (ta den med vapnet; kräver pickDelay i world.nearestWeapon först).
 - [ ] Egen 3D-animation för att låsa fast / bli fastlåst (i dag används grabbing/grabbed-klippen).
 - [ ] Grabbarna siktar egna kast mot fiendeklungor.
-- [ ] Firma på/av och firmans storlek i alternativmenyn (finns bara i sparfilen i dag, behöver tätare rader i menyn),
-      och en THE FIRM-flik i HOW TO PLAY.
-- [ ] Personlighet och egna initiativ i striden: hetsporren rusar in ensam, den fege stannar bak, lookout ropar BEHIND YA, singer drar
-      igång en ramsa, bästa kompisar slåss bättre sida vid sida och blir galna när den andra slås ut, liability går
-      för långt (heat). Rättning: oldschool-nervbonusen staplas i dag per grabb (firm.js nerve-loopen).
+- [ ] Firma på/av och firmans storlek i alternativmenyn (`settings.firm` och `settings.firmSize` finns i sparfilen
+      men inte i `options.js`, menyn behöver tätare rader), och en THE FIRM-flik i HOW TO PLAY.
+- [ ] Personlighet och egna initiativ i striden. I dag är egenskaperna bara siffror (hothead: större räckvidd på HOLD
+      och +10 % slag, lookout: går in från längre håll, singer: nerv, liability: +heat). Kvar: hetsporren rusar in
+      ensam, den fege stannar bak, lookout ropar BEHIND YA, singer drar igång en ramsa, bästa kompisar blir galna när
+      den andra slås ut. Rättning: oldschool-bonusen staplas fortfarande per grabb (två oldschool-grabbar i närheten
+      kvartar nervtappet, `firm.js` nerve-loopen).
 - [x] `test_firm.mjs` seedar Math.random (standard 1994, `FIRM_SEED=n` för andra), så körningarna är repeterbara.
 - [ ] Testerna: `PIN ORDER: ...and pins him` fallerar med vissa seeds (t.ex. `FIRM_SEED=15`), alltså är pin-ordern
       fortfarande slumpkänslig. walkPlayer bevisar inget när PlayerController är avstängd.
@@ -141,8 +145,10 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
       resmål (`src/content/tour/index.js`, `src/ui/hub.js`). Tourvinster ger dubbelt rykte och +15 första gången.
 - [x] Level-registret: varje arena är ett eget paket i `src/content/arenas/<id>/`, ofärdiga är `{ stub: true }` och
       visas som SOON på kartan.
-- [ ] Bygg arenorna (tema, bana, boss och musik i varje paket): The Den, Stamford Bridge, Anfield, Old Trafford och
-      Ibrox. Alla fem är stubbar i dag.
+- [x] Stamford Bridge, Anfield, Old Trafford och Ibrox är byggda (tema, bana, boss och musik i varje paket, `1d20d1c`)
+      och klarar `check.mjs --sim`.
+- [ ] The Den är fortfarande en stubbe (bygget avbröts mitt i banan).
+- [ ] Provspela de fyra arenorna, och klipp för deras bossattacker (se Grafik).
 - [ ] Europa: Tyskland, Italien, Spanien och Sverige.
 
 ## Visionen i övrigt
@@ -150,4 +156,4 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 - [ ] Dynamisk tid och dynamiskt väder (skymning till natt, dimma, vattenpölar).
 - [ ] NPC:er som inte slåss: supportrar, fotgängare, personal och trafik.
 - [ ] Dynamisk musik, ett komplett soundtrack och fler egna ramsor.
-- [ ] Highscore per arena, arenaspecifika menyer och slutsekvenser.
+- [ ] Arenaspecifika menyer och slutsekvenser. (Bästa poäng per bana finns redan: `save.best`, visas på banvalet.)
