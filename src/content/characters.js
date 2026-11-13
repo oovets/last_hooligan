@@ -106,7 +106,7 @@ export const CHARACTERS = [
       hat: { style: 'balaclava', color: '#ff5a00', neon: true },   // NEON orange balaclava (glows a little in 3D)
       tattoo: 'clockwork',                                   // A Clockwork Orange on his left arm (3D)
       jacket: { style: 'vest', color: '#ecebe4' }, shirt: '#ecebe4',
-      pants: { style: 'cargo', color: '#3e4632' }, shoes: { color: '#16161a', sole: '#2a2a2e' },
+      pants: { style: 'cargo', color: '#3e4632' }, shoes: { color: '#f4f4f0', sole: '#ecebe6' },   // clean white trainers
       scarf: null, build: 1.2, height: 1.08,
     },
     unlock: null,

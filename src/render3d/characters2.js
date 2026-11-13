@@ -263,8 +263,9 @@ export class Character2 {
     this.rootInv = this.B.root ? this.B.root.quaternion.clone().invert() : new THREE.Quaternion();
     this.handR = this.B.hand_R;
     const h = look.height || 1;
-    const bw = clamp((look.build || 1) / ({ m: 1.0, h: 1.4, f: 0.95 }[this.model[0]] || 1), 0.88, 1.18);
-    inner.scale.set(CHAR2_SCALE * h * bw, CHAR2_SCALE * h, CHAR2_SCALE * h * bw);
+    const bw = clamp((look.build || 1) / ({ m: 1.0, h: 1.4, f: 0.95, b: 1.2 }[this.model[0]] || 1), 0.88, 1.18);
+    // girth widens the body side to side; depth only a little, or the feet stretch into clown shoes
+    inner.scale.set(CHAR2_SCALE * h * bw, CHAR2_SCALE * h, CHAR2_SCALE * h * (1 + (bw - 1) * 0.3));
     this.group.add(inner);
     this.weaponId = null;
   }

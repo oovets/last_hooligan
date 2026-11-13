@@ -7,11 +7,11 @@
 //     actors: [{ look, x, feet, h, anim, phase, yaw, pose?, dark? }] in logical screen px: feet position and body height;
 //             pose = an explicit pose-library pose (overrides anim), dark = a black silhouette (locked characters)
 //     rect:   logical rect of the 2D canvas the stage covers (also the render viewport)
-//     opts:   { light: 'terrace' | 'studio', persp: bool, shadows?: bool (default: only when there's one actor) }   persp: perspective camera (rounder faces and feet; use it for
+//     opts:   { light: 'terrace' | 'studio', persp: bool, shadows?: bool (self-shadows; off unless asked for) }   persp: perspective camera (rounder faces and feet; use it for
 //             single hero shots, keep orthographic for rows of busts)
 //
 // Lighting: an image-based room environment (soft wrap-around light and real reflections on PBR materials) under a
-// warm key light that casts self-shadows (arms on the body, the jaw on the neck), plus two gentle coloured rims.
+// warm key light (self-shadows only with opts.shadows), plus two gentle coloured rims.
 //
 // Actors are posed from the game's pose library (sampleAnim) through the same layered animator as in the game.
 import * as THREE from 'three';
@@ -144,7 +144,7 @@ export class MenuStage {
     if (!any) return false;
     // self-shadows only for single-character hero shots (portrait, character select, wardrobe): rows of busts and the
     // title-screen firm skip the shadow pass
-    const shadows = opts.shadows ?? actors.length === 1;
+    const shadows = !!opts.shadows;                       // off by default (owner preference: no shadows on the lads)
     s.key.castShadow = shadows;
     // fit the key light's shadow camera round the actors (world units are small: a lad is ~4 units tall here)
     s.scene.updateMatrixWorld();
