@@ -44,11 +44,17 @@ not committed); the rest of the skin is MakeHuman's CC0 `young_caucasian_male` m
 | body shape, weights | base mesh + macro/detail/expression targets, `game_engine` rig weights | MakeHuman team | CC0 | bundled with MPFB 2.0.18 |
 | skin (`skin_vic`) | `young_caucasian_male` (body, re-toned) + projected likeness (head) | makehuman_system / owner | CC0 / owner's | makehuman_system_assets |
 | eyes (`eye_blue`) | `low-poly` eyes, `blue` eye material | makehuman_system | CC0 | makehuman_system_assets |
-| eyebrows (`ID_18`) | `eyebrow007` | makehuman_system | CC0 | makehuman_system_assets |
 | teeth (`teeth`) | `teeth_base` | makehuman_system | CC0 | makehuman_system_assets |
-| top (`ID_3`) | `namuhekam_male_polo_shirt` | namuhekam | CC0 | shirts01 |
+| top (`ID_3`, the overshirt) | `elvs_male_shirt_untucked_bd1` ("mens shirt untucked") | Elvaerwyn | **CC-BY** (version not stated in the asset) | shirts02 |
 | trousers (`ID_7`) | `punkduck_male_classic_jeans` | punkduck | **CC-BY 4.0** | pants02 |
 | trainers (`ID_9`) | `punkduck_running_shoes_01` | punkduck | **CC-BY 3.0** | shoes02 |
+| arm badge (`ID_24`) | none: a generated patch on the left sleeve, design drawn at runtime | | | |
 
-No hair (he's shaved) and no eyelashes (his are pale; MakeHuman's lash cards read as mascara). The CC-BY attribution above
-covers the jeans and trainers here too.
+No hair (he's shaved), no eyebrows and no eyelashes (his are pale; MakeHuman's lash cards read as mascara). The
+trousers' waistband is cut away where the overshirt covers it (so the belt loops can't poke through).
+
+Attribution for Vic's CC-BY items:
+
+> "Mens shirt untucked" by Elvaerwyn, "Male classic jeans" and "Running shoes 01" by punkduck (makehumancommunity.org),
+> licensed under CC BY / CC BY 4.0 / CC BY 3.0. Modified: re-fitted, re-rigged, cut, textures downscaled and
+> colour-neutralised.
