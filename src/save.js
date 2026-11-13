@@ -22,9 +22,9 @@ export const DEFAULT_HISCORES = [
 
 export function defaultSave() {
   return {
-    version: 6,                  // 2: 3D renderer became the default; 3: Terrace Tina replaced by Kenny Showtime; 4: Big Al joins; 5: Big Al max TOUGH; 6: no scarves on the lads
+    version: 7,                  // 2: 3D renderer became the default; 3: Terrace Tina replaced by Kenny Showtime; 4: Big Al joins; 5: Big Al max TOUGH; 6: no scarves on the lads; 7: Kenny Showtime is the default lad
     unlocked: 1,                 // number of levels unlocked (1..8)
-    character: 'hooligan',       // last selected playable character (content/characters.js)
+    character: 'kenny',          // last selected playable character (content/characters.js); Kenny Showtime by default
     best: {},                    // levelId -> best score
     highScore: 0,
     cash: 0,                     // spendable currency (wardrobe)
@@ -94,6 +94,7 @@ export const save = {
         for (const l of [...((F && F.lads) || []), ...((F && F.pool) || [])]) if (l && l.look) l.look.scarf = null;
         this.data.version = 6;
       }
+      if (this.data.version < 7) { this.data.character = 'kenny'; this.data.version = 7; }   // Kenny Showtime is the default lad
       if (UNLOCK_ALL) this.data.unlocked = Math.max(this.data.unlocked || 1, 99);   // clamped to the level count where shown
     } catch (e) { console.warn('save load failed', e); }
     if (!Array.isArray(this.data.hiscores) || !this.data.hiscores.length) this.data.hiscores = DEFAULT_HISCORES.map(h => ({ ...h }));

@@ -11,7 +11,7 @@ export class GameState {
 
   reset() {
     this.score = 0;
-    this.character = save.data.character || 'hooligan';
+    this.character = save.data.character || 'kenny';
     this.lives = 3;
     this.cash = 0;
     this.levelIndex = 0;

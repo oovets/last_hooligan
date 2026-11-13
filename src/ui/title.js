@@ -240,7 +240,9 @@ class MainMenuScene {
     ctx.strokeStyle = '#ffd84a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(mx, fy, 36, 7, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.shadowBlur = 0;
     ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.beginPath(); ctx.ellipse(mx, fy, 18, 3.5, 0, 0, Math.PI * 2); ctx.fill();
-    const look = this.look || (this.look = buildLook(save.data.outfit));
+    // the lad you'll play (Kenny Showtime by default; The Last Hooligan wears your wardrobe outfit)
+    const ch = CHARACTERS.find(c => c.id === save.data.character) || CHARACTERS.find(c => c.id === 'kenny');
+    const look = this.look || (this.look = normalizeLook((ch && ch.look) || buildLook(save.data.outfit)));
     const anim = Math.floor(this.t / 4) % 2 ? 'guard' : 'idle';
     const stage = r3d.menu;
     if (!(stage && stage.ready && stage.draw(ctx, 'portrait', [{ look, x: mx, feet: fy, h: 150, anim, phase: 0, yaw: 0.45 }], { x, y, w, h }, this.t, { light: 'studio' })))

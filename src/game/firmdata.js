@@ -206,7 +206,7 @@ export function newFirm(playerChar = 'hooligan', setup = null) {
 // save.data.firm, created on first use
 export function getFirm(playerChar) {
   if (!save.data.firm) {
-    save.data.firm = newFirm(playerChar || save.data.character || 'hooligan', save.data.firmSetup || null);
+    save.data.firm = newFirm(playerChar || save.data.character || 'kenny', save.data.firmSetup || null);
     delete save.data.firmSetup;
     save.write();
   }

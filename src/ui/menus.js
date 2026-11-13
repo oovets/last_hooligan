@@ -26,7 +26,7 @@ export function startNewRun(levelIndex = 0) {
   // pick a character first (src/ui/charselect.js); a brand new game (level 1) then sets up the firm: club + lads
   // (src/ui/firmsetup.js); then kick off
   const next = () => (levelIndex === 0 && app.scenes.firmSetup
-    ? app.go(app.scenes.firmSetup(save.data.character || 'hooligan', () => beginRun(levelIndex)))
+    ? app.go(app.scenes.firmSetup(save.data.character || 'kenny', () => beginRun(levelIndex)))
     : beginRun(levelIndex));
   if (app.scenes.charSelect) { app.go(app.scenes.charSelect(levelIndex, next)); return; }
   next();
