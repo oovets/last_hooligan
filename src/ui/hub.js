@@ -388,7 +388,7 @@ const GB = [[-5.0, 58.6], [-3.0, 58.65], [-3.1, 58.3], [-4.0, 57.9], [-3.5, 57.7
   [-5.4, 56.0], [-5.6, 56.5], [-6.1, 56.7], [-5.7, 57.0], [-5.8, 57.6], [-5.1, 58.3]];
 const IRL = [[-6.0, 55.2], [-5.4, 54.6], [-6.0, 53.9], [-6.0, 53.0], [-6.4, 52.2], [-7.5, 52.1], [-9.5, 51.6], [-10.2, 52.1], [-9.7, 53.0],
   [-10.0, 53.5], [-9.9, 54.2], [-8.5, 54.5], [-8.2, 55.2], [-7.3, 55.3]];
-const PIN_LABEL = { anfield: [-7, -11, 'right'], oldtrafford: [7, -4, 'left'], theden: [7, -11, 'left'], stamfordbridge: [-7, 1, 'right'], ibrox: [7, -4, 'left'] };
+const PIN_LABEL = { anfield: [-7, -11, 'right'], oldtrafford: [7, -4, 'left'], theden: [2, -14, 'center'], stamfordbridge: [-7, 1, 'right'], ibrox: [7, -4, 'left'] };
 const INK = '#1c1612', PAPER = '#ece2c6', PAPER2 = '#e2d6b4', TOUR_RED = '#b3121f';
 
 class MapPanel extends BasePanel {

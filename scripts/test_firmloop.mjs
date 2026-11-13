@@ -180,5 +180,23 @@ console.log('       ' + lines.slice(0, 6).join('\n       '));
   check(w2.firm.lads.length === ids.length && w2.firm.lads.every(f => ids.includes(f.rec.id) && FD.available(f.rec)), `next trip (THE PUB): ${w2.firm.lads.map(f => f.name).join(', ')}`);
 }
 
+// THE FOOTBALL TOUR: away days pay double reputation, +15 the first win at a ground; a loss there costs more
+{
+  const { TOUR, ALL_LEVELS, levelIndex } = await import('../src/content/tour/index.js');
+  const { LEVELS: STORY } = await import('../src/content/levels/index.js');
+  check(TOUR.length === 5 && ALL_LEVELS.length === STORY.length + TOUR.length && TOUR.every(t => levelIndex(t.id) >= STORY.length),
+    `TOUR: ${TOUR.length} grounds after the ${STORY.length} story levels (${TOUR.map(t => t.venue).join(', ')})`);
+  check(TOUR.every((t, i) => i === 0 || t.rep > TOUR[i - 1].rep), 'TOUR: each ground needs more reputation than the last');
+  const F2 = FD.newFirm('hooligan');
+  const lads = FD.squadLads(F2).map(l => ({ id: l.id, kos: 1, downs: 0, out: false }));
+  const base = { levelId: 'streets', levelName: 'X', won: true, rank: 'B', kos: 4, routs: 0, bossDown: true, lads };
+  const r0 = F2.rep; FD.applyTrip(F2, base); const dStory = F2.rep - r0;
+  const r1 = F2.rep; FD.applyTrip(F2, { ...base, levelId: 'theden', tour: true }); const dTour1 = F2.rep - r1;
+  const r2 = F2.rep; FD.applyTrip(F2, { ...base, levelId: 'theden', tour: true }); const dTour2 = F2.rep - r2;
+  check(dTour1 === dStory * 2 + 15 && dTour2 === dStory * 2 && F2.tourWins.theden === 2, `TOUR: rep story +${dStory}, first away win +${dTour1}, again +${dTour2}`);
+  const r3 = F2.rep; FD.applyTrip(F2, { ...base, won: false, levelId: 'theden', tour: true });
+  check(F2.rep - r3 === -10, `TOUR: losing an away day costs ${F2.rep - r3}`);
+}
+
 console.log(`\n${fails ? fails + ' check(s) FAILED' : 'all firm loop checks passed'}`);
 process.exit(fails ? 1 : 0);
