@@ -15,6 +15,8 @@ import { buildLook, progressTotals } from '../content/wardrobe.js';
 import { Backdrop, backdrop } from './backdrop.js';
 import { drawLogo, drawCrest, LOGO_LAND_TIMES, LOGO_INTRO_LEN } from './logo.js';
 import { drawPosterBg, drawMob, drawPosterTitle, drawTagline } from './poster.js';
+import { CHARACTERS } from '../content/characters.js';
+import { normalizeLook } from '../game/doll.js';
 import { attractCycle } from './attract.js';
 import { startNewRun, LevelSelectScene, OptionsScene, HowToPlayScene, CreditsScene } from './menus.js';
 import { WardrobeScene } from './wardrobe_ui.js';
@@ -102,18 +104,41 @@ class TitleScene {
     // the poster: red paper, the mob charging in from below, the title slammed on, the line in a black box
     drawPosterBg(ctx, this.t);
     const ch = Math.min(1, Math.max(0, this.intro / 1.1));
-    drawMob(ctx, this.t, { charge: 1 - Math.pow(1 - ch, 3) });
+    drawFirm(ctx, this.t, 1 - Math.pow(1 - ch, 3));
     drawPosterTitle(ctx, VIEW_W / 2, 36, this.t, { intro: this.intro });
     ctx.restore();
     const ti = this.intro - LOGO_INTRO_LEN;
-    if (ti > -0.4) drawTagline(ctx, VIEW_W / 2, 258, TAG);
+    if (ti > -0.4) drawTagline(ctx, VIEW_W / 2, 284, TAG);
     if (ti > 0.6) {
       const on = Math.floor(this.t * 2.2) % 2 === 0;
-      if (on) drawTagline(ctx, VIEW_W / 2, 296, 'PRESS START', { size: 15 });
+      if (on) drawTagline(ctx, VIEW_W / 2, 314, 'PRESS START', { size: 15 });
     }
     drawText(ctx, '(C) 1994 STEVOO STUDIOS', 8, VIEW_H - 10, { color: '#f6d0c8', outline: '#000' });
     drawText(ctx, 'V1.0', VIEW_W - 8, VIEW_H - 10, { color: '#f6d0c8', outline: '#000', align: 'right' });
   }
+}
+
+// the whole firm charging at you, as the real 3D lads (the drawn mob is only a fallback without the 3D renderer)
+const CHARGE = [
+  { id: 'stig', x: 258, feet: 212, h: 114, run: 6.2 }, { id: 'oldboy', x: 392, feet: 210, h: 118, run: 5.6 },
+  { id: 'mo', x: 138, feet: 228, h: 144, run: 5.2 }, { id: 'vic', x: 508, feet: 228, h: 144, run: 5.0 },
+  { id: 'kenny', x: 212, feet: 246, h: 164, run: 6.0 }, { id: 'bigal', x: 432, feet: 248, h: 178, run: 5.8 },
+  { id: 'hooligan', x: 320, feet: 264, h: 184, run: 6.4 },
+];
+function drawFirm(ctx, t, charge) {
+  const stage = r3d.menu;
+  if (!(stage && stage.ready)) { drawMob(ctx, t, { charge }); return; }
+  const rise = (1 - charge) * 160;
+  // a dark smear of street under them
+  const g = ctx.createLinearGradient(0, 200, 0, 300);
+  g.addColorStop(0, 'rgba(10,4,5,0)'); g.addColorStop(0.7, 'rgba(10,4,5,0.55)'); g.addColorStop(1, 'rgba(10,4,5,0)');
+  ctx.fillStyle = g; ctx.fillRect(0, 180 + rise, VIEW_W, 100);
+  const actors = CHARGE.map((c, i) => {
+    const ch = CHARACTERS.find(x => x.id === c.id);
+    const look = normalizeLook((ch && ch.look) || buildLook(save.data.outfit));
+    return { look, x: c.x, feet: c.feet + rise, h: c.h, run: c.run, phase: i * 0.37, yaw: (c.x - 320) * -0.0012 };
+  });
+  if (!stage.draw(ctx, 'titlefirm', actors, { x: 0, y: 40, w: VIEW_W, h: 236 }, t, { light: 'studio' })) drawMob(ctx, t, { charge });
 }
 
 // ---------------------------------------------------------------- main menu
@@ -139,9 +164,7 @@ class MainMenuScene {
     this.menu.update(dt);
   }
   draw(ctx) {
-    drawPosterBg(ctx, this.t, { dim: 0.25 });
-    drawMob(ctx, this.t * 0.6);
-    ctx.fillStyle = 'rgba(8,2,3,0.35)'; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    drawPosterBg(ctx, this.t, { dim: 0.45 });
     drawPosterTitle(ctx, VIEW_W / 2, 8, this.t, { small: true });
     // menu panel
     const mx = 46, my = 92, mw = 250;
