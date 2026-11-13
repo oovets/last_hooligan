@@ -77,6 +77,14 @@ PARTS = [  # role, asset subdir, asset name, MPFB asset type
 ]
 PARTS = [(r, sub, JOB.get('assets', {}).get(r, n), t) for r, sub, n, t in PARTS]     # job may swap assets per role
 PARTS = [p for p in PARTS if p[2]]                                                     # ... or drop one (null)
+# a wardrobe hero (job "wardrobe": {"top": {cat: asset}, "legs": {cat: asset | {"asset", "cut_knee"}}, "hair": {style: asset}}):
+# one model carrying every garment and haircut, each tagged with its LOOK layer (acc:top:<cat>, acc:legs:<cat>,
+# acc:hair:<style>) so the runtime shows the outfit's. No delete masks then: the body stays whole under all of them.
+WARD = JOB.get('wardrobe')
+if WARD:
+    for kind, sub, typ in (('top', 'clothes', 'Clothes'), ('legs', 'clothes', 'Clothes'), ('hair', 'hair', 'Hair')):
+        for cat, spec in WARD.get(kind, {}).items():
+            PARTS.append((kind + '_' + cat, sub, spec if isinstance(spec, str) else spec['asset'], typ))
 SKIN = ('skins', JOB.get('assets', {}).get('skin', 'young_caucasian_male'))
 EYE_MAT = JOB.get('eye_mat', 'brown')
 
@@ -102,7 +110,7 @@ OBJ = {'body': body}
 for role, sub, name, typ in PARTS:
     OBJ[role] = HumanService.add_mhclo_asset(asset(sub, name), body, asset_type=typ, subdiv_levels=0, material_type='GAMEENGINE')
 HumanService.set_character_skin(asset(*SKIN, ext='.mhmat'), body, skin_type='GAMEENGINE')
-ExportService.bake_modifiers_remove_helpers(body, bake_masks=True, bake_subdiv=False, remove_helpers=True)
+ExportService.bake_modifiers_remove_helpers(body, bake_masks=not WARD, bake_subdiv=False, remove_helpers=True)
 
 def tri_count(ob): return sum(len(p.vertices) - 2 for p in ob.data.polygons)
 def apply_mod(ob, name):
@@ -242,7 +250,31 @@ if 'pants' in OBJ and 'top' in OBJ:
 # extra kit MPFB has no asset for (balaclava, flat cap, tache, arm tattoo, a vest cut from a tee; scripts/blender/mpfb_extras.py)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mpfb_extras
-TOP_CLS = mpfb_extras.split_classes(OBJ['top']) if JOB.get('top_split') else []    # from the outfit's original texture
+if WARD:
+    import bmesh as _bm
+    TOPS = [r for r in OBJ if r.startswith('top_')]; LEGS = [r for r in OBJ if r.startswith('legs_')]
+    for cat, spec in WARD.get('legs', {}).items():        # shorts: a pair of trousers cut off above the knee
+        if isinstance(spec, dict) and spec.get('cut_knee'):
+            ob = OBJ['legs_' + cat]; zc = J['shin_L'].z + spec.get('above', 0.07)
+            bm = _bm.new(); bm.from_mesh(ob.data)
+            _bm.ops.delete(bm, geom=[f for f in bm.faces if any(v.co.z < zc for v in f.verts)], context='FACES')
+            _bm.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context='VERTS')
+            for v in bm.verts:                                # a clean, level hem instead of the face staircase
+                if v.is_boundary and v.co.z < zc + 0.06: v.co.z = zc
+            bm.to_mesh(ob.data); bm.free()
+    for r in TOPS + LEGS: clear_of(OBJ[r], OBJ['body'], 0.004, 0.03)      # no masks: hold every garment off the skin
+    for t in TOPS:
+        for l in LEGS: clear_of(OBJ[t], OBJ[l], 0.006, 0.04)              # and every top over every pair of trousers
+TS = JOB.get('top_split'); SPLIT_ROLE = (TS or {}).get('role', 'top')
+if TS and TS.get('drop_pants'):        # an all-in-one outfit worn as a top only: its trousers go (separate legs are worn)
+    import bmesh as _bm
+    cls = mpfb_extras.split_classes(OBJ[SPLIT_ROLE])
+    bm = _bm.new(); bm.from_mesh(OBJ[SPLIT_ROLE].data); bm.faces.ensure_lookup_table()
+    _bm.ops.delete(bm, geom=[bm.faces[i] for i, c in enumerate(cls) if c == 'pants'], context='FACES')
+    _bm.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context='VERTS')
+    bm.to_mesh(OBJ[SPLIT_ROLE].data); bm.free()
+    print('TOP SPLIT: dropped', cls.count('pants'), 'trouser faces')
+TOP_CLS = mpfb_extras.split_classes(OBJ[SPLIT_ROLE]) if TS else []    # from the outfit's original texture
 EX = mpfb_extras.build(JOB, OBJ, J)
 
 # the arm badge (job "badge": true): a UV-mapped patch hugging the top's left sleeve, like char_v2's (layer 'badge:arm',
@@ -250,7 +282,7 @@ EX = mpfb_extras.build(JOB, OBJ, J)
 if JOB.get('badge'):
     from mathutils.bvhtree import BVHTree
     import bmesh
-    bmt = bmesh.new(); bmt.from_mesh(OBJ['top'].data); bvh_top = BVHTree.FromBMesh(bmt); bmt.free()
+    bmt = bmesh.new(); bmt.from_mesh(OBJ[JOB.get('badge_on', 'top')].data); bvh_top = BVHTree.FromBMesh(bmt); bmt.free()
     FRONT = Vector((0, -1, 0))
     ua, fa = J['upperArm_L'], J['forearm_L']; d_ = (fa - ua).normalized()
     def on_sleeve(axis_pt, out_dir, lift):
@@ -369,7 +401,7 @@ def conform_weights(ob, force=None):
 FORCE_HEAD = ('eyes', 'brows', 'lashes', 'teeth', 'hair')       # everything on the head rides the head bone only
 def forced_bone(role):
     if role in EX: return EX[role]['force']
-    return 'head' if role in FORCE_HEAD else 'upperArm_L' if role == 'badge' else 'foot_' + role[-1] if role.startswith('stripes_') else None
+    return 'head' if role in FORCE_HEAD or role.startswith('hair_') else 'upperArm_L' if role == 'badge' else 'foot_' + role[-1] if role.startswith('stripes_') else None
 for role, ob in OBJ.items():
     n = conform_weights(ob, forced_bone(role))
     if n: print('WARN %s: %d unweighted verts -> hips' % (role, n))
@@ -408,6 +440,8 @@ NAMES = {'body': 'body', 'eyes': 'eyes', 'brows': 'eyebrows', 'lashes': 'eyelash
          'top': 'top', 'pants': 'pants', 'shoes': 'shoes', 'badge': 'badge', 'stripes_L': 'shoeStripesL', 'stripes_R': 'shoeStripesR'}
 TAGS = {'hair': 'acc:' + JOB.get('hair_layer', 'hair:crop'), 'badge': 'acc:badge:arm', 'stripes_L': 'acc:shoes:stripes', 'stripes_R': 'acc:shoes:stripes'}   # shown only for LOOKs with hair / a badge / striped trainers
 for role, spec in EX.items(): NAMES[role] = spec['name']; TAGS[role] = spec['tag']
+for role in OBJ:
+    if role.startswith(('top_', 'legs_', 'hair_')): NAMES[role] = role; TAGS[role] = 'acc:' + role.replace('_', ':', 1)
 for role, ob in OBJ.items():
     strip_props(ob)                              # MPFB bookkeeping props would leak into glTF extras
     ob.name = ob.data.name = NAMES[role]
@@ -432,6 +466,9 @@ MAT = {
 }
 for role, hx in JOB.get('tints', {}).items():      # preview / baseColorFactor colour of a palette part (the LOOK overrides it)
     if role in MAT: MAT[role] = MAT[role][:2] + (hx,) + MAT[role][3:]     # ('stripes', 'sole': used where those are built)
+for role in list(OBJ):                              # wardrobe garments take their kind's palette material
+    for pre, base in (('top_', 'top'), ('legs_', 'pants'), ('hair_', 'hair')):
+        if role.startswith(pre): MAT[role] = MAT[base]
 SKIN_TEX = JOB.get('skin_tex')
 if SKIN_TEX:            # authored skin (a projected likeness): keep its colour, and keep it out of the ID_ tint path
     MAT['body'] = (JOB.get('skin_mat', 'skin'), None, None, 1024, False, 0.55)
@@ -522,7 +559,7 @@ for role, ob in OBJ.items():
     if role == 'eyes':      # MPFB's eye mhclo defaults may not be the colour we want: load the chosen iris map
         src = bpy.data.images.load(os.path.join(UD, 'eyes', 'materials', EYE_MAT + '_eye.png'))
         diff.image = src
-    diff.image = process_image(diff.image, cap, mname.replace(':', '_') + '_base', alpha, neutral=pid is not None)
+    diff.image = process_image(diff.image, cap, mname.replace(':', '_') + '_' + role + '_base', alpha, neutral=pid is not None)
     if pid is not None:     # base map x palette colour (glTF baseColorFactor; the runtime swaps in the LOOK colour)
         mix = N.new('ShaderNodeMix'); mix.data_type = 'RGBA'; mix.blend_type = 'MULTIPLY'
         mix.inputs['Factor'].default_value = 1.0
@@ -537,7 +574,7 @@ for role, ob in OBJ.items():
     nrm = N.get('NormalMapTextue')
     if nrm is not None:
         if nrm.image is not None:
-            nrm.image = process_image(nrm.image, 512, mname + '_normal', False, neutral=False, is_data=True)
+            nrm.image = process_image(nrm.image, 512, mname + '_' + role + '_normal', False, neutral=False, is_data=True)
         else:
             N.remove(nrm)
             for n in [n for n in N if n.type == 'NORMAL_MAP']: N.remove(n)
@@ -547,7 +584,7 @@ for role, ob in OBJ.items():
 
 mpfb_extras.materials(OBJ, JOB, TEXDIR)
 if TOP_CLS:  # an all-in-one outfit: denim faces -> ID_7 (look.pants), the shirt -> ID_6 (look.shirt), the jacket stays ID_3
-    tm = OBJ['top'].data; m3 = tm.materials[0]; idx = {}
+    tm = OBJ[SPLIT_ROLE].data; m3 = tm.materials[0]; idx = {}
     for cls, mid, hx in (('pants', 'ID_7', JOB['top_split'].get('pants', '#34507a')), ('shirt', 'ID_6', JOB['top_split'].get('shirt', '#e8e4dc'))):
         mc = m3.copy(); mc.name = mid
         for nd in mc.node_tree.nodes:
@@ -586,6 +623,11 @@ print('EXPORTED %s (%.0f KB)' % (OUT, os.path.getsize(OUT) / 1024))
 def preview(path):
     import tempfile
     from mathutils import Euler
+    PL = JOB.get('preview_layers')          # a wardrobe hero: render only these LOOK layers (one outfit, not all of them at once)
+    if PL is not None:
+        for ob in OBJ.values():
+            tg = ob.get('tags', '')
+            if tg.startswith('acc:') and tg[4:] not in PL: ob.hide_render = True
     def link(o): scene.collection.objects.link(o); return o
     cam_d = bpy.data.cameras.new('cam'); cam_d.type = 'ORTHO'
     cam = link(bpy.data.objects.new('cam', cam_d)); scene.camera = cam

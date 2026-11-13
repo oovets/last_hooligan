@@ -306,6 +306,9 @@ export class Character2 {
     this.model = modelFor2(look, this.opts || {});
     const inner = this.inner = SkeletonUtils.clone(CHAR2.templates[this.model]);
     const layers = new Set(spec.layers);
+    // a realistic hero in a hat: the haircut goes under it (it would poke through the knit / the crown), except the
+    // long ones that hang out below
+    if (this.model.startsWith('hero:') && look.hat) for (const l of [...layers]) if (l.startsWith('hair:') && l !== 'hair:long' && l !== 'hair:ponytail') layers.delete(l);
     inner.traverse(o => {
       if (!o.isMesh) return;
       // multi-material parts (striped scarf, the body) export as a group of meshes: the tag sits on the group

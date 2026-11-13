@@ -18,9 +18,9 @@
     "measure-shoulder-dist-incr": 0.3
   },
   "assets": {
-    "hair": "short02",
+    "hair": null,
     "brows": "eyebrow010",
-    "top": "male_casualsuit05",
+    "top": null,
     "pants": null
   },
   "eye_mat": "brown",
@@ -34,10 +34,10 @@
     "sole": "#b9a27a"
   },
   "top_split": {
-    "pants": "#34507a",
+    "role": "top_jacket",
+    "drop_pants": true,
     "shirt": "#e8e4dc"
   },
-  "hair_layer": "hair:crop",
   "badge": true,
   "shoe_stripes": true,
   "sole_h": 0.026,
@@ -46,5 +46,58 @@
     "torso": "jacket",
     "girth": 1.05,
     "hero": "dez"
-  }
+  },
+  "wardrobe": {
+    "top": {
+      "jacket": "male_casualsuit05",
+      "tee": "toigo_basic_tucked_t-shirt",
+      "polo": "namuhekam_male_polo_shirt",
+      "shirt": "elvs_male_shirt_untucked_bd1"
+    },
+    "legs": {
+      "jeans": "punkduck_male_classic_jeans",
+      "cargo": "cortu_cargo_pants",
+      "trackies": "mindfront_male_trousers_1",
+      "suit": "elvs_male_trouser",
+      "shorts": {
+        "asset": "punkduck_male_classic_jeans",
+        "cut_knee": true
+      }
+    },
+    "hair": {
+      "crop": "short02",
+      "curtains": "short03",
+      "mod": "culturalibre_hair_05",
+      "spiky": "cortu_short_messy_hair",
+      "flattop": "short01",
+      "long": "culturalibre_hair_02",
+      "ponytail": "ponytail01"
+    }
+  },
+  "badge_on": "top_jacket",
+  "beanie": {},
+  "bucket": {},
+  "helmet": {},
+  "shades": {},
+  "scarf": {},
+  "beard": {},
+  "gloves": {},
+  "mohawk": {},
+  "cap": {
+    "color": "#b5a98a",
+    "offset": 0.016
+  },
+  "tache": {
+    "color": "#3a2717",
+    "below_nose": 0.007,
+    "over_lip": 0.013,
+    "width": 0.031
+  },
+  "preview_layers": [
+    "top:jacket",
+    "legs:jeans",
+    "hair:crop",
+    "badge:arm",
+    "shoes:stripes"
+  ]
 }

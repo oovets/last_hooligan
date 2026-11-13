@@ -298,7 +298,7 @@ def build(JOB, OBJ, J):
         def rim_z(co): return z_front - slope * max(0.0, co.y - L['eye_front'])     # +Y is the back of the head
         def keep(co, n):
             return radial(co) < 0.135 and co.z > rim_z(co) and not (abs(co.x) > 0.072 and co.z < ec.z + 0.05)
-        ob = _shell(OBJ['body'], keep, 0.007, 'cap')
+        ob = _shell(OBJ['body'], keep, JOB['cap'].get('offset', 0.007), 'cap')
         zt = max(v.co.z for v in ob.data.vertices)
         for v in ob.data.vertices:   # a flat cap: the crown lifted flat (never into the skull), sliding forward over the peak
             d = Vector((v.co.x - axis.x, v.co.y - axis.y, 0)) * 0.025
@@ -339,7 +339,7 @@ def build(JOB, OBJ, J):
                 co = ob.data.vertices[lp.vertex_index].co
                 uvl.data[lp.index].uv = ((co.x - x0) / max(1e-4, x1 - x0), (co.z - z0) / max(1e-4, z1 - z0))
             OBJ['tache'] = ob
-            EXTRA['tache'] = {'name': 'tache', 'tag': 'acc:face:tache', 'force': 'head',
+            EXTRA['tache'] = {'name': 'tache', 'tag': 'acc:face:tache', 'force': None,
                               'mat': ('ID_2', hexlin(JOB['tache'].get('color', '#9a9a9a')), 0.7, _strand_image('tache_strands'), False)}
             print('TACHE', len(ob.data.polygons), 'faces')
             print('TACHE BAND z %.3f..%.3f (nose %.3f, mouth %.3f, eye %.3f)' % (z_bot, z_top, L['nose'].z, L['mouth_z'], ec.z))
@@ -420,6 +420,7 @@ def build(JOB, OBJ, J):
             EXTRA[role] = {'name': 'chestTattoo%d' % i, 'tag': 'acc:tattoo:arm', 'force': 'chest',
                            'mat': ('ID_26', (0.02, 0.02, 0.025, 1.0), 0.6, None, False)}
         print('CHEST TATTOO', T.get('side'), 'at', (round(cx, 3), round(cz, 3)))
+    build_kit(JOB, OBJ, J, L)
     for role in EXTRA:                          # pieces cut from the skin carry its custom normals: drop them (dark blotches)
         me = OBJ[role].data
         if 'custom_normal' in me.attributes: me.attributes.remove(me.attributes['custom_normal'])
@@ -451,10 +452,19 @@ def split_classes(top):
 def materials(OBJ, JOB, texdir):
     """Untextured (or strand-textured) palette materials for the extra pieces."""
     for role, spec in EXTRA.items():
+        if spec.get('mats'):                    # several palette materials, picked per face by spec['face_mat'](polygon)
+            me = OBJ[role].data
+            for nm, rgba, rough in spec['mats']:
+                mt = bpy.data.materials.new(nm); mt.use_nodes = True
+                b = mt.node_tree.nodes['Principled BSDF']; b.inputs['Base Color'].default_value = rgba; b.inputs['Roughness'].default_value = rough
+                mt.use_backface_culling = False; me.materials.append(mt)
+            if spec.get('face_mat'):
+                for pl in me.polygons: pl.material_index = spec['face_mat'](pl)
+            continue
         name, rgba, rough, img, alpha = spec['mat']
         if img is not None and not img.filepath_raw:      # generated strands: write a PNG so the glTF carries a file
             fp = os.path.join(texdir, img.name + '.png'); img.filepath_raw = fp; img.file_format = 'PNG'; img.save()
-        mat = bpy.data.materials.get(name) if name != 'ID_2' else None
+        mat = bpy.data.materials.get(name) if img is None and name != 'ID_2' else None   # textured: never borrow (ID_18 is also the brows)
         if mat is None:
             mat = bpy.data.materials.new(name); mat.use_nodes = True
             b = mat.node_tree.nodes['Principled BSDF']
@@ -478,3 +488,272 @@ def materials(OBJ, JOB, texdir):
                 Lk.new(nt.outputs['Color'], nm.inputs['Color']); Lk.new(nm.outputs['Normal'], b.inputs['Normal'])
             mat.use_backface_culling = False
         OBJ[role].data.materials.append(mat)
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# the wardrobe kit (Dez: every hat, the shades, the scarf, a beard, gloves, a mohican), each its own LOOK layer.
+# Job keys: "beanie", "bucket", "helmet" (hats, ID_14 / trim ID_15), "shades" (ID_19), "scarf" (ID_11 / ID_12 bands),
+# "beard" (ID_18 strands), "gloves" (ID_16), "mohawk" (ID_2). Each value is a dict of options ({} for defaults).
+
+def _bvh(ob):
+    bm = bmesh.new(); bm.from_mesh(ob.data); t = BVHTree.FromBMesh(bm); bm.free(); return t
+
+
+def _push_out(ob, bvh, off):
+    """Every vertex at least off outside the skin (along the skin's normal)."""
+    for v in ob.data.vertices:
+        hit = bvh.find_nearest(v.co, 0.1)
+        if hit[0] is None: continue
+        d = (v.co - hit[0]).dot(hit[1])
+        if d < off: v.co += hit[1] * (off - d)
+
+
+def _uv_planar(ob, ax='xz'):
+    me = ob.data; uvl = me.uv_layers.active or me.uv_layers.new(name='UVMap')
+    i0, i1 = 'xyz'.index(ax[0]), 'xyz'.index(ax[1])
+    cs = [v.co for v in me.vertices]
+    a0, a1 = min(c[i0] for c in cs), max(c[i0] for c in cs); b0, b1 = min(c[i1] for c in cs), max(c[i1] for c in cs)
+    for lp in me.loops:
+        c = me.vertices[lp.vertex_index].co
+        uvl.data[lp.index].uv = ((c[i0] - a0) / max(1e-4, a1 - a0), (c[i1] - b0) / max(1e-4, b1 - b0))
+
+
+def _beard_image(name, w=128, h=128, seed=11):
+    """Short dense beard: many short strands pointing down, darker roots, a soft ragged top edge."""
+    rng = np.random.default_rng(seed)
+    px = np.zeros((h, w, 4), np.float32); px[..., :3] = 0.5; px[..., 3] = 1.0
+    for _ in range(4000):
+        x, y = rng.uniform(0, 1), rng.uniform(0, 1)
+        L = rng.uniform(0.03, 0.08); sh = rng.uniform(0.6, 1.0)
+        for t in np.linspace(0, L, 6):
+            xx = int(np.clip(x + t * 0.15, 0, 0.999) * w); yy = int(np.clip(y - t, 0, 0.999) * h)
+            px[yy, xx, :3] = np.maximum(px[yy, xx, :3], sh)
+    img = bpy.data.images.new(name, w, h, alpha=True); img.pixels.foreach_set(px.ravel()); return img
+
+
+def _smooth_rim(ob, bvh, off, it=8):
+    """Relax a shell's open edges (no face staircase), then hold them off the skin again."""
+    bm = bmesh.new(); bm.from_mesh(ob.data)
+    for _ in range(it):
+        mv = {}
+        for v in bm.verts:
+            if not v.is_boundary: continue
+            nb = [e.other_vert(v) for e in v.link_edges if e.is_boundary]
+            if len(nb) == 2: mv[v] = v.co.lerp((nb[0].co + nb[1].co) * 0.5, 0.6)
+        for v, c in mv.items(): v.co = c
+    bm.to_mesh(ob.data); bm.free()
+    _push_out(ob, bvh, off)
+
+
+def build_kit(JOB, OBJ, J, L):
+    body = OBJ['body']; ec, axis = L['eye'], L['axis']
+    def radial(co): return math.hypot(co.x - axis.x, co.y - axis.y)
+    bvh = None
+    def B():
+        nonlocal bvh
+        if bvh is None: bvh = _bvh(body)
+        return bvh
+
+    def head_shell(name, rim, off, ears=False):
+        """A shell over the skull above rim(co) (a height that can depend on where you are round the head)."""
+        def keep(co, n):
+            if radial(co) > 0.15 or co.z < rim(co): return False
+            return ears or not (abs(co.x) > 0.07 and co.z < ec.z + 0.05)
+        ob = _shell(body, keep, 0.0, name)
+        _push_out(ob, B(), off)
+        _snap_rim(ob, lambda co: Vector((co.x, co.y, max(co.z, rim(co)))))
+        return ob
+
+    if JOB.get('beanie') is not None:
+        o = JOB['beanie']; off = o.get('offset', 0.016)
+        rim = lambda co: ec.z + 0.045 - 0.12 * max(0.0, co.y - L['eye_front'])
+        ob = head_shell('beanie', rim, off)
+        zmin = min(v.co.z for v in ob.data.vertices); zt = max(v.co.z for v in ob.data.vertices)
+        bm = bmesh.new(); bm.from_mesh(ob.data)               # the bobble on top
+        top = Vector((axis.x, axis.y + 0.01, zt + 0.022))
+        bmesh.ops.create_uvsphere(bm, u_segments=12, v_segments=8, radius=0.03, matrix=__import__('mathutils').Matrix.Translation(top))
+        # the turned-up band: a fat ring round the rim (a clean edge, not the face staircase)
+        rimv = [v.co.copy() for v in bm.verts if v.is_boundary]
+        if rimv:
+            cx = sum(c.x for c in rimv) / len(rimv); cy = sum(c.y for c in rimv) / len(rimv)
+            N, M, Tb = 32, 6, 0.017
+            rows = []
+            for i in range(N + 1):
+                a = i / N * 2 * math.pi
+                d = Vector((math.sin(a), -math.cos(a), 0))
+                # the rim's own radius and height in this direction
+                best = max(rimv, key=lambda c: (c - Vector((cx, cy, c.z))).normalized().dot(d) if (c - Vector((cx, cy, c.z))).length > 1e-4 else -1)
+                r = math.hypot(best.x - cx, best.y - cy); zc = best.z + Tb * 0.9
+                c0 = Vector((cx, cy, zc)) + d * (r + Tb * 0.35)
+                rows.append([bm.verts.new(c0 + d * math.cos(b) * Tb * 0.7 + Vector((0, 0, math.sin(b) * Tb * 1.3))) for b in [k / M * 2 * math.pi for k in range(M)]])
+            for i in range(N):
+                for k in range(M):
+                    bm.faces.new((rows[i][k], rows[i + 1][k], rows[i + 1][(k + 1) % M], rows[i][(k + 1) % M])).material_index = 1
+        bm.to_mesh(ob.data); bm.free()
+        for p in ob.data.polygons: p.use_smooth = True
+        OBJ['beanie'] = ob
+        EXTRA['beanie'] = {'name': 'beanie', 'tag': 'acc:hat:beanie', 'force': 'head',
+                           'mats': [('ID_14', hexlin('#c8102e'), 0.95), ('ID_15', hexlin('#f4f1e8'), 0.95)],
+                           'face_mat': lambda pl, zt=zt: 1 if (pl.material_index == 1 or pl.center.z > zt + 0.002) else 0}
+        print('BEANIE', len(ob.data.polygons))
+
+    if JOB.get('bucket') is not None:
+        o = JOB['bucket']; off = o.get('offset', 0.018)
+        rim = lambda co: ec.z + 0.05
+        ob = head_shell('bucket', rim, off)
+        zt = max(v.co.z for v in ob.data.vertices)
+        for v in ob.data.vertices:                            # a flat-topped crown
+            if v.co.z > zt - 0.03: v.co.z = zt - 0.03 + (v.co.z - (zt - 0.03)) * 0.35
+        bm = bmesh.new(); bm.from_mesh(ob.data)
+        for _ in range(10):                                   # a round, level band to hang the brim from
+            mv = {}
+            for v in bm.verts:
+                if not v.is_boundary: continue
+                nb = [e.other_vert(v) for e in v.link_edges if e.is_boundary]
+                if len(nb) == 2: mv[v] = v.co.lerp((nb[0].co + nb[1].co) * 0.5, 0.6)
+            for v, c in mv.items(): v.co = c; v.co.z = ec.z + 0.05
+        rimE = [e for e in bm.edges if e.is_boundary]
+        ext = bmesh.ops.extrude_edge_only(bm, edges=rimE)
+        for v in [g for g in ext['geom'] if isinstance(g, bmesh.types.BMVert)]:
+            d = Vector((v.co.x - axis.x, v.co.y - axis.y, 0)).normalized()
+            v.co += d * 0.05 + Vector((0, 0, -0.022))
+        bm.to_mesh(ob.data); bm.free()
+        OBJ['bucket'] = ob
+        EXTRA['bucket'] = {'name': 'bucketHat', 'tag': 'acc:hat:bucket', 'force': 'head', 'mat': ('ID_14', hexlin('#d8d0b8'), 0.95, None, False)}
+        print('BUCKET', len(ob.data.polygons))
+
+    if JOB.get('helmet') is not None:
+        o = JOB['helmet']; off = o.get('offset', 0.028)
+        rim = lambda co: ec.z + 0.035 - 0.5 * max(0.0, co.y - L['eye_front'] - 0.04)
+        ob = head_shell('helmet', rim, off, ears=True)
+        bm = bmesh.new(); bm.from_mesh(ob.data)
+        for _ in range(12):                                   # a hard shell: smooth the skull's lumps away
+            new = {v: v.co.lerp(sum((e.other_vert(v).co for e in v.link_edges), Vector()) / len(v.link_edges), 0.6)
+                   for v in bm.verts if v.link_edges and not v.is_boundary}
+            for v, c in new.items(): v.co = c
+        bm.to_mesh(ob.data); bm.free()
+        _push_out(ob, B(), off)
+        OBJ['helmet'] = ob
+        EXTRA['helmet'] = {'name': 'helmet', 'tag': 'acc:hat:helmet', 'force': 'head', 'mat': ('ID_14', hexlin('#20242c'), 0.35, None, False)}
+        print('HELMET', len(ob.data.polygons))
+
+    if JOB.get('shades') is not None:
+        ev = [v.co for v in OBJ['eyes'].data.vertices]
+        eyes = [sum((c for c in ev if c.x * sg > 0), Vector()) / max(1, sum(1 for c in ev if c.x * sg > 0)) for sg in (1, -1)]
+        yf = L['eye_front'] - 0.012
+        bm = bmesh.new(); ring = []
+        for e in eyes:
+            c = bm.verts.new(Vector((e.x, yf, e.z)))
+            pts = [bm.verts.new(Vector((e.x + math.cos(a) * 0.022, yf + 0.002 * math.sin(a) ** 2, e.z + math.sin(a) * 0.016 - (0.003 if math.sin(a) < 0 else 0))))
+                   for a in [i / 18 * 2 * math.pi for i in range(18)]]
+            for i in range(18): bm.faces.new((c, pts[i], pts[(i + 1) % 18]))
+            ring.append(pts)
+        # bridge and the arms back to the ears
+        def bar(a, b, w=0.004):
+            d = (b - a); up = Vector((0, 0, w))
+            bm.faces.new((bm.verts.new(a - up), bm.verts.new(b - up), bm.verts.new(b + up), bm.verts.new(a + up)))
+        bar(Vector((eyes[1].x + 0.02, yf, eyes[1].z + 0.004)), Vector((eyes[0].x - 0.02, yf, eyes[0].z + 0.004)), 0.003)
+        for e, sg in zip(eyes, (1, -1)):
+            a = Vector((e.x + sg * 0.022, yf, e.z + 0.004)); hb = Vector((sg * 0.074, axis.y + 0.01, e.z - 0.004))
+            bm.faces.new((bm.verts.new(a - Vector((0, 0, 0.003))), bm.verts.new(hb - Vector((0, 0, 0.003))), bm.verts.new(hb + Vector((0, 0, 0.003))), bm.verts.new(a + Vector((0, 0, 0.003)))))
+        me = bpy.data.meshes.new('shades'); bm.normal_update(); bm.to_mesh(me); bm.free()
+        ob = bpy.data.objects.new('shades', me); bpy.context.scene.collection.objects.link(ob)
+        for g in body.vertex_groups: ob.vertex_groups.new(name=g.name)
+        OBJ['shades'] = ob
+        EXTRA['shades'] = {'name': 'shades', 'tag': 'acc:face:shades', 'force': 'head', 'mat': ('ID_19', (0.02, 0.02, 0.025, 1), 0.12, None, False)}
+
+    if JOB.get('scarf') is not None:
+        # a terrace scarf: two thick wraps round the bottom of the neck, the ends hanging down the front, in bands of
+        # the club's two colours (ID_11 / ID_12, look.scarf.a / .b)
+        o = JOB['scarf']
+        nz = J['neck'].z + o.get('lift', 0.0)
+        ring = [v.co for v in body.data.vertices if abs(v.co.z - nz) < 0.012 and math.hypot(v.co.x - J['neck'].x, v.co.y - J['neck'].y) < 0.11]
+        cx = sum(c.x for c in ring) / len(ring); cy = sum(c.y for c in ring) / len(ring)
+        rx = max(abs(c.x - cx) for c in ring); ry = max(abs(c.y - cy) for c in ring)
+        T = o.get('thick', 0.009); TH = o.get('height', 0.021); N, M = 32, 8
+        bm = bmesh.new()
+        def tube(zc, grow, phase):
+            rows = []
+            for i in range(N + 1):
+                a = i / N * 2 * math.pi
+                c = Vector((cx + math.sin(a) * (rx + T + 0.004 + grow), cy - math.cos(a) * (ry + T + 0.004 + grow), zc))
+                out = Vector((math.sin(a) * ry, -math.cos(a) * rx, 0)).normalized()
+                rows.append([bm.verts.new(c + out * math.cos(b) * T + Vector((0, 0, math.sin(b) * TH))) for b in [k / M * 2 * math.pi for k in range(M)]])
+            for i in range(N):
+                for k in range(M):
+                    f = bm.faces.new((rows[i][k], rows[i + 1][k], rows[i + 1][(k + 1) % M], rows[i][(k + 1) % M]))
+                    f.material_index = ((i + phase) // 3) % 2
+        tube(nz - 0.016, 0.006, 0)
+        tube(nz + 0.03, -0.002, 1)
+        # the two ends, hanging down the chest from the front of the knot, a little apart
+        bvh = B()
+        for sg, ln in ((1, 0.30), (-1, 0.24)):
+            x0 = cx + sg * 0.035; W = 0.085; rows = []
+            for k in range(13):
+                z = nz - 0.02 - ln * k / 12
+                hit = bvh.ray_cast(Vector((x0, cy - 0.6, z)), Vector((0, 1, 0)), 1.0)
+                yy = (hit[0].y if hit[0] is not None else cy - ry) - o.get('ends_out', 0.085)     # outside the clothes
+                rows.append((bm.verts.new(Vector((x0 - W / 2, yy, z))), bm.verts.new(Vector((x0 + W / 2, yy, z)))))
+            for k in range(12):
+                f = bm.faces.new((rows[k][0], rows[k][1], rows[k + 1][1], rows[k + 1][0]))
+                f.material_index = (k // 2) % 2
+                f.normal_update()
+                if f.normal.y > 0: f.normal_flip()           # face the front (the runtime's palette materials are one-sided)
+        bm.normal_update()
+        me = bpy.data.meshes.new('scarf'); bm.to_mesh(me); bm.free()
+        for pl in me.polygons: pl.use_smooth = True
+        ob = bpy.data.objects.new('scarf', me); bpy.context.scene.collection.objects.link(ob)
+        for g in body.vertex_groups: ob.vertex_groups.new(name=g.name)
+        OBJ['scarf'] = ob
+        EXTRA['scarf'] = {'name': 'scarf', 'tag': 'acc:scarf', 'force': 'chest',
+                          'mats': [('ID_11', hexlin('#c8102e'), 0.95), ('ID_12', hexlin('#f4f1e8'), 0.95)], 'face_mat': None}
+        print('SCARF', len(ob.data.polygons))
+
+    if JOB.get('beard') is not None:
+        o = JOB['beard']
+        nose_b = L['nose'].z - 0.014
+        def keep(co, n):
+            if radial(co) > 0.12 or co.y > axis.y + 0.01: return False
+            if co.z > nose_b or co.z < L['mouth_z'] - 0.05 - 0.25 * max(0.0, co.y - (L['eye_front'] + 0.02)): return False   # jaw and chin, not the neck
+            if co.z > ec.z - 0.045 and abs(co.x) > 0.05: return False        # cheeks stay clear up near the eyes
+            if abs(co.x) < 0.028 and abs(co.z - L['mouth_z']) < 0.009: return False   # the mouth
+            return abs(co.x) < 0.078
+        ob = _shell(body, keep, 0.0, 'beard')
+        _push_out(ob, B(), o.get('offset', 0.008))
+        _smooth_rim(ob, B(), o.get('offset', 0.008))
+        _uv_planar(ob, 'xz')
+        OBJ['beard'] = ob
+        EXTRA['beard'] = {'name': 'beard', 'tag': 'acc:face:beard', 'force': None,          # skinned like the jaw under it
+                          'mat': ('ID_18', hexlin('#3a2717'), 0.8, _beard_image('beard_strands'), False)}
+        print('BEARD', len(ob.data.polygons))
+
+    if JOB.get('gloves') is not None:
+        gname = {g.index: g.name for g in body.vertex_groups}
+        HAND = ('hand', 'thumb', 'index', 'middle', 'ring', 'pinky')
+        keepv = set()
+        for v in body.data.vertices:
+            tot = sum(g.weight for g in v.groups if _is_bone(gname.get(g.group, ''))) or 1
+            hw = sum(g.weight for g in v.groups if gname.get(g.group, '').startswith(HAND)) / tot
+            if hw > 0.5: keepv.add(v.index)
+        kco = {tuple(round(c, 5) for c in body.data.vertices[i].co) for i in keepv}
+        ob = _shell(body, lambda co, n: tuple(round(c, 5) for c in co) in kco, 0.0, 'gloves')
+        _push_out(ob, B(), JOB['gloves'].get('offset', 0.003))
+        OBJ['gloves'] = ob
+        EXTRA['gloves'] = {'name': 'gloves', 'tag': 'acc:gloves', 'force': None, 'mat': ('ID_16', hexlin('#141416'), 0.7, None, False)}
+        print('GLOVES', len(ob.data.polygons))
+
+    if JOB.get('mohawk') is not None:
+        o = JOB['mohawk']
+        def keep(co, n):
+            return abs(co.x) < o.get('half', 0.018) and co.z > ec.z + 0.03 and radial(co) < 0.15 and co.z > ec.z + 0.03 - 0.6 * max(0.0, co.y - axis.y - 0.04)
+        ob = _shell(body, keep, 0.002, 'mohawk')
+        bm = bmesh.new(); bm.from_mesh(ob.data); bm.normal_update()
+        ext = bmesh.ops.extrude_face_region(bm, geom=bm.faces[:])
+        vs = [g for g in ext['geom'] if isinstance(g, bmesh.types.BMVert)]
+        for v in vs:
+            d = Vector((0, v.co.y - axis.y, v.co.z - (ec.z - 0.02))).normalized()
+            v.co += d * o.get('height', 0.05); v.co.x *= 0.45
+        bm.normal_update(); bm.to_mesh(ob.data); bm.free()
+        OBJ['mohawk'] = ob
+        EXTRA['mohawk'] = {'name': 'mohawk', 'tag': 'acc:hair:mohawk', 'force': 'head', 'mat': ('ID_2', hexlin('#3a2717'), 0.7, None, False)}
+        print('MOHAWK', len(ob.data.polygons))

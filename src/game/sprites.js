@@ -124,6 +124,9 @@ export function modelReady(name) { return !!MODELS[name]; }
 // ------------------------------------------------------------------ look -> model + layers + palette
 const TORSO_OF = { harrington: 'jacket', bomber: 'jacket', track: 'jacket', leather: 'jacket', suit: 'jacket', shirt: 'jacket', parka: 'parka', tee: 'tee', polo: 'tee', vest: 'tee', hivis: 'hivis', hoodie: 'hoodie', overshirt: 'jacket', bare: 'bare' };
 
+// wardrobe hero garments: every jacket-like style wears the jacket, the rest their own top
+const HERO_TOP = { tee: 'tee', polo: 'polo', shirt: 'shirt', vest: 'tee' };
+
 export function modelForLook(look) {
   const b = look.build || 1;
   const pre = look.female ? 'f' : look.muscle ? 'b' : look.lanky ? 'l' : b >= 1.28 ? 'h' : 'm';
@@ -197,6 +200,9 @@ export function specForLook(look) {
   if (Pn.style === 'cargo') layers.push('pants:cargo');
   if (J.style === 'track') layers.push('track:stripes');      // three stripes down the sleeves (colour: jacket trim)
   if (S.stripe) layers.push('shoes:stripes');                // three stripes + heel tab on the trainers
+  // realistic wardrobe heroes (Dez, assets/models/hero/dez.glb) carry a garment per kind: show the outfit's
+  layers.push('top:' + (HERO_TOP[J.style || 'harrington'] || 'jacket'), 'legs:' + (Pn.style || 'jeans'));
+  if (look.gloves) layers.push('gloves');
   const accModel = model.split('_')[0] + '_jacket';
   const key = model + '|' + layers.join(',') + '|' + pal.map(c => c ? c.join('.') : '').join(';');
   return { model, accModel, layers, pal, key };
