@@ -1,0 +1,50 @@
+{
+  "out": "assets/models/hero/stig.glb",
+  "preview": "build/mpfb/stig_preview.png",
+  "tex": "build/mpfb/tex_stig",
+  "height": 1.78,
+  "macro": {
+    "gender": 1.0,
+    "age": 0.42,
+    "muscle": 0.5,
+    "weight": 0.3,
+    "proportions": 0.6,
+    "height": 0.35
+  },
+  "targets": {
+    "l-cheek-volume-decr": 0.3,
+    "r-cheek-volume-decr": 0.3,
+    "chin-prominent-incr": 0.3,
+    "nose-scale-vert-incr": 0.2,
+    "head-oval": 0.4,
+    "neck-scale-horiz-decr": 0.2
+  },
+  "assets": {
+    "hair": "short02",
+    "brows": "eyebrow006",
+    "top": "male_casualsuit05",
+    "pants": null
+  },
+  "eye_mat": "blue",
+  "tints": {
+    "body": "#f0c098",
+    "hair": "#e8d27a",
+    "brows": "#c9b060",
+    "top": "#4e5536",
+    "pants": "#7d97bf",
+    "shoes": "#2d5bb3",
+    "sole": "#e8e0d0"
+  },
+  "hair_layer": "hair:mod",
+  "sole_h": 0.026,
+  "meta": {
+    "build": "f",
+    "torso": "jacket",
+    "girth": 0.92,
+    "hero": "stig"
+  },
+  "top_split": {
+    "pants": "#7d97bf",
+    "shirt": "#1f3f8f"
+  }
+}

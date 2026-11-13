@@ -241,7 +241,7 @@ function tattooTexture(kind = 'clockwork') {
   // worn ink: knock random flecks out of it
   g.globalCompositeOperation = 'destination-out';
   let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  for (let k = 0; k < 2600; k++) { const r = 0.6 + rnd() * 2.2; g.beginPath(); g.arc(rnd() * S, rnd() * S, r, 0, Math.PI * 2); g.fill(); }
+  for (let k = 0; k < 900; k++) { const r = 0.6 + rnd() * 1.6; g.beginPath(); g.arc(rnd() * S, rnd() * S, r, 0, Math.PI * 2); g.fill(); }
   g.globalCompositeOperation = 'source-over';
   const t = TATTOOS[kind] = new THREE.CanvasTexture(cv);
   t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;

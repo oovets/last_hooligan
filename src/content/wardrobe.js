@@ -194,8 +194,14 @@ export function buildLook(outfit = {}) {
     gloves: (gl && gl.gloves) || null,
     build: 1.05,
     height: 1,
+    // the realistic menu model (assets/models/hero/dez.glb: a jacket over a shirt, jeans, trainers, a short crop, all
+    // tinted from this outfit) when the outfit is one it can show; anything else keeps the v2 doll
+    hero: HERO_JACKETS.has(j.style) && HERO_PANTS.has(p.style) && HERO_HAIR.has(hair.style) ? 'dez' : undefined,
   };
 }
+const HERO_JACKETS = new Set(['harrington', 'bomber', 'leather', 'overshirt', 'track', 'parka']);
+const HERO_PANTS = new Set(['jeans', 'cargo', 'suit']);
+const HERO_HAIR = new Set(['crop', 'shaved', 'skinhead', 'bald']);
 
 function totals(data) {
   const scarves = Object.values(data.scarves || {}).reduce((s, a) => s + (a ? a.length : 0), 0);

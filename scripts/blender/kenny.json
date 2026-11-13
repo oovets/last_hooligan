@@ -1,0 +1,73 @@
+{
+  "out": "assets/models/hero/kenny.glb",
+  "preview": "build/mpfb/kenny_preview.png",
+  "tex": "build/mpfb/tex_kenny",
+  "height": 1.78,
+  "macro": {
+    "gender": 1.0,
+    "age": 0.45,
+    "muscle": 1.0,
+    "weight": 0.78,
+    "proportions": 0.6,
+    "height": 0.6
+  },
+  "targets": {
+    "measure-shoulder-dist-incr": 1.0,
+    "torso-muscle-dorsi-incr": 1.0,
+    "torso-muscle-pectoral-incr": 0.9,
+    "torso-scale-horiz-incr": 0.7,
+    "torso-scale-depth-incr": 0.45,
+    "measure-upperarm-circ-incr": 1.0,
+    "l-lowerarm-muscle-incr": 0.7,
+    "r-lowerarm-muscle-incr": 0.7,
+    "measure-neck-circ-incr": 1.0,
+    "chin-width-incr": 0.3,
+    "neck-scale-horiz-incr": 0.5,
+    "l-upperarm-muscle-incr": 0.8,
+    "r-upperarm-muscle-incr": 0.8,
+    "measure-frontchest-dist-incr": 0.7,
+    "torso-vshape-incr": 0.7
+  },
+  "assets": {
+    "hair": null,
+    "brows": null,
+    "top": null,
+    "pants": "cortu_cargo_pants"
+  },
+  "eye_mat": "green",
+  "tints": {
+    "body": "#d99a6c",
+    "pants": "#3e4632",
+    "shoes": "#f4f4f0",
+    "stripes": "#141416",
+    "sole": "#ecebe6"
+  },
+  "balaclava": {
+    "color": "#ff5a00",
+    "knit_normal": false
+  },
+  "shoe_stripes": true,
+  "sole_h": 0.026,
+  "meta": {
+    "build": "m",
+    "torso": "bare",
+    "girth": 1.2,
+    "hero": "kenny"
+  },
+  "chest_tattoos": [
+    {
+      "side": "R",
+      "size": 0.12,
+      "drop": 0.025,
+      "out": 0.077
+    },
+    {
+      "side": "L",
+      "size": 0.09,
+      "aspect": 1.25,
+      "drop": 0.022,
+      "out": 0.077,
+      "image": "assets/models/hero/src/aik_ink.png"
+    }
+  ]
+}

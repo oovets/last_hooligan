@@ -1,6 +1,11 @@
 {
  "models": {
   "vic": "vic.glb",
-  "bigal": "bigal.glb"
+  "bigal": "bigal.glb",
+  "mo": "mo.glb",
+  "stig": "stig.glb",
+  "oldboy": "oldboy.glb",
+  "kenny": "kenny.glb",
+  "dez": "dez.glb"
  }
 }

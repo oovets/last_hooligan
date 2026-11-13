@@ -233,10 +233,17 @@ def hide_under(inner, outer, slack=0.03, margin=0.06):
     bmesh.ops.delete(bm, geom=gone, context='VERTS')
     bm.to_mesh(inner.data); bm.free(); inner.data.update()
     return len(gone)
-if JOB.get('hide_pants_under_top'):
+if JOB.get('hide_pants_under_top') and 'pants' in OBJ:
     print('PANTS HIDDEN UNDER TOP', hide_under(OBJ['pants'], OBJ['top']), 'verts')
 TG = JOB.get('top_clear', [0.008, 0.04])           # (gap, reach) m: a loose untucked shirt needs a little more
-print('TOP LIFTED', clear_of(OBJ['top'], OBJ['pants'], TG[0], TG[1]), 'verts')
+if 'pants' in OBJ and 'top' in OBJ:
+    print('TOP LIFTED', clear_of(OBJ['top'], OBJ['pants'], TG[0], TG[1]), 'verts')
+
+# extra kit MPFB has no asset for (balaclava, flat cap, tache, arm tattoo, a vest cut from a tee; scripts/blender/mpfb_extras.py)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import mpfb_extras
+TOP_CLS = mpfb_extras.split_classes(OBJ['top']) if JOB.get('top_split') else []    # from the outfit's original texture
+EX = mpfb_extras.build(JOB, OBJ, J)
 
 # the arm badge (job "badge": true): a UV-mapped patch hugging the top's left sleeve, like char_v2's (layer 'badge:arm',
 # material ID_24: the runtime draws the design, characters2.js badgeTexture). Rides the upper arm only.
@@ -360,8 +367,11 @@ def conform_weights(ob, force=None):
     return orphans
 
 FORCE_HEAD = ('eyes', 'brows', 'lashes', 'teeth', 'hair')       # everything on the head rides the head bone only
+def forced_bone(role):
+    if role in EX: return EX[role]['force']
+    return 'head' if role in FORCE_HEAD else 'upperArm_L' if role == 'badge' else 'foot_' + role[-1] if role.startswith('stripes_') else None
 for role, ob in OBJ.items():
-    n = conform_weights(ob, 'head' if role in FORCE_HEAD else 'upperArm_L' if role == 'badge' else 'foot_' + role[-1] if role.startswith('stripes_') else None)
+    n = conform_weights(ob, forced_bone(role))
     if n: print('WARN %s: %d unweighted verts -> hips' % (role, n))
 
 BONES = [('root', 'root', None, None), ('hips', 'hips', 'spine', 'root'), ('spine', 'spine', 'chest', 'hips'),
@@ -397,10 +407,11 @@ def strip_props(idb):
 NAMES = {'body': 'body', 'eyes': 'eyes', 'brows': 'eyebrows', 'lashes': 'eyelashes', 'teeth': 'teeth', 'hair': 'hair',
          'top': 'top', 'pants': 'pants', 'shoes': 'shoes', 'badge': 'badge', 'stripes_L': 'shoeStripesL', 'stripes_R': 'shoeStripesR'}
 TAGS = {'hair': 'acc:' + JOB.get('hair_layer', 'hair:crop'), 'badge': 'acc:badge:arm', 'stripes_L': 'acc:shoes:stripes', 'stripes_R': 'acc:shoes:stripes'}   # shown only for LOOKs with hair / a badge / striped trainers
+for role, spec in EX.items(): NAMES[role] = spec['name']; TAGS[role] = spec['tag']
 for role, ob in OBJ.items():
     strip_props(ob)                              # MPFB bookkeeping props would leak into glTF extras
     ob.name = ob.data.name = NAMES[role]
-    ob['tags'] = TAGS.get(role, ''); ob['bone'] = 'head' if role in FORCE_HEAD else 'upperArm_L' if role == 'badge' else 'foot_' + role[-1] if role.startswith('stripes_') else ''
+    ob['tags'] = TAGS.get(role, ''); ob['bone'] = forced_bone(role) or ''
     ob.parent = rig
     md = ob.modifiers.new('arm', 'ARMATURE'); md.object = rig
 
@@ -489,7 +500,7 @@ for sd in ('L', 'R'):   # untextured ID_23: the runtime colours the stripes with
         sb.inputs['Base Color'].default_value = hexlin(JOB.get('tints', {}).get('stripes', '#f2f2ee')); sb.inputs['Roughness'].default_value = 0.6
         OBJ['stripes_' + sd].data.materials.append(st_mat)
 for role, ob in OBJ.items():
-    if role == 'badge' or role.startswith('stripes_'): continue
+    if role == 'badge' or role.startswith('stripes_') or role in EX: continue
     mname, pid, prev, cap, alpha, rough = MAT[role]
     m = ob.data.materials[0]
     strip_props(m)
@@ -500,7 +511,12 @@ for role, ob in OBJ.items():
     bsdf.inputs['Roughness'].default_value = rough
     for ln in list(L):                                           # rebuild alpha + colour wiring
         if ln.to_node == bsdf and ln.to_socket.name in ('Alpha', 'Base Color'): L.remove(ln)
-    diff = N.get('DiffuseTexture')
+    diff = N.get('DiffuseTexture') or next((n for n in N if n.type == 'TEX_IMAGE' and n.image is not None), None)
+    if diff is None and role == 'body':      # some community skins come without the node MPFB names: load their map
+        mh = asset(*SKIN, ext='.mhmat')
+        tx = next(l.split(None, 1)[1].strip() for l in open(mh) if l.startswith('diffuseTexture'))
+        diff = N.new('ShaderNodeTexImage'); diff.name = 'DiffuseTexture'
+        diff.image = bpy.data.images.load(os.path.join(os.path.dirname(mh), tx))
     if role == 'body' and SKIN_TEX:
         diff.image = bpy.data.images.load(P(SKIN_TEX))
     if role == 'eyes':      # MPFB's eye mhclo defaults may not be the colour we want: load the chosen iris map
@@ -529,6 +545,18 @@ for role, ob in OBJ.items():
     alpha_tex = N.get('AlphaMapTexture')
     if alpha_tex is not None: N.remove(alpha_tex)
 
+mpfb_extras.materials(OBJ, JOB, TEXDIR)
+if TOP_CLS:  # an all-in-one outfit: denim faces -> ID_7 (look.pants), the shirt -> ID_6 (look.shirt), the jacket stays ID_3
+    tm = OBJ['top'].data; m3 = tm.materials[0]; idx = {}
+    for cls, mid, hx in (('pants', 'ID_7', JOB['top_split'].get('pants', '#34507a')), ('shirt', 'ID_6', JOB['top_split'].get('shirt', '#e8e4dc'))):
+        mc = m3.copy(); mc.name = mid
+        for nd in mc.node_tree.nodes:
+            if nd.type == 'MIX' and nd.data_type == 'RGBA': nd.inputs[7].default_value = hexlin(hx)
+        mc.diffuse_color = hexlin(hx)
+        tm.materials.append(mc); idx[cls] = len(tm.materials) - 1
+    for pl, cls in zip(tm.polygons, TOP_CLS):
+        if cls: pl.material_index = idx[cls]
+    print('TOP SPLIT', {c: TOP_CLS.count(c) for c in ('pants', 'shirt', None)})
 if SOLE_H:   # the sole (job "sole_h", m): the shoe faces below it get a copy of the trainer material named ID_10 (look.shoes.sole)
     shm = OBJ['shoes'].data; m9 = shm.materials[0]; m10 = m9.copy(); m10.name = 'ID_10'
     for nd in m10.node_tree.nodes:

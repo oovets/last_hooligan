@@ -1,0 +1,50 @@
+{
+  "out": "assets/models/hero/dez.glb",
+  "preview": "build/mpfb/dez_preview.png",
+  "tex": "build/mpfb/tex_dez",
+  "height": 1.78,
+  "macro": {
+    "gender": 1.0,
+    "age": 0.52,
+    "muscle": 0.62,
+    "weight": 0.55,
+    "proportions": 0.6,
+    "height": 0.55
+  },
+  "targets": {
+    "chin-width-incr": 0.3,
+    "head-square": 0.2,
+    "nose-volume-incr": 0.2,
+    "measure-shoulder-dist-incr": 0.3
+  },
+  "assets": {
+    "hair": "short02",
+    "brows": "eyebrow010",
+    "top": "male_casualsuit05",
+    "pants": null
+  },
+  "eye_mat": "brown",
+  "tints": {
+    "body": "#e2a97a",
+    "hair": "#3a2717",
+    "brows": "#3a2717",
+    "top": "#2b3a2a",
+    "shoes": "#f2f2ee",
+    "stripes": "#f2f2ee",
+    "sole": "#b9a27a"
+  },
+  "top_split": {
+    "pants": "#34507a",
+    "shirt": "#e8e4dc"
+  },
+  "hair_layer": "hair:crop",
+  "badge": true,
+  "shoe_stripes": true,
+  "sole_h": 0.026,
+  "meta": {
+    "build": "m",
+    "torso": "jacket",
+    "girth": 1.05,
+    "hero": "dez"
+  }
+}

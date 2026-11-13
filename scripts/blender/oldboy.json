@@ -1,0 +1,60 @@
+{
+  "out": "assets/models/hero/oldboy.glb",
+  "preview": "build/mpfb/oldboy_preview.png",
+  "tex": "build/mpfb/tex_oldboy",
+  "height": 1.78,
+  "macro": {
+    "gender": 1.0,
+    "age": 0.9,
+    "muscle": 0.45,
+    "weight": 0.62,
+    "proportions": 0.5,
+    "height": 0.5
+  },
+  "targets": {
+    "head-square": 0.4,
+    "chin-width-incr": 0.4,
+    "nose-volume-incr": 0.4,
+    "nose-scale-vert-incr": 0.3,
+    "l-ear-scale-incr": 0.4,
+    "r-ear-scale-incr": 0.4,
+    "stomach-pregnant-incr": 0.35,
+    "measure-neck-circ-incr": 0.5,
+    "mouth-angles-down": 0.3
+  },
+  "assets": {
+    "hair": null,
+    "brows": "eyebrow002",
+    "top": "male_casualsuit05",
+    "pants": null,
+    "skin": "old_caucasian_male"
+  },
+  "eye_mat": "brown",
+  "tints": {
+    "body": "#e2a97a",
+    "brows": "#9a9a9a",
+    "top": "#b5a98a",
+    "shoes": "#5a1418",
+    "sole": "#d8c060"
+  },
+  "top_split": {
+    "pants": "#4a4030",
+    "shirt": "#f0ece0"
+  },
+  "cap": {
+    "color": "#6a5a40"
+  },
+  "tache": {
+    "color": "#c4c0b8",
+    "below_nose": 0.007,
+    "over_lip": 0.013,
+    "width": 0.031
+  },
+  "sole_h": 0.026,
+  "meta": {
+    "build": "m",
+    "torso": "jacket",
+    "girth": 1.15,
+    "hero": "oldboy"
+  }
+}

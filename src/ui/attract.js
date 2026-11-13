@@ -36,8 +36,6 @@ export const STORY = [
   'I KNOW WHAT I\'D RATHER DO.',
   '',
   'TOTTENHAM AWAY, LOVE IT!',
-  '',
-  'THE LAST HOOLIGAN',
 ];
 const HARD = new Set(['FUCK THAT FOR A LAUGH!', 'TOTTENHAM AWAY, LOVE IT!']);   // the punchlines, in red
 
@@ -61,8 +59,7 @@ class StoryScene {
       if (y < 30 || y > VIEW_H) return;
       const fade = Math.min(1, (y - 30) / 40, (VIEW_H - y) / 30);
       ctx.globalAlpha = Math.max(0, fade);
-      const last = i === STORY.length - 1;
-      drawText(ctx, l, VIEW_W / 2, y, { color: last ? C.gold : HARD.has(l) ? '#ff3a3a' : '#ffffff', align: 'center', outline: '#000', scale: last ? 2 : 1 });
+      drawText(ctx, l, VIEW_W / 2, y, { color: HARD.has(l) ? '#ff3a3a' : '#ffffff', align: 'center', outline: '#000' });
     });
     ctx.globalAlpha = 1;
     if (blink(this.t)) drawText(ctx, 'PRESS START', VIEW_W / 2, VIEW_H - 14, { color: C.gold, align: 'center', outline: '#000' });

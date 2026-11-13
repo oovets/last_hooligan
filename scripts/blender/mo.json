@@ -1,0 +1,78 @@
+{
+  "out": "assets/models/hero/mo.glb",
+  "preview": "build/mpfb/mo_preview.png",
+  "tex": "build/mpfb/tex_mo",
+  "height": 1.78,
+  "macro": {
+    "gender": 1.0,
+    "age": 0.56,
+    "muscle": 0.82,
+    "weight": 0.95,
+    "proportions": 0.45,
+    "height": 0.6,
+    "race": {
+      "caucasian": 0.7,
+      "african": 0.15,
+      "asian": 0.15
+    }
+  },
+  "targets": {
+    "head-round": 0.5,
+    "head-fat-incr": 0.35,
+    "head-scale-horiz-incr": 0.35,
+    "chin-width-incr": 0.5,
+    "measure-neck-circ-incr": 1.0,
+    "neck-scale-horiz-incr": 0.6,
+    "nose-volume-incr": 0.4,
+    "nose-flaring-incr": 0.3,
+    "l-eye-scale-decr": 0.3,
+    "r-eye-scale-decr": 0.3,
+    "torso-scale-horiz-incr": 0.5,
+    "torso-scale-depth-incr": 0.35,
+    "measure-shoulder-dist-incr": 0.9,
+    "torso-muscle-dorsi-incr": 0.8,
+    "torso-muscle-pectoral-incr": 0.6,
+    "measure-upperarm-circ-incr": 0.7,
+    "l-lowerarm-muscle-incr": 0.6,
+    "r-lowerarm-muscle-incr": 0.6,
+    "stomach-pregnant-incr": 0.35,
+    "mouth-angles-down": 0.3
+  },
+  "cranium": {
+    "strength": 0.85,
+    "scale": [
+      1.04,
+      1.06,
+      1.08
+    ],
+    "lift": 0.003,
+    "back": 0.006
+  },
+  "assets": {
+    "hair": null,
+    "brows": "eyebrow010",
+    "top": "male_casualsuit05",
+    "pants": null,
+    "skin": "jartur69_middleage_slavic_male_with_genitals_and_beard"
+  },
+  "eye_mat": "brown",
+  "tints": {
+    "body": "#d49a6a",
+    "brows": "#2a1a10",
+    "top": "#1c1c22",
+    "pants": "#2a3a5a",
+    "shoes": "#5a1418",
+    "sole": "#d8c060"
+  },
+  "sole_h": 0.026,
+  "meta": {
+    "build": "h",
+    "torso": "jacket",
+    "girth": 1.5,
+    "hero": "mo"
+  },
+  "top_split": {
+    "pants": "#2a3a5a",
+    "shirt": "#c8102e"
+  }
+}
