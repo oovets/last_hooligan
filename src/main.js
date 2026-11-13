@@ -69,22 +69,26 @@ const qp0 = new URLSearchParams(location.search);
 const want3d = (qp0.get('renderer') || save.data.settings.renderer) === '3d';
 async function load3d() {
   try {
-    const m = await import('./render3d/renderer.js');
-    await Promise.all([m.loadCharacterModels(), m.loadCharacters2()]);
+    const m = await timed('3d:modules', import('./render3d/renderer.js'));
+    await Promise.all([timed('3d:models v1', m.loadCharacterModels()), timed('3d:models v2', m.loadCharacters2())]);
     r3d.renderer = new m.Renderer3D(glCanvas, canvas);
-    try { const ms = await import('./render3d/menustage.js'); r3d.menu = new ms.MenuStage(); } catch (e) { console.warn('[3d] menu stage unavailable', e); }
+    try { const ms = await timed('3d:menu', import('./render3d/menustage.js')); r3d.menu = new ms.MenuStage(); } catch (e) { console.warn('[3d] menu stage unavailable', e); }
   } catch (e) { console.warn('[3d] renderer unavailable, using 2D', e); }
 }
+// each preload step logs its time ([load] in the console) so slow loads can be diagnosed on the live site
+const T0 = performance.now();
+const timed = (name, p) => p.then(v => { console.info(`[load] ${name} ${Math.round(performance.now() - T0)}ms`); return v; });
 async function preload() {
-  const tasks = [loadEnv(), loadFonts()];
-  if (want3d) tasks.push(load3d());
+  const tasks = [timed('env', loadEnv()), timed('fonts', loadFonts())];
+  if (want3d) tasks.push(timed('3d', load3d()));
   try {
     const r = await fetch('assets/sprites/index.json');
-    if (r.ok) { const idx = await r.json(); EXTRAS.push(...(idx.extras || [])); tasks.push(loadModels(idx.models || [])); }
+    if (r.ok) { const idx = await r.json(); EXTRAS.push(...(idx.extras || [])); tasks.push(timed('sprites', loadModels(idx.models || []))); }
   } catch (e) { /* no sprites built */ }
   loadState.total = tasks.length;
   await Promise.all(tasks.map(t => t.then(() => { loadState.done++; })));
   loadState.ready = true;
+  console.info(`[load] ready ${Math.round(performance.now() - T0)}ms`);
 }
 const loading = {
   t: 0,

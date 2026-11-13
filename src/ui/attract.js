@@ -17,26 +17,26 @@ import { backdrop } from './backdrop.js';
 import { frame, heading, blink, scanlines, fmtScore, stripes, C, ladFigure } from './widgets.js';
 
 export const STORY = [
-  'NORDHAMN. A HARBOUR TOWN OF RAIN, RUST',
-  'AND ONE FOOTBALL CLUB: NORDHAMN ATHLETIC.',
-  'THE ANCHORS.',
+  'WHAT ELSE ARE YOU GONNA DO ON A SATURDAY?',
   '',
-  'FOR A HUNDRED YEARS THE RED AND WHITE',
-  'HAVE STOOD ON THE NORTH BANK TERRACE.',
+  'SIT IN YOUR FUCKIN\' ARMCHAIR',
+  'WANKIN\' OFF TO POP IDOLS?',
   '',
-  'NOW THE NORTH BANK IS TO BE BULLDOZED',
-  'FOR A CAR PARK. THE OLD FIRM HAS GROWN UP,',
-  'SETTLED DOWN, BOUGHT GARDEN FURNITURE.',
+  'THEN TRY AND AVOID YOUR WIFE\'S GAZE',
+  'AS YOU STRUGGLE TO COME TO TERMS',
+  'WITH YOUR SEXLESS MARRIAGE?',
   '',
-  'PORTSIDE CITY SMELL WEAKNESS.',
-  'VARGBY WANDERERS ARE COMING DOWN THE COAST.',
-  'THE DERBY IS ON SATURDAY.',
+  'THEN GO AND SPUNK YOUR WAGES ON KEBABS,',
+  'FRUIT MACHINES AND BRASSES?',
   '',
-  'ONE LAD IS STILL STANDING.',
-  'NO RULES. NO FEAR. JUST FOOTBALL.',
+  'FUCK THAT FOR A LAUGH!',
+  'I KNOW WHAT I\'D RATHER DO.',
   '',
-  'HE IS... THE LAST HOOLIGAN.',
+  'TOTTENHAM AWAY, LOVE IT!',
+  '',
+  'THE LAST HOOLIGAN',
 ];
+const HARD = new Set(['FUCK THAT FOR A LAUGH!', 'TOTTENHAM AWAY, LOVE IT!']);   // the punchlines, in red
 
 const leaveKeys = () => input.anyPressed();
 
@@ -59,7 +59,7 @@ class StoryScene {
       const fade = Math.min(1, (y - 30) / 40, (VIEW_H - y) / 30);
       ctx.globalAlpha = Math.max(0, fade);
       const last = i === STORY.length - 1;
-      drawText(ctx, l, VIEW_W / 2, y, { color: last ? C.gold : l.endsWith('.') && l.length < 14 ? '#ff6a7a' : '#ffffff', align: 'center', outline: '#000', scale: last ? 2 : 1 });
+      drawText(ctx, l, VIEW_W / 2, y, { color: last ? C.gold : HARD.has(l) ? '#ff3a3a' : '#ffffff', align: 'center', outline: '#000', scale: last ? 2 : 1 });
     });
     ctx.globalAlpha = 1;
     ctx.fillStyle = '#05030a'; ctx.fillRect(0, 0, VIEW_W, 28);
