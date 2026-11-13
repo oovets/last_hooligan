@@ -141,9 +141,10 @@ def stand(cfg, side, S):
     # roof: from the back out over the seats, a little tilt up at the front
     front = cfg.get('roof_front', back * 0.42)        # the roof covers the back of the stand, the front rows are open
     roofm = mat('roof', S.get('roof', '#d8dce2'), 0.55, 0.3)
-    objs.append(prism(f'{side}_roof', [(front, rz + 1.2), (back + 2.5, rz), (back + 2.5, rz + 1.4), (front, rz + 2.0)], L, [roofm]))
+    if not cfg.get('noroof'):
+        objs.append(prism(f'{side}_roof', [(front, rz + 1.2), (back + 2.5, rz), (back + 2.5, rz + 1.4), (front, rz + 2.0)], L, [roofm]))
     # roof-front floodlight strip
-    if S.get('floods', 'roof') == 'roof':
+    if S.get('floods', 'roof') == 'roof' and not cfg.get('noroof'):
         objs.append(prism(f'{side}_lights', [(front, rz + 0.6), (front + 1.2, rz + 0.5), (front + 1.2, rz + 1.1), (front, rz + 1.2)], L * 0.9, [mat('lamp', '#fff6e0', 0.3, 0, '#fff2d8', 18.0)]))
     if cfg.get('masts'):
         for k in range(cfg['masts']):
@@ -165,7 +166,8 @@ def corner(cx, cy, size, h, S):
 def pitch(S):
     me = bpy.data.meshes.new('pitch'); bm = bmesh.new()
     bmesh.ops.create_grid(bm, x_segments=1, y_segments=1, size=1.0)
-    bmesh.ops.scale(bm, vec=Vector(((PITCH_L + 2 * RUNOFF) / 2, (PITCH_W + 2 * RUNOFF) / 2, 1)), verts=bm.verts)
+    m_ = 3.0 if S.get('track') else RUNOFF
+    bmesh.ops.scale(bm, vec=Vector(((PITCH_L + 2 * m_) / 2, (PITCH_W + 2 * m_) / 2, 1)), verts=bm.verts)
     bm.to_mesh(me); bm.free()
     o = link(bpy.data.objects.new('pitch', me)); o.location.z = 0.02
     m = bpy.data.materials.new('grass'); m.use_nodes = True; nt = m.node_tree; N = nt.nodes
@@ -238,14 +240,14 @@ def surroundings(S, ext, seed):
         for k in range(int(w // 4)):
             if rnd.random() < 0.45: box('win', (1.4, d + 0.1, 1.2), (x + (k - w / 8) * 4 * (1 if rz % math.pi < 0.1 else 0), y + (k - w / 8) * 4 * (0 if rz % math.pi < 0.1 else 1), h * 0.6), win, rot_z=rz)
 
-def camera(ext):
+def camera(ext, span=None, target=(0, 0, 8), el=34, az=38):
     cam = bpy.data.cameras.new('cam'); cam.type = 'ORTHO'
-    span = (PITCH_L + 2 * ext) * 1.75
+    span = span or (PITCH_L + 2 * ext) * 1.75
     cam.ortho_scale = span
     o = link(bpy.data.objects.new('cam', cam)); bpy.context.scene.camera = o
-    el, az = math.radians(34), math.radians(38)
+    el, az = math.radians(el), math.radians(az)
     d = Vector((math.cos(el) * math.cos(az), -math.cos(el) * math.sin(az), math.sin(el)))
-    target = Vector((0, 0, 8))
+    target = Vector(target)
     o.location = target + d * 600
     o.rotation_euler = (target - o.location).to_track_quat('-Z', 'Y').to_euler()
     cam.clip_start, cam.clip_end = 1, 2000
@@ -282,8 +284,49 @@ STADIUMS = {
         corners=[]),
 }
 
-def build(sid, S):
+def render_to(sid):
+    os.makedirs(OUT, exist_ok=True)
+    bpy.context.scene.render.filepath = os.path.join(OUT, sid + '.png')
+    bpy.ops.render.render(write_still=True)
+    print('[stadium] rendered', sid)
+
+def track():
+    # an athletics track round the pitch (Stockholms Stadion): a red oval round the grass
+    me = bpy.data.meshes.new('track'); bm = bmesh.new()
+    bmesh.ops.create_circle(bm, cap_ends=True, radius=1.0, segments=64)
+    bmesh.ops.scale(bm, vec=Vector((PITCH_L / 2 + RUNOFF - 1, PITCH_W / 2 + RUNOFF - 1, 1)), verts=bm.verts)
+    bm.to_mesh(me); bm.free()
+    o = link(bpy.data.objects.new('track', me)); o.location.z = 0.01
+    o.data.materials.append(mat('track', '#a8402e', 0.8))
+
+def tower(x, y, w, h, color, roof='#3a3e46'):
+    box('tower', (w, w, h), (x, y, h / 2), mat('towerwall', color, 0.85))
+    box('towerwin', (w + 0.2, w + 0.2, 1.2), (x, y, h * 0.7), mat('window', '#ffd890', 0.4, 0, '#ffcf80', 1.6))
+    me = bpy.data.meshes.new('spire'); bm = bmesh.new()
+    bmesh.ops.create_cone(bm, cap_ends=True, segments=4, radius1=w * 0.75, radius2=0.2, depth=w * 1.2)
+    bm.to_mesh(me); bm.free()
+    o = link(bpy.data.objects.new('spire', me)); o.location = (x, y, h + w * 0.6); o.rotation_euler.z = math.pi / 4
+    o.data.materials.append(mat('spire', roof, 0.6, 0.3))
+
+def flares(S, n, seed=7):
+    # flares going off in the home end (Raasunda): red-hot cores with a light each and a haze of smoke above
+    rnd = random.Random(seed)
+    side = S.get('flare_side', 'N'); cfg = S['stands'][side]; dep, zf, zb = cfg['tiers'][0]
+    hot = mat('flare', '#ff5020', 0.3, 0, '#ff4010', 40.0)
+    rot, org, base_len = SIDES[side]; L = cfg.get('len', base_len + 6)
+    for i in range(n):
+        lx, d = rnd.uniform(-L * 0.4, L * 0.4), rnd.uniform(dep * 0.25, dep * 0.8)
+        lz = zf + (zb - zf) * d / dep + 0.8
+        v = Vector((lx, d, lz)); v.rotate(__import__('mathutils').Euler((0, 0, rot))); v += Vector(org(RUNOFF))
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.9, location=v); bpy.context.object.data.materials.append(hot)
+        bpy.ops.object.light_add(type='POINT', location=v + Vector((0, 0, 1.5))); l = bpy.context.object
+        l.data.energy = 9000; l.data.color = (1, 0.3, 0.12); l.data.shadow_soft_size = 2.5
+
+def build(sid, S, render=True):
+    global RUNOFF
     reset()
+    RUNOFF = S.get('runoff', 6.0)
+    if S.get('track'): track()
     pitch(S)
     ext = 0
     for side, cfg in S['stands'].items():
@@ -298,14 +341,15 @@ def build(sid, S):
         hm = mat('hotel', '#d8ccb0', 0.7); hw = mat('window', '#ffd890', 0.4, 0, '#ffcf80', 3.0)
         for (sx, sy, x, y, h) in [(26, 34, -(PITCH_L / 2 + ext + 18), 22, 30), (30, 26, -(PITCH_L / 2 + ext + 20), -18, 24)]:
             box('hotel', (sx, sy, h), (x, y, h / 2), hm); box('hotelwin', (sx + 0.2, sy * 0.8, 1.2), (x, y, h * 0.6), hw)
+    for (x, y, w, h, c) in S.get('towers', []): tower(x, y, w, h, c)
+    if S.get('flares'): flares(S, S['flares'])
     surroundings(S, ext, sum(map(ord, sid)))
     lights(S)
-    camera(ext)
-    os.makedirs(OUT, exist_ok=True)
-    bpy.context.scene.render.filepath = os.path.join(OUT, sid + '.png')
-    bpy.ops.render.render(write_still=True)
-    print('[stadium] rendered', sid)
+    camera(ext, span=S.get('span'))
+    if render: render_to(sid)
+    return ext
 
-for sid, S in STADIUMS.items():
-    if ONLY and sid not in ONLY: continue
-    build(sid, S)
+if __name__ == '__main__':
+    for sid, S in STADIUMS.items():
+        if ONLY and sid not in ONLY: continue
+        build(sid, S)
