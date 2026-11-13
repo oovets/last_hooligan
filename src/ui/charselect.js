@@ -41,8 +41,8 @@ export class CharSelectScene {
   constructor(levelIndex, onPick) {
     this.levelIndex = levelIndex; this.onPick = onPick;
     this.t = 0; this.rep = new Repeater();
-    const cur = CHARACTERS.findIndex(c => c.id === (save.data.character || 'hooligan'));
-    this.sel = Math.max(0, cur);
+    // always opens on Kenny Showtime (whoever you played last)
+    this.sel = Math.max(0, CHARACTERS.findIndex(c => c.id === 'kenny'));
     this.picked = -1; this.pickT = 0;
     this.looks = CHARACTERS.map(lookOf);
     this.specs = this.looks.map(l => specForLook(l));
