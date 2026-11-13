@@ -289,9 +289,9 @@ export function drawCrest(ctx, x, y, s = 1) {
   ctx.shadowColor = 'transparent';
   ctx.save(); shield(); ctx.clip();
   const rg = ctx.createLinearGradient(0, y, 0, y + h);
-  rg.addColorStop(0, '#ff3048'); rg.addColorStop(1, '#8a0418');
+  rg.addColorStop(0, '#2a2a2e'); rg.addColorStop(1, '#0a0a0b');          // black and yellow: a black field under a yellow chief
   ctx.fillStyle = rg; ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = '#f4f1e8'; ctx.fillRect(x, y, w, h * 0.42);
+  ctx.fillStyle = '#f2c811'; ctx.fillRect(x, y, w, h * 0.42);
   const sh = ctx.createLinearGradient(x, 0, x + w, 0);
   sh.addColorStop(0, 'rgba(255,255,255,0.25)'); sh.addColorStop(0.5, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(0,0,0,0.25)');
   ctx.fillStyle = sh; ctx.fillRect(x, y, w, h);
@@ -299,16 +299,21 @@ export function drawCrest(ctx, x, y, s = 1) {
   ctx.strokeStyle = '#121214'; ctx.lineWidth = 0.8 * s; shield(); ctx.stroke();
   ctx.strokeStyle = 'rgba(255,220,150,0.8)'; ctx.lineWidth = 0.3 * s;
   ctx.save(); ctx.translate(cx, y + h * 0.53); ctx.scale(0.86, 0.86); ctx.translate(-cx, -(y + h * 0.53)); shield(); ctx.stroke(); ctx.restore();
-  // anchor
-  ctx.strokeStyle = '#121214'; ctx.lineWidth = 1.15 * s; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.beginPath(); ctx.arc(cx, y + h * 0.19, 1.2 * s, 0, Math.PI * 2); ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(cx, y + h * 0.26); ctx.lineTo(cx, y + h * 0.84);
-  ctx.moveTo(cx - 3.6 * s, y + h * 0.36); ctx.lineTo(cx + 3.6 * s, y + h * 0.36);
-  ctx.moveTo(cx - 5 * s, y + h * 0.6); ctx.quadraticCurveTo(cx - 4.6 * s, y + h * 0.86, cx, y + h * 0.84); ctx.quadraticCurveTo(cx + 4.6 * s, y + h * 0.86, cx + 5 * s, y + h * 0.6);
-  ctx.stroke();
-  ctx.fillStyle = '#121214';
-  for (const d of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + d * 5.9 * s, y + h * 0.56); ctx.lineTo(cx + d * 3.9 * s, y + h * 0.63); ctx.lineTo(cx + d * 5.6 * s, y + h * 0.68); ctx.closePath(); ctx.fill(); }
+  // anchor: black, edged in yellow so it reads on the yellow chief and the black field alike
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const anchor = (col, lw, grow) => {
+    ctx.strokeStyle = col; ctx.lineWidth = lw;
+    ctx.beginPath(); ctx.arc(cx, y + h * 0.19, 1.2 * s, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx, y + h * 0.26); ctx.lineTo(cx, y + h * 0.84);
+    ctx.moveTo(cx - 3.6 * s, y + h * 0.36); ctx.lineTo(cx + 3.6 * s, y + h * 0.36);
+    ctx.moveTo(cx - 5 * s, y + h * 0.6); ctx.quadraticCurveTo(cx - 4.6 * s, y + h * 0.86, cx, y + h * 0.84); ctx.quadraticCurveTo(cx + 4.6 * s, y + h * 0.86, cx + 5 * s, y + h * 0.6);
+    ctx.stroke();
+    ctx.fillStyle = col;
+    for (const d of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + d * (5.9 + grow) * s, y + h * 0.56); ctx.lineTo(cx + d * (3.9 - grow) * s, y + h * 0.63); ctx.lineTo(cx + d * (5.6 + grow) * s, y + h * 0.68 + grow * s); ctx.closePath(); ctx.fill(); }
+  };
+  anchor('#f2c811', 2.1 * s, 0.4);
+  anchor('#121214', 1.15 * s, 0);
   ctx.restore();
   return { w, h };
 }
