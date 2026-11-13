@@ -1,6 +1,6 @@
 // LEVEL 6 — THE INDUSTRIAL ZONE: dock workers, welders, scaffolders, the hired nightwatchman,
 // tougher Portside / Vargby lads, and the boss BIG GUNNAR, foreman of the yard, with his giant wrench.
-import { registerEnemy, casualLook, RIVAL, AWAY } from '../enemies.js';
+import { registerEnemy, casualLook, RIVAL, AWAY, RIVAL_KIT } from '../enemies.js';
 import { registerAttack } from '../../game/combat.js';
 import { registerAttackPose, GUARD } from '../../game/poses.js';
 import { toScreen } from '../../engine/iso.js';
@@ -269,7 +269,7 @@ registerEnemy('industrial_gunnar', {
     hat: { style: 'helmet', color: '#e87020' },
     jacket: { style: 'hivis', color: '#ff7a1a' }, shirt: '#1d2a44',
     pants: { style: 'cargo', color: '#1d2a44' }, shoes: { color: '#3a2a1a', sole: '#141414' },
-    gloves: '#d8b040', scarf: { a: RIVAL.a, b: RIVAL.b }, build: 1.6, height: 1.36,
+    gloves: '#d8b040', scarf: RIVAL_KIT, build: 1.6, height: 1.36,
   },
   ai: { aggression: 0.5, reaction: 0.4, attacks: [['haymaker', 2], ['push', 1]], comboLen: [1, 2], blockChance: 0.15, ignoreTokens: true, keepDist: 2.8 },
   drops: [['kebab', 1]],

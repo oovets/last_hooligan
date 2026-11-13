@@ -205,7 +205,14 @@ function measurePixel(text, scale) {
   return Math.max(0, (w - 1) * scale);
 }
 
+// a filter every drawn/measured string goes through (content/rivals.js: the story's old made-up club names -> the real
+// rival clubs of the club you picked)
+let textFilter = null;
+export function setTextFilter(fn) { textFilter = fn || null; }
+const filt = text => (textFilter ? textFilter(text) : text);
+
 export function measureText(text, scale = 1) {
+  text = filt(text);
   if (textMode === 'hd' || (textMode === 'auto' && hdNow)) return measureHD(text, scale);
   return measurePixel(text, scale);
 }
@@ -226,6 +233,7 @@ export function isFrameHD() { return hdNow; }
 
 export function drawText(ctx, text, x, y, opts = {}) {
   const scale = opts.scale || 1;
+  text = filt(text);
   if (isHD(ctx)) return drawHD(ctx, text, x, y, opts, scale);
   const color = opts.color || '#ffffff';
   const w = measurePixel(text, scale);
@@ -248,7 +256,7 @@ export function drawText(ctx, text, x, y, opts = {}) {
 // Word-wrap helper: returns array of lines fitting maxWidth px.
 export function wrapText(text, maxWidth, scale = 1) {
   const out = [];
-  for (const para of String(text).split('\n')) {
+  for (const para of String(filt(text)).split('\n')) {
     let line = '';
     for (const word of para.split(' ')) {
       const t = line ? line + ' ' + word : word;

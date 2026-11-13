@@ -11,7 +11,7 @@
 // They swap ("TAG!") every ~10s or when the point man takes a beating. When one falls the other rages.
 // The level (l7_derby.js) keeps the exit shut until BOTH are down.
 
-import { registerEnemy, casualLook, RIVAL, AWAY } from '../enemies.js';
+import { registerEnemy, casualLook, RIVAL, AWAY, AWAY_KIT } from '../enemies.js';
 import { registerAttack } from '../../game/combat.js';
 import { registerAttackPose, GUARD } from '../../game/poses.js';
 import { normalizeLook } from '../../game/doll.js';
@@ -352,7 +352,7 @@ registerEnemy('derby_bjorn', {
     skin: '#f2c8a4', hair: { style: 'long', color: '#e0c060' }, facial: 'beard',
     jacket: { style: 'vest', color: '#141414' }, shirt: '#f0c020',
     pants: { style: 'cargo', color: '#26262a' }, shoes: { color: '#121214', sole: '#3a3a3a' },
-    scarf: { a: AWAY.a, b: AWAY.b }, gloves: null, build: 1.65, height: 1.38,
+    scarf: AWAY_KIT, gloves: null, build: 1.65, height: 1.38,
   },
   ai: { aggression: 0.5, reaction: 0.4, attacks: [['haymaker', 3], ['derby_bjorn_hammer', 2], ['push', 2], ['bodySlam', 1]], comboLen: [1, 2], blockChance: 0.12, grabChance: 0.12, ignoreTokens: true, keepDist: 2.8 },
   drops: [['kebab', 1], ['cash20', 1]],

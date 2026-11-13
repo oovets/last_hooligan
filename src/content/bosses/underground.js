@@ -5,7 +5,7 @@
 //   world.ug.depotLive                           live rail in the depot energised
 //   world.ug.depotLaneY                          y of the depot track centre line
 
-import { registerEnemy, casualLook, RIVAL, AWAY } from '../enemies.js';
+import { registerEnemy, casualLook, RIVAL, AWAY, RIVAL_KIT } from '../enemies.js';
 import { registerAttack } from '../../game/combat.js';
 import { registerAttackPose, registerAnim, GUARD, STAND } from '../../game/poses.js';
 import { toScreen } from '../../engine/iso.js';
@@ -177,7 +177,7 @@ registerEnemy('underground_gunnar', {
     hat: { style: 'helmet', color: '#f0a020' },
     jacket: { style: 'hivis', color: '#ff7a1a', trim: '#e8e8d8' }, shirt: '#3a3a3a',
     pants: { style: 'cargo', color: '#2a3a4a' }, shoes: { color: '#3a2a1a', sole: '#1a1a1a' },
-    scarf: { a: RIVAL.a, b: RIVAL.b }, gloves: '#d8b020', build: 1.6, height: 1.36,
+    scarf: RIVAL_KIT, gloves: '#d8b020', build: 1.6, height: 1.36,
   },
   ai: { aggression: 0.5, reaction: 0.42, attacks: [['haymaker', 2], ['push', 1]], comboLen: [1, 2], blockChance: 0.15, ignoreTokens: true, keepDist: 2.4, runChance: 0.3 },
   drops: [['kebab', 1]],

@@ -1,6 +1,6 @@
 // Boss roster. One boss per level; each has a custom think() layered on top of the default AI.
 // (Levels 2-8 register their bosses in src/content/bosses/<id>.js; this file holds the shared Level 1 boss.)
-import { registerEnemy, RIVAL } from './enemies.js';
+import { registerEnemy, RIVAL, RIVAL_KIT } from './enemies.js';
 import { registerAttack } from '../game/combat.js';
 
 // Telegraphed bull charge: plants his feet and roars (0.7s, tracking you for the first half), then thunders
@@ -16,7 +16,7 @@ registerEnemy('bigtel', {
     skin: '#e8b090', hair: { style: 'skinhead', color: '#2a1a10' }, facial: 'beard',
     jacket: { style: 'bomber', color: '#1a2a4a', trim: '#0f1830', lining: '#e07020' }, shirt: '#1f4fb4',
     pants: { style: 'jeans', color: '#2a3a5a' }, shoes: { color: '#7a2020', sole: '#d8c060' },
-    scarf: { a: RIVAL.a, b: RIVAL.b }, build: 1.55, height: 1.28,
+    scarf: RIVAL_KIT, build: 1.55, height: 1.28,
   },
   ai: { aggression: 0.5, reaction: 0.42, attacks: [['haymaker', 3], ['cross', 2], ['bodySlam', 1], ['push', 1]], comboLen: [1, 2], blockChance: 0.15, grabChance: 0.1, ignoreTokens: true, keepDist: 2.6,
     shouts: false },

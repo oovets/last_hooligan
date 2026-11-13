@@ -9,7 +9,9 @@ import { audio } from '../audio/audio.js';
 import { makeRng } from '../engine/rng.js';
 import { drawDoll } from '../game/doll.js';
 import { sampleAnim } from '../game/poses.js';
-import { ENEMIES } from '../content/enemies.js';
+import { ENEMIES, casualLook } from '../content/enemies.js';
+import { CLUBS } from '../content/clubs.js';
+import { rivalTag } from '../content/rivals.js';
 import { LEVELS } from '../content/levels/index.js';
 import { TOUR } from '../content/tour/index.js';
 import { World } from '../game/world.js';
@@ -71,6 +73,34 @@ class StoryScene {
 // ---------------------------------------------------------------- know your enemy
 // One page per real firm on the Football Tour: three of their lads and their top boy, in the club's colours.
 const ENEMY_PREFIX = { oldtrafford: 'ot_' };
+// the Swedish firms (after the Football Tour's): grounds as they were in 1994
+const SWEDISH = {
+  aik: { venue: 'RÅSUNDA', lines: ['GNAGET HAR KOMMIT!', 'NORTH STAND. NOW.', 'BLACK AND YELLOW TILL I DIE'] },
+  dif: { venue: 'STOCKHOLMS STADION', lines: ['JÄRNKAMINERNA!', 'THE OLD STADIUM IS OURS', 'COME ON THEN, SÖDER!'] },
+  bajen: { venue: 'SÖDERSTADION', lines: ['WELCOME TO SÖDER', 'THIS IS OUR ISLAND', 'GREEN AND WHITE ARMY!'] },
+  blavitt: { venue: 'ULLEVI', lines: ['STOCKHOLM? NEVER HEARD OF IT', 'THE WISEMEN ARE HERE', 'BLÅVITT! BLÅVITT!'] },
+  mff: { venue: 'MALMÖ STADION', lines: ['DI BLÅE!', 'FERRY\'S GONE, MATE', 'SKÅNE IS SKY BLUE'] },
+  hbg: { venue: 'OLYMPIA', lines: ['DI RÖE!', 'ACROSS THE SOUND AND BACK', 'FRONTLINE. FRONT. LINE.'] },
+  peking: { venue: 'IDROTTSPARKEN', lines: ['WELCOME TO PEKING', 'WHITE AND BLUE!', 'NORRKÖPING DOESN\'T RUN'] },
+};
+function swedishPage(c, ci) {
+  const S = SWEDISH[c.id], tag = rivalTag(c);
+  const rng = makeRng(ci * 101 + 7);
+  const kit = { a: c.a, b: c.b };
+  const lad = (name, hp, quote, o = {}) => ({ id: c.id + name, name, look: casualLook(rng, { ...kit, ...o }), quote, hp, boss: false });
+  const boss = { id: c.id + 'top', name: `${c.firm} TOP BOY`, hp: 560, boss: true, quote: c.chant,
+    look: { ...casualLook(rng, { ...kit, scarf: kit, hatChance: 0, maskChance: 0, hoodChance: 0 }), build: 1.5, height: 1.24, facial: 'beard' } };
+  return {
+    t: { colors: [c.a, c.b], club: c.name, nick: c.nick, firm: c.firm, venue: S.venue, city: c.city },
+    cards: [
+      lad(`${tag} LAD`, 34, S.lines[0]),
+      lad(`${tag} BOOT BOY`, 42, S.lines[1], { hair: ['skinhead', 'shaved'], build: 1.15 }),
+      lad(`${tag} BRUISER`, 56, S.lines[2], { build: 1.35, maskChance: 0.6 }),
+      boss,
+    ],
+  };
+}
+const PAGE_T = 5;   // seconds per page (the English tour, then the Swedish firms)
 class GalleryScene {
   constructor(next) { this.next = next; this.t = 0; }
   enter() {
@@ -95,19 +125,20 @@ class GalleryScene {
       if (last && last.boss && last.quote === '...' && bi) last.quote = Array.isArray(bi) ? bi[0] : String(bi);
       return { t, cards };
     }).filter(p => p.cards.length);
+    CLUBS.forEach((c, ci) => { if (SWEDISH[c.id]) this.pages.push(swedishPage(c, ci)); });
   }
   update(dt) {
     this.t += dt; backdrop.update(dt);
     if (this.t > 0.4 && leaveKeys()) { app.go(app.scenes.title({ skipIntro: true })); return; }
-    if (this.t > 6 * this.pages.length) app.go(this.next());
+    if (this.t > PAGE_T * this.pages.length) app.go(this.next());
   }
   draw(ctx) {
     backdrop.draw(ctx, { dim: 0.7 });
     heading(ctx, 'KNOW YOUR ENEMY', VIEW_W / 2, 16, { scale: 3 });
     if (!this.pages.length) { scanlines(ctx); return; }
-    const pi = Math.min(this.pages.length - 1, Math.floor(this.t / 6));
+    const pi = Math.min(this.pages.length - 1, Math.floor(this.t / PAGE_T));
     const { t: club, cards } = this.pages[pi];
-    const pt = this.t - pi * 6;
+    const pt = this.t - pi * PAGE_T;
     const [ca, cb] = club.colors;
     cards.forEach((e, i) => {
       const x = 24 + i * 152, y = 62;

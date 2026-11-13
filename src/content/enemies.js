@@ -17,6 +17,7 @@ import { Fighter } from '../game/fighter.js';
 import { AIController } from '../game/ai.js';
 import { ITEMS } from '../game/items.js';
 import { makeRng } from '../engine/rng.js';
+import { rivalClub, awayClub, rivalTag } from './rivals.js';
 
 export const ENEMIES = {};
 export function registerEnemy(id, def) { ENEMIES[id] = { id, ...def }; }
@@ -45,8 +46,21 @@ export function spawnEnemy(type, x, y, opts = {}, world) {
 // ------------------------------------------------------------------ palette helpers
 const SKINS = ['#e2a97a', '#d49a6a', '#f0c098', '#b87a50', '#8a5636', '#5e3a24', '#f4d0b0'];
 const HAIRC = ['#141016', '#3a2717', '#6a4a2a', '#b4521c', '#e8d27a', '#5a5a5a'];
-export const RIVAL = { a: '#1f4fb4', b: '#f2f2f2', name: 'PORTSIDE CITY' };     // the blues across the river
-export const AWAY = { a: '#f0c020', b: '#141414', name: 'VARGBY WANDERERS' };   // yellow & black away firm
+// the story's two rival firms: real clubs, chosen from the club your firm follows (content/rivals.js). Read live, so
+// enemies spawned after a new firm is formed wear the new rivals' colours. a/b = kit colours, name, firm, tag ('DIF')
+function liveClub(get) {
+  const o = {};
+  for (const k of ['a', 'b', 'name', 'firm', 'city']) Object.defineProperty(o, k, { get: () => get()[k], enumerable: true });
+  Object.defineProperty(o, 'tag', { get: () => rivalTag(get()), enumerable: true });
+  Object.defineProperty(o, 'club', { get, enumerable: false });
+  return o;
+}
+export const RIVAL = liveClub(rivalClub);     // the derby enemy
+export const AWAY = liveClub(awayClub);       // the away firm
+// scarf/kit colours that stay live inside looks built when the module loads: { a, b } read at spawn time
+const liveKit = get => Object.defineProperties({}, { a: { get: () => get().a, enumerable: true }, b: { get: () => get().b, enumerable: true } });
+export const RIVAL_KIT = liveKit(rivalClub);
+export const AWAY_KIT = liveKit(awayClub);
 
 export function casualLook(rng, o = {}) {
   const dark = () => rng.pick(['#141416', '#1c1c20', '#26262c', '#2e3036', '#3a3c42']);

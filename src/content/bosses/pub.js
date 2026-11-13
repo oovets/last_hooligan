@@ -7,7 +7,7 @@
 //                               enough; BELLY BARGE (telegraphed charge), LAST ORDERS bell (summons regulars),
 //                               phase 2 "LOCK-IN!" under 40% HP: string vest, faster, darker, triple glass volleys.
 
-import { registerEnemy, casualLook, RIVAL } from '../enemies.js';
+import { registerEnemy, casualLook, RIVAL, RIVAL_KIT } from '../enemies.js';
 import { registerAttack } from '../../game/combat.js';
 import { registerAttackPose, registerAnim, GUARD, STAND } from '../../game/poses.js';
 import { normalizeLook } from '../../game/doll.js';
@@ -55,7 +55,7 @@ registerAnim('pub_stagger', {
 });
 
 // ======================================================================= helpers
-const PORTSIDE = { a: RIVAL.a, b: RIVAL.b };
+const PORTSIDE = RIVAL_KIT;   // live: the rival club's colours at spawn time
 function clearShot(world, x0, y0, x1, y1, maxH = 1.3) {
   const d = Math.hypot(x1 - x0, y1 - y0), n = Math.ceil(d / 0.3);
   for (let i = 1; i < n; i++) { const t = i / n; if (world.heightAt(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t) > maxH) return false; }
