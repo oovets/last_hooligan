@@ -97,12 +97,16 @@ def floor_road(line=None):
     def build(ctx, n):
         ctx.plane(0, 0, n, n, ctx.noise_mat('road', _h('#222228'), _h('#36363e'), scale=55, rough=0.6, bump=0.5, detail=10, period=n))
         paint = ctx.mat('paint', _h('#d8d0a0'), 0.7)
-        if line == 'x':
-            for i in range(0, n, 2): ctx.box(i, 0.47 + 0.0, 0, 0.75, 0.06, 0.004, paint)
-        if line == 'y':
-            for i in range(0, n, 2): ctx.box(0.47, i, 0, 0.06, 0.75, 0.004, paint)
-        if line in ('x', 'y'):
-            pass
+        # The sheet is n x n tiles and a level samples it at (tx % n, ty % n), so a line must be drawn in EVERY row
+        # (x lines) or column (y lines) of the sheet, or it only shows where ty % n == 0. Lines are ~0.1 tile wide so
+        # they survive the 3D floor bake (24 texels per tile).
+        for j in range(n):
+            if line == 'x':
+                for i in range(0, n, 2): ctx.box(i, j + 0.45, 0, 0.75, 0.1, 0.004, paint)
+            if line == 'xe':    # dashed centre line on the tile's +y edge: a road with an even number of rows (two lanes of 2)
+                for i in range(0, n, 2): ctx.box(i, j + 0.86, 0, 0.75, 0.12, 0.004, paint)
+            if line == 'y':
+                for i in range(0, n, 2): ctx.box(j + 0.45, i, 0, 0.1, 0.75, 0.004, paint)
     return build
 
 def floor_pavement(ctx, n):
@@ -367,6 +371,7 @@ PIECES = [
     dict(kind='floor', id='asphalt', n=4, build=floor_asphalt),
     dict(kind='floor', id='road', n=4, build=floor_road()),
     dict(kind='floor', id='roadLineX', n=4, build=floor_road('x')),
+    dict(kind='floor', id='roadLineXEdge', n=4, build=floor_road('xe')),
     dict(kind='floor', id='roadLineY', n=4, build=floor_road('y')),
     dict(kind='floor', id='pavement', n=4, build=floor_pavement),
     dict(kind='floor', id='kerbX', n=4, build=floor_kerb_x),

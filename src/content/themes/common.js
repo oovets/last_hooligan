@@ -68,6 +68,13 @@ registerFloor('roadLineX', {
     return asphaltPix(u, v, tx, ty, 2, ROAD, false);
   },
 });
+// the same line on the row's +y edge: the middle of a road with an even number of rows (two 2-tile lanes)
+registerFloor('roadLineXEdge', {
+  pixel(u, v, tx, ty) {
+    if (v > 0.86 && v < 0.98 && ((tx % 2) === 0 ? u > 0.1 && u < 0.85 : false)) return paintWorn(u, v, tx, ty);
+    return asphaltPix(u, v, tx, ty, 2, ROAD, false);
+  },
+});
 registerFloor('roadLineY', {
   pixel(u, v, tx, ty) {
     if (Math.abs(u - 0.5) < 0.055 && ((ty % 2) === 0 ? v > 0.1 && v < 0.85 : false)) return paintWorn(u, v, tx, ty);

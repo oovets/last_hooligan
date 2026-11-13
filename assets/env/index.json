@@ -2069,6 +2069,10 @@
 "n": 4,
 "file": "floors/zebra.png"
 },
+"roadLineXEdge": {
+"n": 4,
+"file": "floors/roadLineXEdge.png"
+},
 "derby_concourse": {
 "n": 9,
 "file": "floors/derby_concourse.png"

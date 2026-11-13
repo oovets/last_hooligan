@@ -65,6 +65,16 @@ const CULL_R = 24;                                // world units around the came
 
 const v3 = (x, y, z = 0) => new THREE.Vector3(x, z * ZS, y);
 
+// Scale of the world against the lads. The characters are about 2.3 units tall (chunky, readable) and the vehicles
+// were rebuilt to match them, but buildings and street furniture were authored small (a two-storey terrace at h 5 was
+// barely taller than three lads). In 3D, buildings (walls h >= BUILDING_H) and tall street furniture are drawn
+// TOWN_SCALE taller, facades stretched with them (doors and windows grow too). Visual only: collision, heights you can
+// stand on and low walls you can jump onto are untouched.
+const TOWN_SCALE = 1.5, BUILDING_H = 4;
+export const wallVisH = h => (h >= BUILDING_H ? h * TOWN_SCALE : h);
+const TALL_PROP = /(^|_)(lamp|phonebox|tree|trafficLight|busStop|busShelter|floodlight|flagpole|post|metroSign|signal|door|gate|arenagate|parkGates|shanklyGates|washpole)$/i;
+const propScale = p => (TALL_PROP.test(p.type) && !/postbox|postSign|milepost/i.test(p.type) ? TOWN_SCALE : 1);
+
 export class Renderer3D {
   constructor(glCanvas, canvas2d) {
     this.gl = glCanvas;
@@ -247,16 +257,16 @@ export class Renderer3D {
     }
     const m = new THREE.Matrix4();
     for (const g of groups.values()) {
-      const geo = this.track(new THREE.BoxGeometry(1, g.h * ZS, 1));
-      geo.translate(0, g.h * ZS / 2, 0);
+      const geo = this.track(new THREE.BoxGeometry(1, wallVisH(g.h) * ZS, 1));
+      geo.translate(0, wallVisH(g.h) * ZS / 2, 0);
       const mesh = new THREE.InstancedMesh(geo, this.wallMaterials(g.style, g.h, g.variant, false), g.list.length);
       g.list.forEach((w, i) => { m.makeTranslation(w.tx + 0.5, 0, w.ty + 0.5); mesh.setMatrixAt(i, m); });
       mesh.castShadow = true; mesh.receiveShadow = true;
       this.scene.add(mesh);
     }
     this.fakeWalls = fakes.map(w => {
-      const geo = this.track(new THREE.BoxGeometry(1, w.w.h * ZS, 1));
-      geo.translate(0, w.w.h * ZS / 2, 0);
+      const geo = this.track(new THREE.BoxGeometry(1, wallVisH(w.w.h) * ZS, 1));
+      geo.translate(0, wallVisH(w.w.h) * ZS / 2, 0);
       const mats = this.wallMaterials(w.w.style, w.w.h, w.w.variant, true).map(mm => mm);
       const mesh = new THREE.Mesh(geo, mats);
       mesh.position.set(w.tx + 0.5, 0, w.ty + 0.5);
@@ -353,10 +363,10 @@ export class Renderer3D {
   }
 
   placeBoard(b, wx, wy, wz, order, shift = 0) {
-    const m = b.mesh;
+    const m = b.mesh, k = b.k || 1;                // k: town scale for tall street furniture (about the anchor)
     m.position.set(wx, wz * ZS, wy)
-      .addScaledVector(RIGHT, (b.wl / 2 - b.ax) / K)
-      .addScaledVector(THREE.Object3D.DEFAULT_UP, (b.ay - b.hl / 2) / PXV)
+      .addScaledVector(RIGHT, (b.wl / 2 - b.ax) * k / K)
+      .addScaledVector(THREE.Object3D.DEFAULT_UP, (b.ay - b.hl / 2) * k / PXV)
       .addScaledVector(VIEW_DIR, shift);
     m.renderOrder = Math.round(order * 64);
     m.visible = true;
@@ -402,6 +412,8 @@ export class Renderer3D {
     b.tex.needsUpdate = true;
     const decal = !p.solid && (p.h || 0) <= 0 && (p.o.side || /sign|graffiti|banner|poster|tactics|shirts/.test(p.type));
     b.shift = decal ? 0.9 : 0.12;
+    b.k = propScale(p);
+    if (b.k !== 1) b.mesh.scale.multiplyScalar(b.k);
     return b;
   }
 

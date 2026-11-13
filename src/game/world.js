@@ -1035,7 +1035,7 @@ export class World {
 
   updateWeather(dt) {
     const w = this.level.weather;
-    if (w !== 'rain' && w !== 'snow') return;
+    if (w !== 'snow') return;                  // rain is off everywhere (owner's call: it got on your nerves); snow stays
     const target = w === 'rain' ? 160 : 90;
     while (this.rain.length < target) this.rain.push({ x: Math.random() * VIEW_W, y: Math.random() * VIEW_H, s: 0.6 + Math.random() * 0.6 });
     for (const r of this.rain) {
@@ -1297,10 +1297,7 @@ export class World {
 
   drawWeather(ctx) {
     const w = this.level.weather;
-    if (w === 'rain') {
-      ctx.fillStyle = 'rgba(160,190,230,0.45)';
-      for (const r of this.rain) ctx.fillRect(Math.round(r.x), Math.round(r.y), 1, Math.round(5 * r.s + 2));
-    } else if (w === 'snow') {
+    if (w === 'snow') {
       ctx.fillStyle = 'rgba(240,240,255,0.8)';
       for (const r of this.rain) ctx.fillRect(Math.round(r.x), Math.round(r.y), r.s > 0.9 ? 2 : 1, r.s > 0.9 ? 2 : 1);
     }

@@ -1516,9 +1516,9 @@ const Amb = {
     try {
       const h = typeof window !== 'undefined' && window.__hooligan;
       const w = h && h.world;
-      if (w && w.level) return w.level.weather || null;
+      if (w && w.level) return w.level.weather === 'rain' ? null : w.level.weather || null;   // rain is off: no hiss or drips
     } catch (e) { /* ok */ }
-    return this.kind === 'street' && Crowd.track === 'streets' ? 'rain' : null;
+    return null;
   },
   tick() {
     const E = this.E, c = E.ctx, t = c.currentTime;

@@ -831,6 +831,10 @@
 "zebra": {
 "n": 4,
 "file": "floors/zebra.png"
+},
+"roadLineXEdge": {
+"n": 4,
+"file": "floors/roadLineXEdge.png"
 }
 },
 "props": {

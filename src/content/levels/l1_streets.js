@@ -1,5 +1,5 @@
 // LEVEL 1 — THE STREETS
-// Rainy Saturday lunchtime. Portside City have come early and are drinking in your streets.
+// Saturday lunchtime. Portside City have come early and are drinking in your streets.
 // Route: main street (2 encounters) -> back alley (secret yard via fake wall) -> square (3 waves)
 //        -> car park under the railway viaduct (BOSS: BIG TEL) -> through the arches to the pub.
 import '../themes/common.js';
@@ -8,7 +8,7 @@ export default {
   id: 'streets',
   num: 1,
   name: 'THE STREETS',
-  subtitle: 'SATURDAY. 12:47. RAIN.',
+  subtitle: 'SATURDAY. 12:47.',
   intro: [
     'MATCHDAY IN NORDHAMN.',
     'PORTSIDE CITY CAME IN ON THE EARLY TRAIN',
@@ -26,6 +26,7 @@ export default {
     'k': { floor: 'kerbX' },
     '=': { floor: 'road' },
     '-': { floor: 'roadLineX' },
+    '~': { floor: 'roadLineXEdge' },   // centre line of the two-lane street (on the row's south edge)
     'c': { floor: 'cobble' },
     'g': { floor: 'grass' },
     'p': { floor: 'parking' },
@@ -85,9 +86,9 @@ export default {
     'B,P,,L,,,,,,,L,,,,,e,,,,,,L,,,,b                ',
     'Bkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkb                ',
     '================================                ',
-    '--------------------------------                ',
+    '~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                ',
     '============o=============vv====                ',
-    'B,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,b                ',
+    '================================                ',
     'B,,n,,,,,L,,,,,,,y,,,,y,,,,L,,+b                ',
     'bbbbbbbbbbbbbbbbbb....bbbbbbbbbb                ',
     '                 B....b                         ',
@@ -151,13 +152,14 @@ export default {
     { x: 14, y: 19, z: 1, r: 2.5, color: '#c0d0ff', intensity: 0.5 },
   ],
   hazards: [
-    // one-way backstreet: full-size cars (2 tiles wide) use the whole 3-tile road, eastbound only
-    { type: 'traffic', lane: [{ x: -6, y: 7.5 }, { x: 38, y: 7.5 }], interval: [6, 12], speed: 8.5, offset: 3, dmg: 14 },
+    // a two-lane street (rows 6-9, centre line between 7 and 8): full-size cars (2 tiles wide), one lane each way
+    { type: 'traffic', lane: [{ x: 38, y: 7.0 }, { x: -6, y: 7.0 }], interval: [7, 13], speed: 8, offset: 2, dmg: 14 },
+    { type: 'traffic', lane: [{ x: -6, y: 9.0 }, { x: 38, y: 9.0 }], interval: [7, 13], speed: 8.5, offset: 6, dmg: 14 },
   ],
   triggers: [
     { area: { x: 1, y: 3, w: 5, h: 8 }, msg: 'J  K  = PUNCH    L = KICK', sub: 'SPACE JUMP  SHIFT BLOCK  O DODGE  I GRAB', dur: 5, color: '#ffe14a' },
     { area: { x: 17, y: 3, w: 3, h: 3 }, toast: 'E = PICK UP / USE    I = THROW WEAPON' },
-    { area: { x: 1, y: 6, w: 30, h: 3 }, toast: 'MIND THE TRAFFIC! (IT HITS THEM TOO)' },
+    { area: { x: 1, y: 6, w: 30, h: 4 }, toast: 'MIND THE TRAFFIC! (IT HITS THEM TOO)' },
     { area: { x: 18, y: 12, w: 4, h: 2 }, toast: '1 2 3 = EAT & DRINK    TAB = INVENTORY' },
     { area: { x: 20, y: 21, w: 2, h: 2 }, toast: 'THOSE CRATES LOOK CLIMBABLE...' },
   ],
@@ -169,15 +171,15 @@ export default {
     {
       id: 'street1', area: { x: 6, y: 3, w: 4, h: 8 }, lockArea: { x: 1, y: 3, w: 30, h: 8 }, msg: 'PORTSIDE SCUM!',
       waves: [
-        { enemies: [{ type: 'rival', x: 12.5, y: 4.5, from: { x: 21.5, y: 2.6 } }, { type: 'rival', x: 13.5, y: 9.5, from: { x: 19.5, y: 12.5 } }] },
-        { enemies: [{ type: 'rival', x: 16.5, y: 7.5, from: { x: 33, y: 7.5 } }, { type: 'bottler', x: 20.5, y: 9.5, from: { x: 19.5, y: 13 } }] },
+        { enemies: [{ type: 'rival', x: 12.5, y: 4.5, from: { x: 21.5, y: 2.6 } }, { type: 'rival', x: 13.5, y: 10.5, from: { x: 19.5, y: 12.5 } }] },
+        { enemies: [{ type: 'rival', x: 16.5, y: 7.5, from: { x: 33, y: 7.5 } }, { type: 'bottler', x: 20.5, y: 10.5, from: { x: 19.5, y: 13 } }] },
       ],
     },
     {
       id: 'street2', area: { x: 18, y: 3, w: 3, h: 8 }, lockArea: { x: 1, y: 3, w: 30, h: 8 }, msg: 'MORE OF THEM OUTSIDE THE ANCHOR!',
       goTo: { x: 18, y: 12, w: 4, h: 3 },
       waves: [
-        { enemies: [{ type: 'rival', x: 25.5, y: 6.5, from: { x: 33, y: 6.5 } }, { type: 'rival', x: 26.5, y: 9.5, from: { x: 33, y: 8.5 } }, { type: 'rival', x: 24.5, y: 4.5, from: { x: 21.5, y: 2.6 } }] },
+        { enemies: [{ type: 'rival', x: 25.5, y: 6.5, from: { x: 33, y: 6.5 } }, { type: 'rival', x: 26.5, y: 10.5, from: { x: 33, y: 8.5 } }, { type: 'rival', x: 24.5, y: 4.5, from: { x: 21.5, y: 2.6 } }] },
         { enemies: [{ type: 'bruiser', x: 22, y: 5, from: { x: 21.5, y: 2.6 } }] },
       ],
     },
