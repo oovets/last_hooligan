@@ -471,6 +471,10 @@ HCAP = JOB.get('wardrobe_hair_tex', WCAP)           # ... and for each haircut (
 for role in list(OBJ):                              # wardrobe garments take their kind's palette material
     for pre, base in (('top_', 'top'), ('legs_', 'pants'), ('hair_', 'hair')):
         if role.startswith(pre): MAT[role] = MAT[base][:3] + (min(MAT[base][3], HCAP if pre == 'hair_' else WCAP),) + MAT[base][4:]
+if JOB.get('hair_tex'):                             # lighter maps (the title's line-up loads before the lads show)
+    MAT['hair'] = MAT['hair'][:3] + (min(MAT['hair'][3], JOB['hair_tex']),) + MAT['hair'][4:]
+if JOB.get('cloth_tex'):
+    for r in ('top', 'pants'): MAT[r] = MAT[r][:3] + (min(MAT[r][3], JOB['cloth_tex']),) + MAT[r][4:]
 SKIN_TEX = JOB.get('skin_tex')
 if SKIN_TEX:            # authored skin (a projected likeness): keep its colour, and keep it out of the ID_ tint path
     MAT['body'] = (JOB.get('skin_mat', 'skin'), None, None, 1024, False, 0.55)

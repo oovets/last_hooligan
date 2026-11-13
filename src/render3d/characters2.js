@@ -36,6 +36,9 @@ const ANIMATED = ['hips', 'spine', 'chest', 'neck', 'head', 'shoulder_L', 'shoul
 // heroes that must be in before the title shows (its line-up); set by main.js before loading. The rest load in the
 // background once the title is up (loadAllHeroes), so the loading screen doesn't grow with every new lad.
 export const HERO_FIRST = [];
+// v2 bodies the title needs (the masked mob behind the line-up): they load with HERO_FIRST, before every other v2 body,
+// and CHAR2.ready turns on as soon as they're in (gameplay still waits for loadCharacters2 to finish: all of them)
+export const V2_FIRST = [];
 export async function loadCharacters2() {
   try {
     const base = new URL('../../assets/models/v2/', import.meta.url);
@@ -54,7 +57,7 @@ export async function loadCharacters2() {
     const heroesP = fetch(new URL('../../assets/models/hero/index.json', import.meta.url))
       .then(hr => (hr.ok ? hr.json() : {})).then(j => { CHAR2.heroes = j.models || {}; return Promise.all(Object.keys(CHAR2.heroes).filter(id => !HERO_FIRST.length || HERO_FIRST.includes(id)).map(loadHero)); })
       .catch(() => { /* no heroes: the v2 models stand in */ });
-    await Promise.all([heroesP, ...models.map(async name => {
+    const loadV2 = async name => {
       try {
         const g = await loader.loadAsync(new URL(name + '.glb' + (v[name] ? '?v=' + v[name] : ''), base).href);
         g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = false; o.frustumCulled = false; } });
@@ -64,7 +67,13 @@ export async function loadCharacters2() {
         try { meta = JSON.parse((rig && rig.userData && rig.userData.hooligan) || '{}'); } catch (e) { /* defaults */ }
         CHAR2.meta[name] = { girth: meta.girth || 1, build: name[0] };
       } catch (e) { console.warn('[3d v2] model failed', name, e); }
-    })]);
+    };
+    // the title's models first (its line-up heroes + the mob's body), on their own, so they don't share the bandwidth
+    // with a dozen bodies the title never shows; then the rest
+    const first = models.filter(n => V2_FIRST.includes(n)), rest = models.filter(n => !V2_FIRST.includes(n));
+    await Promise.all([heroesP, ...first.map(loadV2)]);
+    CHAR2.ready = Object.keys(CHAR2.templates).length > 0;
+    await Promise.all(rest.map(loadV2));
     CHAR2.ready = Object.keys(CHAR2.templates).length > 0;
   } catch (e) { console.warn('[3d v2] no models', e); }
 }

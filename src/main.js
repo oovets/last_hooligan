@@ -67,7 +67,7 @@ import { drawLoading } from './ui/loadscreen.js';
 import { r3d } from './render3d/index.js';
 import { backdrop } from './ui/backdrop.js';
 import { drawPadToast } from './ui/widgets.js';
-import { lineupHeroes } from './ui/title.js';
+import { lineupHeroes, titleBodies } from './ui/title.js';
 
 // ---- asset preload (Blender-rendered environment + character atlases); the game falls back to procedural art
 let loadState = { done: 0, total: 1, ready: false };
@@ -83,6 +83,7 @@ async function load3d() {
     try { const ic = await import('./render3d/itemicons.js'); r3d.itemIcon = ic.itemIcon; } catch (e) { console.warn('[3d] item icons unavailable', e); }
     r3d.charsP = (async () => {
       m.HERO_FIRST.push(...lineupHeroes());          // the title's line-up first, the other lads after
+      m.V2_FIRST.push(...titleBodies());                  // and the one body the title's masked mob wears
       await timed('3d:models v2 + title lads', m.loadCharacters2());
       // the old v1 rigid models are only a fallback for when the v2 skinned models are missing
       const { CHAR2 } = await import('./render3d/characters2.js');

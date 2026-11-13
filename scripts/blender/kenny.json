@@ -69,5 +69,8 @@
       "out": 0.077,
       "image": "assets/tattoos/aik_ink.png"
     }
-  ]
+  ],
+  "hair_tex": 256,
+  "wardrobe_hair_levels": 6,
+  "cloth_tex": 512
 }

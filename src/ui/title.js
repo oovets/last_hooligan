@@ -23,6 +23,7 @@ import { WardrobeScene } from './wardrobe_ui.js';
 import { frame, MenuList, hintBar, scanlines, blink, fmtScore, fmtTime, scarfIcon, badgeIcon, secretIcon, coinIcon, hideLoader, C, rrect, devScale, padIcon } from './widgets.js';
 import { r3d } from '../render3d/index.js';
 import { makeRng } from '../engine/rng.js';
+import { modelForLook } from '../game/sprites.js';
 
 // how far the line-up, the mob and the lines under them sit below the old layout: more of Råsunda's North Stand and
 // its flares shows above their heads
@@ -81,6 +82,8 @@ class TitleScene {
 // dark (the drawn poster mob is only a fallback without the 3D renderer)
 export const LINEUP = ['oldboy', 'mo', 'kenny', 'hooligan', 'bigal', 'vic', 'stig'];
 // their hero model ids (preloaded before the title: main.js)
+// the v2 body the masked mob wears (loaded first with the line-up: main.js)
+export const titleBodies = () => [modelForLook(mobLook(makeRng(1)))];
 export const lineupHeroes = () => LINEUP.map(id => { const ch = CHARACTERS.find(x => x.id === id); return (ch && ch.look && ch.look.hero) || buildLook(save.data.outfit).hero; }).filter(Boolean);
 // the models load after the title is up (main.js): the mob fades in once the bodies are in, the line-up once all seven
 // of its realistic models are (no plain bodies swapped for the real ones in front of you)

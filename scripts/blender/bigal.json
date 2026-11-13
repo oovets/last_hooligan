@@ -43,5 +43,8 @@
     "torso": "jacket",
     "girth": 0.86,
     "hero": "bigal"
-  }
+  },
+  "hair_tex": 256,
+  "wardrobe_hair_levels": 6,
+  "cloth_tex": 512
 }

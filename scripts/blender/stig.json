@@ -46,5 +46,8 @@
   "top_split": {
     "pants": "#7d97bf",
     "shirt": "#1f3f8f"
-  }
+  },
+  "hair_tex": 256,
+  "wardrobe_hair_levels": 6,
+  "cloth_tex": 512
 }
