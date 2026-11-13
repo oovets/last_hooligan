@@ -147,6 +147,31 @@ function pickFighter(world, sx, sy, filter) {
 }
 
 // ------------------------------------------------------------------ world-space overlay (rings, markers, tags)
+// who's who in a scrum: a ring under the player, and the man his next swing goes at (world.aimTarget) gets a red
+// ring and a red arrow over his head. Drawn in every fight, firm or no firm.
+export function drawAimMarkers(ctx, world) {
+  const P = world.player;
+  if (!P || !P.alive) return;
+  const cam = world.camera, t = world.time;
+  ctx.save();
+  ctx.translate(cam.tx, cam.ty);
+  const ps = toScreen(P.x, P.y, world.groundHeight(P.x, P.y, P.z));
+  ring(ctx, ps.x, ps.y, 10, 5, '#ffd23a', 0.9);
+  const e = world.aimTarget;
+  if (e && e.alive && !e.removed) {
+    const gs = toScreen(e.x, e.y, world.groundHeight(e.x, e.y, e.z));
+    ring(ctx, gs.x, gs.y, 11, 5.5, '#ff3a3a');
+    ring(ctx, gs.x, gs.y, 12, 6, '#7a0a0a', 0.6);
+    const head = toScreen(e.x, e.y, e.z), sc = (e.look && e.look.height) || 1;
+    const x = Math.round(head.x), y = Math.round(head.y - 66 * sc - 3 + Math.sin(t * 8) * 1.5);
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.moveTo(x - 5, y - 1); ctx.lineTo(x + 5, y - 1); ctx.lineTo(x, y + 6); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#ff3a3a';
+    ctx.beginPath(); ctx.moveTo(x - 3.5, y); ctx.lineTo(x + 3.5, y); ctx.lineTo(x, y + 4.5); ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+
 export function drawFirmWorld(ctx, world) {
   const F = world.firm;
   if (!F) return;

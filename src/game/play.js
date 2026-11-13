@@ -16,7 +16,7 @@ import { frame, MenuList, hintBar, heading, scarfIcon, badgeIcon, keyIcon, secre
 import { optionItems, drawBindings, drawControlCard } from '../ui/options.js';
 import { r3d } from '../render3d/index.js';
 import { getFirm, applyTrip, resultFromWorld } from './firmdata.js';
-import { updateFirmInput, drawFirmWorld, drawFirmScreen, drawFirmPanel, drawFirmControls, COMMAND_SLOW } from '../ui/firmhud.js';
+import { updateFirmInput, drawFirmWorld, drawAimMarkers, drawFirmScreen, drawFirmPanel, drawFirmControls, COMMAND_SLOW } from '../ui/firmhud.js';
 
 export class PlayScene {
   // 2D renderer: the world is pixel art, drawn at the 2x resolution (main.js). 3D renderer: the 2D canvas only carries
@@ -163,6 +163,7 @@ export class PlayScene {
       ctx.clearRect(0, 0, VIEW_W, VIEW_H);
       this.world.drawOverlay3D(ctx);
     } else this.world.draw(ctx);
+    drawAimMarkers(ctx, this.world);
     drawFirmWorld(ctx, this.world);
     this.hud.draw(ctx, this.world, game);
     drawFirmPanel(ctx, this.world);

@@ -385,7 +385,8 @@ export class World {
   }
 
   // ================================================================== player helpers
-  autoAim(f, mx = 0, my = 0) {
+  // the man an attack would go at right now (stick direction, else facing; within 2.2), without turning
+  aimPick(f, mx = 0, my = 0) {
     let best = null, bs = -1e9;
     for (const t of this.fighters) {
       if (t.team === f.team || !t.alive || t.removed || t.state === 'dead') continue;
@@ -397,6 +398,10 @@ export class World {
       const score = dot * 2 - d + (t.isDown ? -1.5 : 0) - (dot < 0.1 ? 2 : 0);
       if (score > bs) { bs = score; best = t; }
     }
+    return best;
+  }
+  autoAim(f, mx = 0, my = 0) {
+    const best = this.aimPick(f, mx, my);
     if (best) f.face2(best.x - f.x, best.y - f.y);
     else if (Math.hypot(mx, my) > 0.3) f.face2(mx, my);
   }
@@ -848,6 +853,8 @@ export class World {
     // camera
     const look = 14;
     this.camera.follow(p.x, p.y, p.z, dt, (p.fx - p.fy) * look, (p.fx + p.fy) * look * 0.5);
+    // who the player's next swing goes at (the marker over his head, firmhud drawAimMarkers; the lads leave him to you)
+    this.aimTarget = p.alive && !p.isDown && !p.dying ? this.aimPick(p, p.intent ? p.intent.mx : 0, p.intent ? p.intent.my : 0) : null;
     this.fx.update(dt);
     this.updateWeather(dt);
   }

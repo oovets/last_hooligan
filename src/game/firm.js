@@ -167,6 +167,7 @@ export class LadController extends AIController {
         I.attack = null; I.attackName = null;
         if (!this.tryPin(f, world, dt)) this.pinWant = { e: this.foe, t: 0.8 };
       }
+      this.spread(f, world);
       return;
     }
     this.curTarget = null;
@@ -189,6 +190,35 @@ export class LadController extends AIController {
     if (d > 0.6 && world.heightAt(tx, ty) < 0.4) this.moveToward(f, world, tx, ty, dt, d > 3.2);
     else if (dist(f, P) > 2.6) this.moveToward(f, world, P.x, P.y, dt, dist(f, P) > 4);
     else { I.mx = I.my = 0; f.face2(P.fx, P.fy); }
+  }
+
+  // room to see what's going on: keep off the leader and the other lads (soft push, on top of the AI's own steering),
+  // and when he's on the leader's man, work round to that man's side instead of queueing behind the leader
+  spread(f, world) {
+    const I = f.intent;
+    if (!f.canAct || I.attack || I.attackName || f.grabbing) return;
+    const P = world.player;
+    let sx = 0, sy = 0;
+    const push = (m, R, w) => {
+      if (!m || m === f || !m.alive) return;
+      const dx = f.x - m.x, dy = f.y - m.y, d = Math.hypot(dx, dy);
+      if (d >= R || d < 0.01) return;
+      const k = (R - d) / R * w; sx += dx / d * k; sy += dy / d * k;
+    };
+    push(P, 1.5, 1.4);
+    for (const l of this.firm.lads) push(l, 1.2, 1.0);
+    const e = this.foe;
+    if (e && e === world.aimTarget && dist(f, e) < 3) {
+      const ax = e.x - P.x, ay = e.y - P.y, al = Math.hypot(ax, ay) || 1, side = this.idx % 2 ? 1 : -1;
+      const tx = e.x - ay / al * side, ty = e.y + ax / al * side;            // his flank, a tile to one side
+      const dx = tx - f.x, dy = ty - f.y, d = Math.hypot(dx, dy);
+      if (d > 0.35 && world.heightAt(tx, ty) < 0.4) { sx += dx / d * 0.8; sy += dy / d * 0.8; }
+    }
+    if (!sx && !sy) return;
+    let mx = (I.mx || 0) + sx, my = (I.my || 0) + sy;
+    const l = Math.hypot(mx, my);
+    if (l > 1) { mx /= l; my /= l; }
+    I.mx = mx; I.my = my;
   }
 
   chooseFoe(f, world) {
@@ -325,7 +355,7 @@ export class LadController extends AIController {
       let crowd = 0;
       for (const l of this.firm.lads) if (l !== f && l.controller && l.controller.foe === e) crowd++;
       if (crowd >= 2) continue;
-      const s = dist(e, who) + dist(e, f) * 0.3 + crowd * 2.5;
+      const s = dist(e, who) + dist(e, f) * 0.3 + crowd * 2.5 + (e === world.aimTarget ? 1.6 : 0);   // (the leader has that one)
       if (s < bs) { bs = s; best = e; }
     }
     return best;
@@ -340,7 +370,7 @@ export class LadController extends AIController {
       if (d > r) continue;
       let crowd = 0;
       for (const l of this.firm.lads) if (l !== f && l.controller && l.controller.foe === e) crowd++;
-      const s = dist(e, f) + crowd * 2.2;
+      const s = dist(e, f) + crowd * 2.2 + (e === world.aimTarget ? 1.6 : 0);   // (the leader has that one)
       if (s < bs) { bs = s; best = e; }
     }
     return best;
