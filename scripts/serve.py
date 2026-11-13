@@ -96,8 +96,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         u = urllib.parse.urlparse(self.path)
         if u.path != '/__shot' or not self._is_local():
             self.send_error(404); return
+        # only the game's own pages may post: any other website open in your browser could otherwise POST to
+        # localhost (a "simple" cross-origin request needs no preflight) and write files into build/shots
+        origin = self.headers.get('Origin')
+        if origin and urllib.parse.urlparse(origin).hostname not in ('localhost', '127.0.0.1', '[::1]', '::1'):
+            self.send_error(403); return
+        size = int(self.headers.get('Content-Length', 0) or 0)
+        if size <= 0 or size > 40 * 1024 * 1024:
+            self.send_error(413); return
         name = re.sub(r'[^a-zA-Z0-9_-]', '', urllib.parse.parse_qs(u.query).get('name', ['shot'])[0]) or 'shot'
-        body = self.rfile.read(int(self.headers.get('Content-Length', 0))).decode()
+        body = self.rfile.read(size).decode()
         data = base64.b64decode(body.split(',', 1)[-1])
         os.makedirs(os.path.join(ROOT, 'build', 'shots'), exist_ok=True)
         with open(os.path.join(ROOT, 'build', 'shots', name + '.png'), 'wb') as f: f.write(data)
