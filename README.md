@@ -14,7 +14,7 @@ is 90s football-casual culture in the fictional city of Nordhamn.
   THE LAST STAND. Each has unique enemies, hazards, secrets, 5 lost scarves, a pin badge and a boss.
 * 6 playable characters: The Last Hooligan, Big Mo, Little Stig, Terrace Tina, Fat Vic and The Old Boy (unlockable).
 * **Two renderers:**
-  * **3D (Three.js, beta):** wall blocks, real lights and shadows, ambient occlusion, bloom and colour grading.
+  * **3D (Three.js, default):** wall blocks, real lights and shadows, ambient occlusion, bloom and colour grading.
     The characters are skinned Blender models on a 22-bone rig, animated by a layered animator: hand-keyed strike
     clips with fist IK, a procedural walk and run that doesn't slide, counter-twist and head tracking. Props are
     still flat billboards of the 2D art.
@@ -37,8 +37,8 @@ python3 scripts/serve.py
 
 Then open http://localhost:8642. Add `?play=N` to jump straight into level N (0-based).
 
-**3D renderer (beta):** pick OPTIONS → GRAPHICS → 3D, or add `?renderer=3d`. It needs an internet connection: Three.js
-is loaded from jsDelivr via an import map. Add `?post=0` to turn off post-processing on slow machines.
+**3D renderer (default):** it needs an internet connection: Three.js is loaded from jsDelivr via an import map.
+For the classic pixel-art renderer pick OPTIONS → GRAPHICS → 2D, or add `?renderer=2d`. Add `?post=0` to turn off post-processing on slow machines.
 
 **The game loop:** NEW GAME starts a new firm and the first level. After every level (won or lost) you're back at
 THE ANCHOR with a report. Walk to the map on the wall (or press **M**) to pick the next trip.

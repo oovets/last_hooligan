@@ -19,7 +19,7 @@ export const DEFAULT_HISCORES = [
 
 export function defaultSave() {
   return {
-    version: 1,
+    version: 2,                  // 2: 3D renderer became the default (load() moves older saves over once)
     unlocked: 1,                 // number of levels unlocked (1..8)
     character: 'hooligan',       // last selected playable character (content/characters.js)
     best: {},                    // levelId -> best score
@@ -38,7 +38,7 @@ export function defaultSave() {
       hints: true,               // on-screen button hints
       firm: true,                // your lads come along (game/firm.js); false = lone wolf
       firmSize: 3,               // lads in the firm (1..4)
-      renderer: '2d',            // '2d' | '3d' (Three.js renderer, phase A; ?renderer=3d overrides)
+      renderer: '3d',            // '3d' (Three.js renderer, default) | '2d' (pixel-art canvas); ?renderer= overrides
     },
     run: null,                   // snapshot to continue from (GameState.snapshot())
     completed: false,
@@ -65,6 +65,8 @@ export const save = {
     try {
       const raw = localStorage.getItem(KEY);
       if (raw) this.data = merge(defaultSave(), JSON.parse(raw));
+      // v1 saves stored renderer '2d' because that was the default: switch them to 3D once (OPTIONS > GRAPHICS can go back)
+      if ((this.data.version || 1) < 2) { this.data.settings.renderer = '3d'; this.data.version = 2; }
     } catch (e) { console.warn('save load failed', e); }
     if (!Array.isArray(this.data.hiscores) || !this.data.hiscores.length) this.data.hiscores = DEFAULT_HISCORES.map(h => ({ ...h }));
     return this.data;
