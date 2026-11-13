@@ -260,7 +260,7 @@ body_b.chain(V(0, 0.012, 1.36), V(0, 0.012, 1.54), (nr * 1.05, nr), (nr * 0.9, n
 # arms: deltoid, upper arm (biceps), elbow, forearm (sleeves add a little loft)
 g = 1.18 if HEAVY else G          # heavy = husky: thick arms, not fat ones
 for sg in (1, -1):
-    s = side(sg); SL = JK if SLEEVED else 0
+    s = side(sg); SL = (JK * 0.3 if LANKY else JK) if SLEEVED else 0   # lanky (Al's shirt): thin cotton sleeves, not a padded jacket
     if MUS:   # boulder shoulders, big biceps and forearms
         body_b.ell(J['upperArm_' + s], (0.1 + SL, 0.1 + SL, 0.1 + SL))
         body_b.chain(J['upperArm_' + s], J['forearm_' + s], (0.085 + SL, 0.09 + SL), (0.06 + SL, 0.062 + SL), bulge=0.22, at=0.45)
@@ -350,8 +350,8 @@ for f in bm.faces:
     lift = 0.0
     if mid in (TOP, ID['trim'], ID['band']) and mid not in (ID['shirt'], ID['skin']):
         lift = 0.006 if mid == ID['trim'] else 0.004
-    if mid == ID['trim'] and HEM < c.z < HEM + 0.06 and TORSO != 'parka': lift = 0.012    # waistband stands proud
-    if mid == ID['trim'] and n and n.startswith('forearm'): lift = 0.008
+    if mid == ID['trim'] and HEM < c.z < HEM + 0.06 and TORSO != 'parka': lift = 0.004 if LANKY else 0.012    # waistband stands proud (a shirt hem doesn't)
+    if mid == ID['trim'] and n and n.startswith('forearm'): lift = 0.003 if LANKY else 0.008                  # cuffs
     if mid == ID['belt']: lift = 0.006
     for v in f.verts: push[v.index] = max(push.get(v.index, 0), lift)
 for v in bm.verts:
@@ -359,7 +359,7 @@ for v in bm.verts:
 # cloth crumple: soft folds on the sleeves and trouser legs (low-frequency noise, along the normals)
 for v in bm.verts:
     n, t = region(v.co)
-    if n and n.startswith(('upperArm', 'forearm')) and SLEEVED: v.co += v.normal * 0.006 * noise.noise(v.co * Vector((9, 9, 26)))
+    if n and n.startswith(('upperArm', 'forearm')) and SLEEVED: v.co += v.normal * (0.003 if LANKY else 0.006) * noise.noise(v.co * Vector((9, 9, 26)))
     elif n and n.startswith(('thigh', 'shin')) and v.co.z > 0.12: v.co += v.normal * 0.005 * noise.noise(v.co * Vector((8, 8, 22)) + Vector((3, 1, 0)))
     elif n in ('spine', 'chest', 'hips') and v.co.z > HEM and not BARE: v.co += v.normal * 0.004 * noise.noise(v.co * 11 + Vector((7, 0, 2)))
 bm.to_mesh(me); bm.free()
