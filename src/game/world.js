@@ -20,6 +20,7 @@ import { save } from '../save.js';
 import { isoBox } from '../engine/gfx.js';
 import { envProp } from '../engine/envsprites.js';
 import { VEHICLE_SIZE, drawVehicleSprite } from './vehicles.js';
+import { applyBuff, tickBuffs, buffLeft, RUSH, CRASH } from './buffs.js';
 
 // Clip to the screen region of the vertical prism above footprint [x0,x0+w] x [y0,y0+d] from height z0 up to z0+h.
 function clipPrism(ctx, x0, y0, w, d, h, z0 = 0) {
@@ -506,6 +507,30 @@ export class World {
     if (!slot) return;
     const def = ITEMS[slot.id];
     if (!def) return;
+    if (def.kind === 'boost') {                       // BAG OF CHARLIE: rush, then comedown
+      if (buffLeft(p, 'rush') || buffLeft(p, 'crash')) { this.toast('STILL BUZZING FROM THE LAST ONE'); return; }
+      this.game.takeItem(i);
+      p.setState('drink'); p.vx = p.vy = 0;
+      p.onAction = () => {
+        applyBuff(p, 'rush', RUSH, 20, f => {
+          applyBuff(f, 'crash', CRASH, 10);
+          if (f.alive) { this.fx.popup(f.x, f.y, f.z, 'COMEDOWN...', '#8a8aa0'); if (f.say) f.say('...NEED A SIT DOWN', 1.4); }
+        });
+        this.fx.popup(p.x, p.y, p.z, 'BUZZING!', '#ffffff');
+        if (p.say) p.say(['COME ON THEN!', 'I\'M FLYING!', 'WHO WANTS IT?!'][Math.floor(Math.random() * 3)], 1.4);
+        if (save.data.settings.shake) this.camera.shake(3, 0.3);
+      };
+      this.sfx('combo', p);
+      return;
+    }
+    if (def.kind === 'gear') {                        // GUM SHIELD: in for the rest of the level
+      if (p.gumShield) { this.toast('GUM SHIELD\'S ALREADY IN'); return; }
+      this.game.takeItem(i);
+      p.gumShield = true;
+      this.fx.popup(p.x, p.y, p.z, 'GUM SHIELD IN', '#5a8af0');
+      this.sfx('pickup', p);
+      return;
+    }
     if (def.heal && p.hp >= p.maxHp) { this.toast('ALREADY FIGHTING FIT'); return; }
     this.game.takeItem(i);
     p.setState('drink');
@@ -518,6 +543,9 @@ export class World {
     const d = it.def, g = this.game, p = this.player;
     if (!d) { it.removed = true; return; }
     switch (d.kind) {
+      case 'boost': case 'gear':
+        if (g.addItem(d.id)) { this.toast('+ ' + d.name); this.sfx('pickup', p); } else return;   // kit bag full: leave it
+        break;
       case 'heal':
         if (d.stash && g.addItem(d.id)) { this.toast('+ ' + d.name); this.sfx('pickup', p); }
         else if (p.hp < p.maxHp) { p.heal(d.heal); this.fx.popup(p.x, p.y, p.z, '+' + d.heal, '#5aff7a'); this.sfx('heal', p); }
@@ -724,6 +752,7 @@ export class World {
     // fighters
     for (const f of this.fighters) {
       if (f.removed) continue;
+      tickBuffs(f, dt);
       f.combat = f.isPlayer ? this.enemiesNear(f, 4.5) : f.combat;
       const prevPhase = f.attack ? f.attack.phase : -1;
       const prevAtk = f.attack;

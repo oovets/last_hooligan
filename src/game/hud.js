@@ -2,6 +2,7 @@
 // Layout (640x360): player panel top-left, score/cash top-centre, enemy panel top-right, combo under it,
 // kit strip bottom-left, boss bar bottom-centre, minimap bottom-right, toasts above the minimap,
 // banners mid-screen, fanzine reader on top.
+import { MAX_SLOTS } from './state.js';
 import { VIEW_W, VIEW_H } from '../engine/constants.js';
 import { drawText, measureText, wrapText } from '../engine/font.js';
 import { makeCanvas } from '../engine/gfx.js';
@@ -120,7 +121,10 @@ export class HUD {
     drawText(ctx, 'GUARD', x + 40, y + 27, { color: '#b090c0' });
     bar(ctx, x + 72, y + 28, 70, 4, gf, gf < 0.25 ? '#ff6a3a' : C.pink, '#ffc0e0', undefined, 5);
     // status tags
-    if (p.invuln > 0.5 && p.alive) drawText(ctx, 'SAFE', x + w - 6, y + 27, { color: Math.floor(world.time * 8) % 2 ? '#7affe0' : '#3a9a8a', align: 'right' });
+    const rush = p.buffs && p.buffs.rush, crash = p.buffs && p.buffs.crash;
+    if (rush) drawText(ctx, 'BUZZING ' + Math.ceil(rush.t), x + w - 6, y + 27, { color: Math.floor(world.time * 10) % 2 ? '#ffffff' : '#ffe14a', align: 'right' });
+    else if (crash) drawText(ctx, 'COMEDOWN ' + Math.ceil(crash.t), x + w - 6, y + 27, { color: '#8a8aa0', align: 'right' });
+    else if (p.invuln > 0.5 && p.alive) drawText(ctx, 'SAFE', x + w - 6, y + 27, { color: Math.floor(world.time * 8) % 2 ? '#7affe0' : '#3a9a8a', align: 'right' });
     else if (p.weapon) drawText(ctx, 'ARMED', x + w - 6, y + 27, { color: GOLD, align: 'right' });
   }
 
@@ -244,7 +248,7 @@ export class HUD {
   // ------------------------------------------------------------------ kit strip
   drawKit(ctx, world, game) {
     const p = world.player;
-    const x = 6, y = VIEW_H - 36, w = 182, h = 30;
+    const x = 6, y = VIEW_H - 36, w = 182 + (MAX_SLOTS - 3) * 25, h = 30;   // widens with the kit bag slots
     frame(ctx, x, y, w, h);
     // weapon slot
     const wx = x + 4, wy = y + 3;
@@ -262,7 +266,7 @@ export class HUD {
       ctx.fillRect(wx + 7, wy + 16, 10, 1); ctx.fillStyle = '#c8102e'; ctx.fillRect(wx + 8, wy + 17, 8, 3);
     }
     // consumable slots
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < MAX_SLOTS; i++) {
       const sx = x + 32 + i * 25, sy = y + 3;
       ctx.fillStyle = '#000'; ctx.fillRect(sx, sy, 23, 24);
       ctx.fillStyle = '#1a1222'; ctx.fillRect(sx + 1, sy + 1, 21, 22);
@@ -274,7 +278,7 @@ export class HUD {
       drawText(ctx, String(i + 1), sx + 2, sy + 2, { color: '#6a5a7a' });
     }
     // collectibles
-    const cx = x + 110;
+    const cx = x + 35 + MAX_SLOTS * 25;
     const ns = world.record.scarves.size, tot = world.totalScarves || 5;
     scarfIcon(ctx, cx, y + 5, true);
     drawText(ctx, `${ns}/${tot}`, cx + 12, y + 5, { color: ns >= tot && tot ? GOLD : '#fff' });

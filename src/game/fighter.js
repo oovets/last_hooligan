@@ -275,7 +275,8 @@ export class Fighter {
       this.setState('blockstun'); this.stunT = Math.max(0.12, hit.stun * 0.45);
       return 'blocked';
     }
-    const dmg = hit.dmg * this.defense;
+    // gum shield: blows to the head hurt less (and the stun below is halved)
+    const dmg = hit.dmg * this.defense * (this.gumShield && this.hitDir.high ? 0.8 : 1);
     this.hp -= dmg;
     this.flashT = 0.09;
     this.lastAttacker = hit.attacker;
@@ -302,6 +303,10 @@ export class Fighter {
       if (this.superArmor > dmg * 1.5 && !airborne) { this.vx += dir.x * 0.6; this.vy += dir.y * 0.6; return 'armor'; }
       this.hitChain = 0;
       this.knockDown(dir, mercy && !hit.knockdown ? Math.max(hit.kb, 3) : hit.kb, hit.launch);
+      if (this.gumShield && Math.random() < 0.25) {      // a proper clatter can knock the gum shield out
+        this.gumShield = false;
+        if (world && world.fx) world.fx.popup(this.x, this.y, this.z + 0.4, 'GUM SHIELD OUT!', '#5a8af0');
+      }
       return 'knockdown';
     }
     if (this.superArmor > dmg && this.state !== 'grabbed') {
@@ -320,7 +325,7 @@ export class Fighter {
     } else {
       this.animT = 0;
     }
-    this.stunT = hit.stun;
+    this.stunT = hit.stun * (this.gumShield ? 0.5 : 1);
     return 'hit';
   }
 

@@ -2,7 +2,7 @@
 import { save } from '../save.js';
 import { buildLook } from '../content/wardrobe.js';
 
-export const MAX_SLOTS = 3;
+export const MAX_SLOTS = 4;
 
 export class GameState {
   constructor() {
@@ -15,7 +15,9 @@ export class GameState {
     this.lives = 3;
     this.cash = 0;
     this.levelIndex = 0;
-    this.inventory = [];           // [{ id, count }] consumables, max MAX_SLOTS different items
+    // [{ id, count }] consumables, max MAX_SLOTS different items. Every new game starts with your own bag of charlie and
+    // a gum shield in the kit bag.
+    this.inventory = [{ id: 'charlie', count: 1 }, { id: 'gumshield', count: 1 }];
     this.keys = new Set();         // key ids collected in the current level
     this.collected = {};           // levelId -> { scarves:Set(idx), badge:bool, secrets:Set }
     this.perks = {};               // e.g. { power: 0.1 } from unlocks

@@ -6,7 +6,7 @@ import { drawText, measureText } from '../engine/font.js';
 import { app } from '../app.js';
 import { World } from './world.js';
 import { HUD } from './hud.js';
-import { game } from './state.js';
+import { game, MAX_SLOTS } from './state.js';
 import { LEVELS } from '../content/levels/index.js';
 import { ALL_LEVELS } from '../content/tour/index.js';
 import { audio } from '../audio/audio.js';
@@ -146,7 +146,7 @@ export class PlayScene {
   }
 
   updateInventory() {
-    const n = 3;
+    const n = MAX_SLOTS;
     if (input.pressed('menuLeft')) { this.invSel = (this.invSel + n - 1) % n; audio.sfx('menuMove'); }
     if (input.pressed('menuRight')) { this.invSel = (this.invSel + 1) % n; audio.sfx('menuMove'); }
     if (input.pressed('confirm') || input.pressed('use')) {
@@ -180,28 +180,30 @@ export class PlayScene {
     frame(ctx, X, Y, W, H, { title: 'KIT BAG', fill: 'rgba(16,10,24,0.95)' });
     // ---- left column: items
     const lx = X + 12, ly = Y + 14;
-    drawText(ctx, 'SNACKS & PINTS', lx, ly, { color: C.dim });
-    for (let i = 0; i < 3; i++) {
-      const sx = lx + i * 72, sy = ly + 12;
+    drawText(ctx, 'KIT, SNACKS & PINTS', lx, ly, { color: C.dim });
+    for (let i = 0; i < MAX_SLOTS; i++) {
+      const sx = lx + i * 56, sy = ly + 12;
       const sel = i === this.invSel;
-      ctx.fillStyle = sel ? C.gold : '#3a2a4a'; ctx.fillRect(sx - 2, sy - 2, 64, 64);
-      ctx.fillStyle = '#000'; ctx.fillRect(sx, sy, 60, 60);
-      ctx.fillStyle = sel ? '#2a1a10' : '#140e1c'; ctx.fillRect(sx + 1, sy + 1, 58, 58);
+      ctx.fillStyle = sel ? C.gold : '#3a2a4a'; ctx.fillRect(sx - 2, sy - 2, 54, 54);
+      ctx.fillStyle = '#000'; ctx.fillRect(sx, sy, 50, 50);
+      ctx.fillStyle = sel ? '#2a1a10' : '#140e1c'; ctx.fillRect(sx + 1, sy + 1, 48, 48);
       drawText(ctx, String(i + 1), sx + 3, sy + 3, { color: '#6a5a7a' });
       const it = game.inventory[i];
       if (it && ITEMS[it.id]) {
-        ctx.save(); ctx.translate(sx + 30, sy + 50); ctx.scale(3, 3); ITEMS[it.id].icon(ctx, 0, 0, this.t); ctx.restore();
-        drawText(ctx, 'X' + it.count, sx + 57, sy + 51, { color: '#fff', align: 'right', outline: '#000' });
-      } else drawText(ctx, 'EMPTY', sx + 30, sy + 27, { color: '#4a3a5a', align: 'center' });
+        ctx.save(); ctx.translate(sx + 25, sy + 42); ctx.scale(2.5, 2.5); ITEMS[it.id].icon(ctx, 0, 0, this.t); ctx.restore();
+        drawText(ctx, 'X' + it.count, sx + 47, sy + 42, { color: '#fff', align: 'right', outline: '#000' });
+      } else drawText(ctx, 'EMPTY', sx + 25, sy + 22, { color: '#4a3a5a', align: 'center' });
     }
     const cur = game.inventory[this.invSel];
     if (cur && ITEMS[cur.id]) {
       const def = ITEMS[cur.id];
       drawText(ctx, def.name, lx, ly + 84, { color: '#ffffff' });
-      drawText(ctx, (def.heal ? '+' + def.heal + ' HEALTH' : '') + '   PRESS ' + (input.lastDevice === 'pad' ? 'A' : 'ENTER') + ' TO USE', lx, ly + 95, { color: '#5aff7a' });
+      if (def.desc) drawText(ctx, def.desc, lx, ly + 95, { color: '#c0b8d0' });
+      drawText(ctx, (def.heal ? '+' + def.heal + ' HEALTH   ' : '') + 'PRESS ' + (input.lastDevice === 'pad' ? 'A' : 'ENTER') + ' TO USE', lx, ly + (def.desc ? 105 : 95), { color: '#5aff7a' });
     } else drawText(ctx, 'PICK UP PINTS, PIES AND KEBABS TO STASH THEM', lx, ly + 84, { color: '#6a5a7a' });
+    if (w.player && w.player.gumShield) drawText(ctx, 'GUM SHIELD IN', lx + 150, ly, { color: '#5a8af0' });
     // weapon
-    const wy = ly + 114;
+    const wy = ly + 118;
     drawText(ctx, 'IN YOUR HAND', lx, wy, { color: C.dim });
     const p = w.player;
     ctx.fillStyle = '#000'; ctx.fillRect(lx, wy + 11, 30, 30); ctx.fillStyle = '#1a1222'; ctx.fillRect(lx + 1, wy + 12, 28, 28);

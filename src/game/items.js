@@ -71,6 +71,32 @@ registerItem('energy', {
     px(ctx, '#ffd23a', x, y - 9, 2, 2); px(ctx, '#ffd23a', x - 1, y - 7, 2, 2); px(ctx, '#ffd23a', x, y - 5, 1, 2);
   },
 });
+// ---------------------------------------------------------------- personal kit (kit bag, used from it)
+// BAG OF CHARLIE: a 20 s rush (hits harder, quicker, feels nothing), then a 10 s comedown (world.useItemSlot, game/buffs.js)
+registerItem('charlie', {
+  name: 'BAG OF CHARLIE', kind: 'boost', score: 0, stash: true, auto: true,
+  desc: '20 SECONDS OF FLYING, THEN THE COMEDOWN',
+  icon(ctx, x, y, t = 0) {
+    px(ctx, O, x - 5, y - 11, 10, 11);
+    px(ctx, '#d8e4ec', x - 4, y - 8, 8, 7);                      // the baggie
+    px(ctx, '#ffffff', x - 3, y - 5, 6, 4); px(ctx, '#eef2f6', x - 2, y - 6, 4, 1);   // the powder
+    px(ctx, '#b8c8d4', x + 3, y - 8, 1, 7);
+    px(ctx, '#c8d4dc', x - 1, y - 10, 2, 2); px(ctx, '#e04040', x - 2, y - 9, 4, 1);   // knotted top, red tie
+    if (Math.floor(t * 3) % 2) px(ctx, '#ffffff', x - 3, y - 7, 1, 1);
+  },
+});
+// GUM SHIELD: put it in for the rest of the level: head shots hurt less and stuns are halved. A knockdown can knock it out.
+registerItem('gumshield', {
+  name: 'GUM SHIELD', kind: 'gear', score: 0, stash: true, auto: true,
+  desc: 'HALF THE STUN, HEAD SHOTS HURT LESS',
+  icon(ctx, x, y) {
+    px(ctx, O, x - 6, y - 9, 12, 8);
+    px(ctx, '#2a62d8', x - 5, y - 8, 10, 3); px(ctx, '#2a62d8', x - 5, y - 5, 2, 3); px(ctx, '#2a62d8', x + 3, y - 5, 2, 3);
+    px(ctx, '#5a8af0', x - 4, y - 8, 8, 1);
+    px(ctx, '#f4f1e8', x - 3, y - 7, 6, 1);                      // the teeth marks
+    px(ctx, '#1a3a90', x - 5, y - 3, 10, 1);
+  },
+});
 registerItem('cash5', {
   name: 'FIVER', kind: 'cash', cash: 5, score: 50, auto: true,
   icon(ctx, x, y, t) {
