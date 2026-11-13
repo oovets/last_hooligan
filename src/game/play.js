@@ -17,6 +17,7 @@ import { optionItems, drawBindings, drawControlCard } from '../ui/options.js';
 import { r3d } from '../render3d/index.js';
 import { getFirm, applyTrip, resultFromWorld } from './firmdata.js';
 import { updateFirmInput, drawFirmWorld, drawAimMarkers, drawFirmScreen, drawFirmPanel, drawFirmControls, COMMAND_SLOW } from '../ui/firmhud.js';
+import { drawItemIcon } from '../ui/itemicon.js';
 
 export class PlayScene {
   // 2D renderer: the world is pixel art, drawn at the 2x resolution (main.js). 3D renderer: the 2D canvas only carries
@@ -191,7 +192,7 @@ export class PlayScene {
       drawText(ctx, String(i + 1), sx + 3, sy + 3, { color: '#6a5a7a' });
       const it = game.inventory[i];
       if (it && ITEMS[it.id]) {
-        ctx.save(); ctx.translate(sx + 25, sy + 42); ctx.scale(2.5, 2.5); ITEMS[it.id].icon(ctx, 0, 0, this.t); ctx.restore();
+        if (!drawItemIcon(ctx, ITEMS[it.id], sx + 3, sy + 5, 44, 40)) { ctx.save(); ctx.translate(sx + 25, sy + 42); ctx.scale(2.5, 2.5); ITEMS[it.id].icon(ctx, 0, 0, this.t); ctx.restore(); }
         drawText(ctx, 'X' + it.count, sx + 47, sy + 42, { color: '#fff', align: 'right', outline: '#000' });
       } else drawText(ctx, 'EMPTY', sx + 25, sy + 22, { color: '#4a3a5a', align: 'center' });
     }
@@ -209,7 +210,7 @@ export class PlayScene {
     const p = w.player;
     ctx.fillStyle = '#000'; ctx.fillRect(lx, wy + 11, 30, 30); ctx.fillStyle = '#1a1222'; ctx.fillRect(lx + 1, wy + 12, 28, 28);
     if (p.weapon && p.weapon.def) {
-      if (p.weapon.def.icon) p.weapon.def.icon(ctx, lx + 15, wy + 37, this.t);
+      if (!drawItemIcon(ctx, p.weapon.def, lx + 1, wy + 12, 28, 28) && p.weapon.def.icon) p.weapon.def.icon(ctx, lx + 15, wy + 37, this.t);
       drawText(ctx, p.weapon.def.name, lx + 38, wy + 14, { color: C.gold });
       const max = (p.weapon.def.weapon && p.weapon.def.weapon.durability) || p.weapon.durability || 1;
       drawText(ctx, 'DURABILITY', lx + 38, wy + 26, { color: C.dim });

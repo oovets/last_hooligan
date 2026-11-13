@@ -279,6 +279,7 @@ export class Fighter {
     const dmg = hit.dmg * this.defense * (this.gumShield && this.hitDir.high ? 0.8 : 1);
     this.hp -= dmg;
     this.flashT = 0.09;
+    this.hurtAt = world.time;          // (firmhud: the health bar over his head shows for a few seconds)
     this.lastAttacker = hit.attacker;
     this.face = 'hurt'; this.faceT = 0.4;
     this.counterT = 0;

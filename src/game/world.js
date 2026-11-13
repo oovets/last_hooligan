@@ -752,6 +752,7 @@ export class World {
 
   // ================================================================== update
   update(dt) {
+    this.dtLast = dt;
     if (this.readText) { this.readText.t += dt; return; }
     this.time += dt;
     this.updateUI(dt);

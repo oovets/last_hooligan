@@ -10,8 +10,10 @@ import { drawPortrait } from './doll.js';
 import { ITEMS } from './items.js';
 import { input } from '../engine/input.js';
 import { save } from '../save.js';
-import { frame, bar, scarfIcon, badgeIcon, keyIcon, coinIcon, keyName, fmtScore, C } from '../ui/widgets.js';
+import { frame, bar, scarfIcon, badgeIcon, keyIcon, coinIcon, keyName, fmtScore, C, devScale } from '../ui/widgets.js';
 import { Minimap } from '../ui/minimap.js';
+import { drawItemIcon } from '../ui/itemicon.js';
+import { r3d } from '../render3d/index.js';
 
 const GOLD = '#ffd23a';
 
@@ -92,6 +94,26 @@ export class HUD {
   }
 
   // ------------------------------------------------------------------ player panel
+  // the player's portrait as a 3D bust (the menus' stage, the realistic model when there is one), re-rendered at most
+  // 15 times a second into a small canvas; false when there's no 3D (the 2D game draws the pixel portrait)
+  drawPortrait3D(ctx, p, x, y, s, t) {
+    const stage = r3d.menu;
+    if (!stage || !stage.ready || !p.look) return false;
+    const S = devScale(ctx), W = Math.max(8, Math.round(s * S));
+    const P = this.port || (this.port = { c: makeCanvas(W, W), t: -1 });
+    if (P.c.width !== W) { P.c.width = P.c.height = W; P.t = -1; }
+    if (t - P.t > 1 / 15 || t < P.t) {
+      const g = P.c.getContext('2d');
+      g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, W, W); g.setTransform(S, 0, 0, S, 0, 0);
+      const H = 138 * ((p.look && p.look.height) || 1);   // (tight: head and shoulders)
+      const ok = stage.draw(g, 'hudport', [{ look: p.look, x: s / 2, feet: 3 + H, h: H, anim: 'idle', phase: 0, yaw: 0.3 }], { x: -10, y: -4, w: s + 20, h: s + 8 }, t, { light: 'studio' });
+      if (!ok) return false;
+      P.t = t;
+    }
+    ctx.drawImage(P.c, x, y, s, s);
+    return true;
+  }
+
   drawPlayer(ctx, world, game, dt, frac) {
     const p = world.player;
     const x = 6, y = 6, w = 198, h = 38;
@@ -99,10 +121,11 @@ export class HUD {
     // portrait
     ctx.fillStyle = '#000'; ctx.fillRect(x + 3, y + 3, 32, 32);
     const pg = ctx.createLinearGradient(0, y + 4, 0, y + 34);
-    pg.addColorStop(0, '#5a0a1a'); pg.addColorStop(1, '#1a0408');
+    pg.addColorStop(0, '#4a3c08'); pg.addColorStop(1, '#0c0b06');
     ctx.fillStyle = pg; ctx.fillRect(x + 4, y + 4, 30, 30);
     const face = !p.alive ? 'ko' : this.hurtT > 0 ? 'hurt' : frac < 0.3 ? 'hurt' : p.state === 'attack' ? 'shout' : 'angry';
-    drawPortrait(ctx, p.look, x + 4, y + 4, 30, { face });
+    if (!this.drawPortrait3D(ctx, p, x + 4, y + 4, 30, world.time)) drawPortrait(ctx, p.look, x + 4, y + 4, 30, { face });
+    if (!p.alive) { ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(x + 4, y + 4, 30, 30); }
     if (this.hurtT > 0) { ctx.fillStyle = `rgba(255,40,40,${this.hurtT * 2})`; ctx.fillRect(x + 4, y + 4, 30, 30); }
     // name + lives
     drawText(ctx, p.name || 'THE LAST HOOLIGAN', x + 40, y + 4, { color: '#ffffff', shadow: '#000' });
@@ -255,7 +278,7 @@ export class HUD {
     ctx.fillStyle = '#000'; ctx.fillRect(wx, wy, 24, 24);
     ctx.fillStyle = p.weapon ? '#3a2a10' : '#1a1222'; ctx.fillRect(wx + 1, wy + 1, 22, 22);
     if (p.weapon && p.weapon.def) {
-      if (p.weapon.def.icon) p.weapon.def.icon(ctx, wx + 12, wy + 20, world.time);
+      if (!drawItemIcon(ctx, p.weapon.def, wx + 1, wy + 1, 22, 22) && p.weapon.def.icon) p.weapon.def.icon(ctx, wx + 12, wy + 20, world.time);
       const max = (p.weapon.def.weapon && p.weapon.def.weapon.durability) || p.weapon.durability || 1;
       const n = Math.min(10, max), cur = Math.ceil(p.weapon.durability / max * n);
       for (let i = 0; i < n; i++) { ctx.fillStyle = i < cur ? (cur <= 2 ? '#ff4a3a' : GOLD) : '#3a3a40'; ctx.fillRect(wx + 1 + i * Math.floor(22 / n), wy + 25, Math.max(1, Math.floor(22 / n) - 1), 2); }
@@ -272,7 +295,7 @@ export class HUD {
       ctx.fillStyle = '#1a1222'; ctx.fillRect(sx + 1, sy + 1, 21, 22);
       const it = game.inventory[i];
       if (it && ITEMS[it.id]) {
-        ITEMS[it.id].icon(ctx, sx + 11, sy + 21, 0);
+        if (!drawItemIcon(ctx, ITEMS[it.id], sx + 1, sy + 1, 21, 22)) ITEMS[it.id].icon(ctx, sx + 11, sy + 21, 0);
         if (it.count > 1) drawText(ctx, String(it.count), sx + 22, sy + 16, { color: '#fff', align: 'right', outline: '#000' });
       }
       drawText(ctx, String(i + 1), sx + 2, sy + 2, { color: '#6a5a7a' });

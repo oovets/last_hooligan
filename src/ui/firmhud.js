@@ -163,13 +163,52 @@ export function drawAimMarkers(ctx, world) {
     ring(ctx, gs.x, gs.y, 11, 5.5, '#ff3a3a');
     ring(ctx, gs.x, gs.y, 12, 6, '#7a0a0a', 0.6);
     const head = toScreen(e.x, e.y, e.z), sc = (e.look && e.look.height) || 1;
-    const x = Math.round(head.x), y = Math.round(head.y - 66 * sc - 3 + Math.sin(t * 8) * 1.5);
+    const x = Math.round(head.x), y = Math.round(head.y - 66 * sc - 17 + Math.sin(t * 8) * 1.5);   // (above his health bar)
     ctx.fillStyle = '#000';
     ctx.beginPath(); ctx.moveTo(x - 5, y - 1); ctx.lineTo(x + 5, y - 1); ctx.lineTo(x, y + 6); ctx.closePath(); ctx.fill();
     ctx.fillStyle = '#ff3a3a';
     ctx.beginPath(); ctx.moveTo(x - 3.5, y); ctx.lineTo(x + 3.5, y); ctx.lineTo(x, y + 4.5); ctx.closePath(); ctx.fill();
   }
+  drawFoeStatus(ctx, world);
   ctx.restore();
+}
+
+// how the men you're fighting are doing: a health bar over the head (yellow -> orange -> red, a white chip for the
+// last blow) and what state they're in: DOWN, DAZED (stars), KO, LEGGING IT. Shown for your target, anyone hit in the
+// last few seconds and anyone having a go at you, so the screen doesn't fill up with bars. Bosses have the big bar.
+function drawFoeStatus(ctx, world) {
+  const P = world.player, t = world.time;
+  for (const e of world.fighters) {
+    if (e.team === P.team || e.removed || e.boss || e.isLad) continue;
+    if (Math.abs(e.x - P.x) + Math.abs(e.y - P.y) > 8) continue;
+    const ko = !e.alive || e.dying || e.state === 'dead';
+    const hurtRecently = t - (e.hurtAt ?? -99) < 4;
+    const onMe = e.controller && e.controller.curTarget === P && e.alive;
+    if (!(e === world.aimTarget || hurtRecently || onMe || (ko && hurtRecently))) continue;
+    const head = toScreen(e.x, e.y, e.z), sc = (e.look && e.look.height) || 1;
+    const down = e.isDown && !ko;
+    const x = Math.round(head.x), y = Math.round(down ? head.y - 24 : head.y - 66 * sc - 8);
+    // health
+    const k = Math.max(0, Math.min(1, e.hp / (e.maxHp || 1)));
+    e.hpShown = e.hpShown === undefined ? k : Math.max(k, e.hpShown - 0.6 * (world.dtLast || 1 / 60));
+    if (!ko) {
+      const W = 22, bx = x - W / 2;
+      ctx.fillStyle = '#000'; ctx.fillRect(bx - 1, y - 1, W + 2, 5);
+      ctx.fillStyle = '#2a2a2e'; ctx.fillRect(bx, y, W, 3);
+      ctx.fillStyle = '#f4f1e8'; ctx.fillRect(bx, y, Math.round(W * e.hpShown), 3);
+      ctx.fillStyle = k > 0.5 ? '#f2c811' : k > 0.25 ? '#ff8a2a' : '#ff3a3a'; ctx.fillRect(bx, y, Math.round(W * k), 3);
+    }
+    // state
+    let tag = null, col = '#ffffff';
+    if (ko) { tag = 'KO'; col = '#ff4a4a'; }
+    else if (e.routT > 0) { tag = 'LEGGING IT'; col = '#9ad8ff'; }
+    else if (down) { tag = 'DOWN'; col = Math.floor(t * 4) % 2 ? '#ffffff' : '#c8c4b8'; }
+    else if (e.state === 'dizzy') {
+      tag = 'DAZED'; col = '#ffe14a';
+      for (let i = 0; i < 3; i++) { const a = t * 5 + i * 2.1; ctx.fillStyle = '#ffe14a'; ctx.fillRect(Math.round(x + Math.cos(a) * 9) - 1, Math.round(y - 12 + Math.sin(a) * 3) - 1, 2, 2); }
+    }
+    if (tag) drawText(ctx, tag, x, ko ? Math.round(head.y - 30) : y - 9, { color: col, align: 'center', outline: '#000' });
+  }
 }
 
 export function drawFirmWorld(ctx, world) {

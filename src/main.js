@@ -82,6 +82,7 @@ async function load3d() {
     if (!CHAR2.ready) await timed('3d:models v1', m.loadCharacterModels());
     r3d.renderer = new m.Renderer3D(glCanvas, canvas);
     try { const ms = await timed('3d:menu', import('./render3d/menustage.js')); r3d.menu = new ms.MenuStage(); } catch (e) { console.warn('[3d] menu stage unavailable', e); }
+    try { const ic = await import('./render3d/itemicons.js'); r3d.itemIcon = ic.itemIcon; } catch (e) { console.warn('[3d] item icons unavailable', e); }
   } catch (e) { console.warn('[3d] renderer unavailable, using 2D', e); }
 }
 // each preload step logs its time ([load] in the console) so slow loads can be diagnosed on the live site

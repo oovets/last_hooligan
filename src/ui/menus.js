@@ -20,6 +20,7 @@ import { optionItems, drawBindings, drawControlCard } from './options.js';
 import { drawComboList } from '../game/play.js';
 import { drawHallOfFame } from './attract.js';
 import { frame, MenuList, hintBar, heading, scarfIcon, badgeIcon, lockIcon, secretIcon, Repeater, scanlines, blink, fmtScore, C, ladFigure, rrect, devScale } from './widgets.js';
+import { drawItemIcon } from './itemicon.js';
 
 export function startNewRun(levelIndex = 0) {
   // pick a character first (src/ui/charselect.js); a brand new game (level 1) then sets up the firm: club + lads
@@ -226,7 +227,7 @@ export class HowToPlayScene {
         if (id === 'scarf') scarfIcon(ctx, 47, y + 4, true, 2);
         else if (id === 'badge') badgeIcon(ctx, 48, y, true, 2);
         else if (id === 'secret') secretIcon(ctx, 48, y, true, 2);
-        else if (ITEMS[id] && ITEMS[id].icon) ITEMS[id].icon(ctx, 56, y + 17, this.t);
+        else if (ITEMS[id] && !drawItemIcon(ctx, ITEMS[id], 45, y - 3, 22, 22) && ITEMS[id].icon) ITEMS[id].icon(ctx, 56, y + 17, this.t);
         drawText(ctx, t, 80, y + 4, { color: '#e8e0f0' });
       });
     }
