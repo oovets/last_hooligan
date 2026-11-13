@@ -145,7 +145,7 @@ function lineupSnap() {
 }
 lineupSnap();                                       // start fetching it with the title's other images
 
-// the mob behind the line-up: rows of masked-up lads (black track tops with white piping, balaclavas, black cargos,
+// the mob behind the line-up: rows of masked-up lads (black track tops with yellow piping, balaclavas, black cargos,
 // white trainers), smaller and darker the further back they stand, each in a fight stance of his own. A stage of its own (no floor shadows:
 // cheap), drawn first and then pushed back into the dark, so the firm reads in front.
 const MOB_ROWS = [   // back to front: feet y, body height, how many, darkening on top
@@ -155,11 +155,11 @@ const MOB_ROWS = [   // back to front: feet y, body height, how many, darkening 
 ];
 let MOB = null;
 const MOB_STANCES = [{ fight: true }, { fight: true }, { fight: true }, { anim: 'block' }, { anim: 'crouch' }, { anim: 'taunt' }, { anim: 'taunt2' }];
-// all in the same kit: black track top with white piping, black balaclava, black cargos, white trainers, black gloves
+// all in the same kit: black track top with yellow piping, black balaclava, black cargos, white trainers, black gloves
 function mobLook(rng) {
   return normalizeLook({
     skin: rng.pick(['#e2a97a', '#d49a6a', '#f0c098', '#b87a50', '#8a5636']), hair: { style: 'shaved', color: '#141016' }, facial: 'none',
-    jacket: { style: 'track', color: '#16161a', trim: '#ecebe6' }, shirt: '#141416',
+    jacket: { style: 'track', color: '#16161a', trim: '#f2c811' }, shirt: '#141416',   // AIK yellow piping
     pants: { style: 'cargo', color: '#141416' },
     shoes: { color: '#f4f4f0', sole: '#ecebe6', stripe: '#141416' },
     mask: 'balaclava', maskColor: '#141416', gloves: '#141416', scarf: null,
