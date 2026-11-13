@@ -14,7 +14,7 @@ import { ALL_LEVELS } from '../content/tour/index.js';
 import { buildLook, progressTotals } from '../content/wardrobe.js';
 import { Backdrop, backdrop } from './backdrop.js';
 import { drawLogo, drawCrest, LOGO_LAND_TIMES, LOGO_INTRO_LEN } from './logo.js';
-import { drawPosterBg, drawMob, drawPosterTitle, drawTagline } from './poster.js';
+import { drawMob, drawPosterTitle, drawTagline } from './poster.js';
 import { CHARACTERS } from '../content/characters.js';
 import { normalizeLook } from '../game/doll.js';
 import { attractCycle } from './attract.js';
@@ -25,6 +25,9 @@ import { r3d } from '../render3d/index.js';
 import { makeRng } from '../engine/rng.js';
 
 const TAG = 'WHAT ELSE ARE YOU GONNA DO ON A SATURDAY?';
+// how far the line-up, the mob and the lines under them sit below the old layout: more of Råsunda's North Stand and
+// its flares shows above their heads
+const DROP = 26;
 
 // ---------------------------------------------------------------- title
 class TitleScene {
@@ -63,10 +66,10 @@ class TitleScene {
     drawPosterTitle(ctx, VIEW_W / 2, 36, this.t, { intro: this.intro });
     ctx.restore();
     const ti = this.intro - LOGO_INTRO_LEN;
-    if (ti > -0.4) drawTagline(ctx, VIEW_W / 2, 284, TAG);
+    if (ti > -0.4) drawTagline(ctx, VIEW_W / 2, 284 + DROP, TAG);
     if (ti > 0.6) {
       const on = Math.floor(this.t * 2.2) % 2 === 0;
-      if (on) drawTagline(ctx, VIEW_W / 2, 314, 'PRESS START', { size: 15 });
+      if (on) drawTagline(ctx, VIEW_W / 2, 310 + DROP, 'PRESS START', { size: 15 });
     }
     drawText(ctx, '(C) 1994 STEVOO STUDIOS', 8, VIEW_H - 10, { color: '#f6d0c8', outline: '#000' });
     drawText(ctx, 'V1.0', VIEW_W - 8, VIEW_H - 10, { color: '#f6d0c8', outline: '#000', align: 'right' });
@@ -85,7 +88,7 @@ function drawFirm(ctx, t, k) {
     const look = normalizeLook((ch && ch.look) || buildLook(save.data.outfit));
     const d = Math.abs(i - mid);
     const x = x0 + i * gap;
-    return { look, x, feet: 264, h: 150 * (look.height || 1) * (1 - d * 0.035), still: true, yaw: (VIEW_W / 2 - x) * 0.0016 };   // all on one floor, standing dead still
+    return { look, x, feet: 264 + DROP, h: 150 * (look.height || 1) * (1 - d * 0.035), still: true, yaw: (VIEW_W / 2 - x) * 0.0016 };   // all on one floor, standing dead still
   });
   // nobody's head goes behind the logo (its bottom is ~y 108): shrink the whole line-up evenly if the tallest
   // (Big Al) would reach it, so the lads keep their heights relative to each other
@@ -95,7 +98,7 @@ function drawFirm(ctx, t, k) {
   ctx.globalAlpha = k;
   drawBackMob(ctx, t, stage);
   // floor: the key light casts the lads' real shadows on the ground they stand on (menustage opts.floor)
-  const ok = stage.draw(ctx, 'titlefirm', actors, { x: 0, y: 70, w: VIEW_W, h: 230 }, t, { light: 'studio', floor: true });
+  const ok = stage.draw(ctx, 'titlefirm', actors, { x: 0, y: 70 + DROP, w: VIEW_W, h: 230 }, t, { light: 'studio', floor: true });
   ctx.restore();
   if (!ok) { drawMob(ctx, t, { charge: k }); return; }
 }
@@ -104,9 +107,9 @@ function drawFirm(ctx, t, k) {
 // white trainers), smaller and darker the further back they stand, each in a fight stance of his own. A stage of its own (no floor shadows:
 // cheap), drawn first and then pushed back into the dark, so the firm reads in front.
 const MOB_ROWS = [   // back to front: feet y, body height, how many, darkening on top
-  { feet: 204, h: 96, n: 13, dim: 0.35 },
-  { feet: 220, h: 110, n: 11, dim: 0.3 },
-  { feet: 238, h: 126, n: 10, dim: 0.3 },
+  { feet: 204 + DROP, h: 96, n: 13, dim: 0.35 },
+  { feet: 220 + DROP, h: 110, n: 11, dim: 0.3 },
+  { feet: 238 + DROP, h: 126, n: 10, dim: 0.3 },
 ];
 let MOB = null;
 const MOB_STANCES = [{ fight: true }, { fight: true }, { fight: true }, { anim: 'block' }, { anim: 'crouch' }, { anim: 'taunt' }, { anim: 'taunt2' }];
@@ -151,9 +154,9 @@ function drawBackMob(ctx, t, stage) {
   m.setTransform(ctx.getTransform());
   for (let ri = 0; ri < MOB_ROWS.length; ri++) {
     const r = MOB_ROWS[ri];
-    if (!stage.draw(m, 'titlemob' + ri, actors.filter(a => a.row === ri), { x: 0, y: 70, w: VIEW_W, h: 230 }, t, { light: 'studio' })) return;
+    if (!stage.draw(m, 'titlemob' + ri, actors.filter(a => a.row === ri), { x: 0, y: 70 + DROP, w: VIEW_W, h: 230 }, t, { light: 'studio' })) return;
     m.save(); m.globalCompositeOperation = 'source-atop';
-    const g = m.createLinearGradient(0, 90, 0, 250);
+    const g = m.createLinearGradient(0, 90 + DROP, 0, 250 + DROP);
     g.addColorStop(0, `rgba(10,4,8,${r.dim})`); g.addColorStop(1, `rgba(10,4,8,${Math.min(0.92, r.dim + 0.25)})`);
     m.fillStyle = g; m.fillRect(0, 0, VIEW_W, VIEW_H);
     m.restore();
@@ -184,7 +187,7 @@ class MainMenuScene {
     this.menu.update(dt);
   }
   draw(ctx) {
-    drawPosterBg(ctx, this.t, { dim: 0.45 });
+    backdrop.draw(ctx, { dim: 0.45 });   // Råsunda's North Stand, dimmed under the menu
     drawPosterTitle(ctx, VIEW_W / 2, 8, this.t, { small: true });
     // menu panel
     const mx = 46, my = 92, mw = 250;
