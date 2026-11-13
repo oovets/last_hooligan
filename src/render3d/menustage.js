@@ -8,7 +8,9 @@
 //             run = running speed (tiles/s): the in-game procedural run cycle, charging the way he faces (title screen)
 //             pose = an explicit pose-library pose (overrides anim), dark = a black silhouette (locked characters)
 //     rect:   logical rect of the 2D canvas the stage covers (also the render viewport)
-//     opts:   { light: 'terrace' | 'studio', persp: bool, shadows?: bool (self-shadows; off unless asked for) }   persp: perspective camera (rounder faces and feet; use it for
+//     opts:   { light: 'terrace' | 'studio', persp: bool, shadows?: bool (self-shadows; off unless asked for),
+//               floor?: bool (the lads cast real shadows on the ground they stand on; the camera tips down a little so the
+//               ground is seen. The lads don't shadow themselves) }   persp: perspective camera (rounder faces and feet; use it for
 //             single hero shots, keep orthographic for rows of busts)
 //
 // Lighting: an image-based room environment (soft wrap-around light and real reflections on PBR materials) under a
@@ -20,6 +22,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { CHAR2, Character2, modelFor2, heroTemplate } from './characters2.js';
 import { sampleAnim } from '../game/poses.js';
 
+const FLOOR_GEO = new THREE.PlaneGeometry(60, 12);          // the floor's shadow catcher (opts.floor)
 const devScale = ctx => (ctx.getTransform ? ctx.getTransform().a : 2) || 2;
 
 export class MenuStage {
@@ -63,7 +66,7 @@ export class MenuStage {
     // the key light shadows the characters onto themselves; its shadow box is fitted to the actors every draw
     key1.castShadow = true;
     key1.shadow.mapSize.set(1024, 1024);
-    key1.shadow.bias = -0.0004; key1.shadow.normalBias = 0.02; key1.shadow.radius = 3;
+    key1.shadow.bias = -0.0004; key1.shadow.normalBias = 0.02; key1.shadow.radius = 5;   // soft edges
     scene.add(key1); scene.add(key1.target);
     s = { scene, actors: [], t: null, key: key1, keyDir: key1.position.clone().normalize() };
     this.scenes.set(key, s);
@@ -124,7 +127,9 @@ export class MenuStage {
       cam = s.cam = persp ? new THREE.PerspectiveCamera(24, cw / ch, 0.1, 200) : new THREE.OrthographicCamera(-cw / 2, cw / 2, ch / 2, -ch / 2, 0.1, 200);
     }
     const dist = persp ? (ch / 2) / Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)) : 30;
-    cam.position.set(0, 0, dist);
+    // with a floor the camera looks down a little (ELEV) so the ground plane - and the shadows on it - can be seen
+    const elev = opts.floor ? 0.24 : 0;
+    cam.position.set(0, Math.sin(elev) * dist, Math.cos(elev) * dist);
     if (!persp) { cam.left = -cw / 2; cam.right = cw / 2; cam.top = ch / 2; cam.bottom = -ch / 2; }
     else cam.aspect = cw / ch;
     cam.lookAt(0, 0, 0);
@@ -144,16 +149,33 @@ export class MenuStage {
       else A.f.state = (a.pose || (a.anim && a.anim !== 'idle' && a.anim !== 'guard')) ? 'menu' : 'idle';   // poses/anims go through the pose library
       A.char.animate(A.f, { time: t }, dt);
     });
-    for (let i = actors.length; i < s.actors.length; i++) if (s.actors[i]) { s.scene.remove(s.actors[i].char.group); s.actors[i].char.dispose(); s.actors[i] = null; }
+    for (let i = actors.length; i < s.actors.length; i++) if (s.actors[i]) { const A = s.actors[i]; s.scene.remove(A.char.group); A.char.dispose(); s.actors[i] = null; }
     if (!any) return false;
     // self-shadows only for single-character hero shots (portrait, character select, wardrobe): rows of busts and the
     // title-screen firm skip the shadow pass
     const shadows = !!opts.shadows;                       // off by default (owner preference: no shadows on the lads)
-    s.key.castShadow = shadows;
+    s.key.castShadow = shadows || !!opts.floor;
+    // the floor: one big shadow catcher (invisible apart from the shadows) at the lads' feet
+    if (opts.floor && !s.floor) {
+      s.floor = new THREE.Mesh(FLOOR_GEO, new THREE.ShadowMaterial({ opacity: 0.42 }));
+      s.floor.rotation.x = -Math.PI / 2; s.floor.receiveShadow = true;
+      s.scene.add(s.floor);
+    }
+    if (s.floor) {
+      s.floor.visible = !!opts.floor;
+      const live = s.actors.filter(Boolean);
+      if (live.length) {
+        const fy = Math.min(...live.map(A => A.char.group.position.y));
+        const cz = live.reduce((a, A) => a + A.char.group.position.z, 0) / live.length;
+        s.floor.position.set(0, fy + 0.004, cz);
+      }
+      for (const A of live) A.char.group.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = false; } });
+    }
     // fit the key light's shadow camera round the actors (world units are small: a lad is ~4 units tall here)
     s.scene.updateMatrixWorld();
     const box = new THREE.Box3();
-    if (shadows) for (const A of s.actors) if (A) box.expandByObject(A.char.inner);
+    if (shadows || opts.floor) for (const A of s.actors) if (A) box.expandByObject(A.char.inner);
+    if (opts.floor && !box.isEmpty()) box.expandByScalar(1.5);          // room for the shadows on the floor
     if (!box.isEmpty()) {
       const c = box.getCenter(new THREE.Vector3()), r = box.getSize(new THREE.Vector3()).length() * 0.6 + 0.5;
       const L = s.key;

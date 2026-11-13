@@ -130,21 +130,18 @@ function drawFirm(ctx, t, k) {
     const look = normalizeLook((ch && ch.look) || buildLook(save.data.outfit));
     const d = Math.abs(i - mid);
     const x = x0 + i * gap;
-    return { look, x, feet: 266 - d * 4, h: 150 * (look.height || 1) * (1 - d * 0.035), anim: 'idle', phase: i * 0.9, yaw: (VIEW_W / 2 - x) * 0.0016 };
+    return { look, x, feet: 264, h: 150 * (look.height || 1) * (1 - d * 0.035), anim: 'idle', phase: i * 0.9, yaw: (VIEW_W / 2 - x) * 0.0016 };   // all on one floor
   });
+  // nobody's head goes behind the logo (its bottom is ~y 108): shrink the whole line-up evenly if the tallest
+  // (Big Al) would reach it, so the lads keep their heights relative to each other
+  const HEAD_ROOM = 114, fit = Math.min(1, ...actors.map(a => (a.feet - HEAD_ROOM) / a.h));
+  if (fit < 1) for (const a of actors) a.h *= fit;
   ctx.save();
   ctx.globalAlpha = k;
-  ctx.shadowColor = 'rgba(0,0,0,0.65)'; ctx.shadowBlur = 16 * devScale(ctx); ctx.shadowOffsetY = 5 * devScale(ctx);
-  const ok = stage.draw(ctx, 'titlefirm', actors, { x: 0, y: 70, w: VIEW_W, h: 206 }, t, { light: 'studio' });
+  // floor: the key light casts the lads' real shadows on the ground they stand on (menustage opts.floor)
+  const ok = stage.draw(ctx, 'titlefirm', actors, { x: 0, y: 70, w: VIEW_W, h: 230 }, t, { light: 'studio', floor: true });
   ctx.restore();
   if (!ok) { drawMob(ctx, t, { charge: k }); return; }
-  // legs fade into the dark street
-  const g = ctx.createLinearGradient(0, 214, 0, 276);
-  g.addColorStop(0, 'rgba(12,4,6,0)'); g.addColorStop(0.65, 'rgba(12,4,6,0.78)'); g.addColorStop(1, 'rgba(12,4,6,0.92)');
-  ctx.fillStyle = g; ctx.fillRect(0, 214, VIEW_W, 62);
-  const g2 = ctx.createLinearGradient(0, 276, 0, 300);
-  g2.addColorStop(0, 'rgba(12,4,6,0.92)'); g2.addColorStop(1, 'rgba(12,4,6,0)');
-  ctx.fillStyle = g2; ctx.fillRect(0, 276, VIEW_W, 24);
 }
 
 // ---------------------------------------------------------------- main menu
