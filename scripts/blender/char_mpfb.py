@@ -467,9 +467,10 @@ MAT = {
 for role, hx in JOB.get('tints', {}).items():      # preview / baseColorFactor colour of a palette part (the LOOK overrides it)
     if role in MAT: MAT[role] = MAT[role][:2] + (hx,) + MAT[role][3:]     # ('stripes', 'sole': used where those are built)
 WCAP = JOB.get('wardrobe_tex', 1024)               # texture cap (px) for each wardrobe garment / haircut: keeps a full wardrobe small
+HCAP = JOB.get('wardrobe_hair_tex', WCAP)           # ... and for each haircut (alpha PNGs: the heavy ones)
 for role in list(OBJ):                              # wardrobe garments take their kind's palette material
     for pre, base in (('top_', 'top'), ('legs_', 'pants'), ('hair_', 'hair')):
-        if role.startswith(pre): MAT[role] = MAT[base][:3] + (min(MAT[base][3], WCAP),) + MAT[base][4:]
+        if role.startswith(pre): MAT[role] = MAT[base][:3] + (min(MAT[base][3], HCAP if pre == 'hair_' else WCAP),) + MAT[base][4:]
 SKIN_TEX = JOB.get('skin_tex')
 if SKIN_TEX:            # authored skin (a projected likeness): keep its colour, and keep it out of the ID_ tint path
     MAT['body'] = (JOB.get('skin_mat', 'skin'), None, None, 1024, False, 0.55)
@@ -515,6 +516,10 @@ def process_image(img, cap, tag, alpha, neutral, is_data=False):
     if sc < 1: new.scale(max(1, int(w * sc)), max(1, int(h * sc)))
     px = img_array(new)
     if neutral: px = neutralise(px, alpha)
+    lv = JOB.get('wardrobe_hair_levels') if '_hair_' in tag else None
+    if lv and alpha:                        # a wardrobe haircut: a few grey levels compress far better (the alpha keeps the cut)
+        px[..., :3] = np.round(px[..., :3] * lv) / lv
+        px[..., 3] = (px[..., 3] > 0.5).astype(np.float32)     # alpha-clipped anyway: a clean 1-bit mask
     out = bpy.data.images.new(tag, new.size[0], new.size[1], alpha=alpha)
     out.pixels.foreach_set(px.ravel())
     ext = '.png' if alpha else '.jpg'
@@ -573,6 +578,9 @@ for role, ob in OBJ.items():
         rnd = N.new('ShaderNodeMath'); rnd.operation = 'ROUND'
         L.new(diff.outputs['Alpha'], rnd.inputs[0]); L.new(rnd.outputs[0], bsdf.inputs['Alpha'])
     nrm = N.get('NormalMapTextue')
+    if nrm is not None and ((role.startswith('hair_') and JOB.get('wardrobe_hair_normals') is False) or
+                            (role.startswith(('top_', 'legs_')) and JOB.get('wardrobe_normals') is False)):
+        nrm.image = None                                 # a wardrobe haircut: no normal map (size; the hair cards read anyway)
     if nrm is not None:
         if nrm.image is not None:
             nrm.image = process_image(nrm.image, 512, mname + '_' + role + '_normal', False, neutral=False, is_data=True)

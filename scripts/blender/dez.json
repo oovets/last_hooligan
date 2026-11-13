@@ -100,5 +100,9 @@
     "badge:arm",
     "shoes:stripes"
   ],
-  "wardrobe_tex": 512
+  "wardrobe_tex": 512,
+  "wardrobe_hair_tex": 256,
+  "wardrobe_hair_normals": false,
+  "wardrobe_hair_levels": 6,
+  "wardrobe_normals": false
 }
