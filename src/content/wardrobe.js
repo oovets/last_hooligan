@@ -7,9 +7,11 @@
 // bands, lining = the over-check line) and hood: 'down'; shoes may carry stripe (three stripes + heel tab).
 // KITS are whole looks: { sets: { category: optionId, ... } }, worn in one go.
 import { currentClub } from './clubs.js';
+import { rivalTag } from './rivals.js';
 import { UNLOCK_ALL } from '../save.js';
 
-export const CLUB = { name: 'NORDHAMN ATHLETIC', a: '#c8102e', b: '#f4f1e8', nick: 'THE ANCHORS' };
+// your club (read live: the one your firm follows)
+export const CLUB = { get name() { return currentClub().name; }, get a() { return currentClub().a; }, get b() { return currentClub().b; }, get nick() { return currentClub().nick; } };
 
 export const WARDROBE = {
   hair: [
@@ -38,7 +40,7 @@ export const WARDROBE = {
     { id: 'harrington_navy', name: 'HARRINGTON (NAVY)', cost: 0, style: 'harrington', color: '#1d2742', lining: '#c33a2a', desc: 'FOR NIGHT MATCHES.' },
     { id: 'harrington_stone', name: 'HARRINGTON (STONE)', cost: 200, style: 'harrington', color: '#b5a98a', lining: '#b8302a', desc: 'SHOWS EVERY STAIN. BRAVE.' },
     { id: 'polo', name: 'TIPPED POLO', cost: 150, style: 'polo', color: '#f0ece0', shirt: '#f0ece0', trim: '#c8102e', desc: 'COLLAR UP, OBVIOUSLY.' },
-    { id: 'homeshirt', name: 'ANCHORS HOME SHIRT', cost: 300, style: 'tee', color: '#c8102e', shirt: '#c8102e', trim: '#f4f1e8', req: { level: 2 }, desc: 'RED AND WHITE TILL YOU DIE.' },
+    { id: 'homeshirt', get name() { return rivalTag(currentClub()) + ' HOME SHIRT'; }, cost: 300, style: 'tee', get color() { return currentClub().a; }, get shirt() { return currentClub().a; }, get trim() { return currentClub().b; }, req: { level: 2 }, desc: 'THE COLOURS. TILL YOU DIE.' },
     { id: 'track_red', name: 'SHELL TRACKTOP', cost: 250, style: 'track', color: '#a01020', trim: '#f2efe6', desc: 'SWISHES WHEN YOU WALK.' },
     { id: 'track_blue', name: 'TERRACE TRACKTOP', cost: 250, style: 'track', color: '#2a2f45', trim: '#c8102e', req: { level: 2 }, desc: 'NAVY WITH RED PIPING. SHARP.' },
     { id: 'cagoule', name: 'STORM CAGOULE', cost: 300, style: 'track', color: '#2a6a5a', trim: '#e8e4d0', req: { level: 3 }, desc: 'PACKS INTO ITS OWN POCKET.' },

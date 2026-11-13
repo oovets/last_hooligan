@@ -210,6 +210,7 @@ function measurePixel(text, scale) {
 let textFilter = null;
 export function setTextFilter(fn) { textFilter = fn || null; }
 const filt = text => (textFilter ? textFilter(text) : text);
+export const filterText = filt;   // for text that isn't drawn through drawText (level props: signs, tickers, fanzines)
 
 export function measureText(text, scale = 1) {
   text = filt(text);

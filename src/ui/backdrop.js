@@ -1,4 +1,4 @@
-// Animated title/menu backdrop: Nordhamn by night, seen from the home terrace — painted with vector shapes,
+// Animated title/menu backdrop: your club's town by night, seen from the home terrace — painted with vector shapes,
 // gradients and light at the canvas's full resolution (HD menus) or at 2x (pixel frames).
 //
 // Static layers (sky, skyline, far stand, pitch, fence, floodlight towers) and sprites (crowd tiers, terrace fans,
@@ -7,7 +7,7 @@
 // with smoke and sparks, the terrace crowd and — with { lads: true } — the firm in front (rigged 3D characters when
 // the 3D renderer is loaded, the 2D dolls otherwise).
 import { VIEW_W, VIEW_H } from '../engine/constants.js';
-import { FONT, sizeForCap } from '../engine/font.js';
+import { FONT, sizeForCap, filterText } from '../engine/font.js';
 import { makeRng } from '../engine/rng.js';
 import { drawDoll } from '../game/doll.js';
 import { sampleAnim } from '../game/poses.js';
@@ -306,7 +306,7 @@ function buildAds(S) {
     if ('letterSpacing' in g) g.letterSpacing = (px * 0.12).toFixed(2) + 'px';
     g.textAlign = 'center'; g.textBaseline = 'middle';
     g.shadowColor = it.fg; g.shadowBlur = 3 * S;
-    g.fillStyle = it.fg; g.fillText(it.t, x + it.w / 2, h / 2 + 0.4);
+    g.fillStyle = it.fg; g.fillText(filterText(it.t), x + it.w / 2, h / 2 + 0.4);   // (NORDHAMN FERRIES -> your club)
     g.shadowBlur = 0;
     g.fillStyle = 'rgba(0,0,0,0.6)'; g.fillRect(x + it.w - 0.5, 0, 0.5, h);
     x += it.w;

@@ -285,7 +285,7 @@ const ENDING_PAGES = [
   { title: 'FULL TIME', lines: ['THE FIRM TOP BOYS ARE ON THEIR BACKS.', 'PORTSIDE CITY HAVE GONE HOME ON THE LAST FERRY.', 'VARGBY ARE STILL LOOKING FOR THEIR COACH.'], anim: 'victory' },
   { title: 'THE NORTH BANK', lines: ['THE BULLDOZERS NEVER CAME.', 'THE COUNCIL "LOST THE PAPERWORK".', 'NOBODY ASKED WHY. NOBODY DARED.'], anim: 'cheer' },
   { title: 'THE LAST HOOLIGAN', lines: ['HE HUNG UP THE HARRINGTON,', 'PUT THE KETTLE ON,', 'AND RENEWED HIS SEASON TICKET.'], anim: 'idle' },
-  { title: 'NORDHAMN ATHLETIC', lines: ['STILL RED. STILL WHITE.', 'STILL RUBBISH ON A WET TUESDAY.', 'STILL OURS.'], anim: 'cheer' },
+  { title: 'NORDHAMN ATHLETIC', lines: ['STILL HERE.', 'STILL RUBBISH ON A WET TUESDAY.', 'STILL OURS.'], anim: 'cheer' },
 ];
 class EndingScene {
   constructor() { this.t = 0; this.page = 0; this.pageT = 0; this.phase = 'story'; this.scroll = 0; }

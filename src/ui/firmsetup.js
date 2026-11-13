@@ -8,7 +8,7 @@ import { drawText } from '../engine/font.js';
 import { app } from '../app.js';
 import { save } from '../save.js';
 import { audio } from '../audio/audio.js';
-import { CLUBS, clubLogo, drawClubCrest } from '../content/clubs.js';
+import { CLUBS, clubById, clubLogo, drawClubCrest } from '../content/clubs.js';
 import { drawCrest } from './logo.js';
 import { FOUNDER_IDS, founderInfo, TRAITS } from '../game/firmdata.js';
 import { backdrop } from './backdrop.js';
@@ -22,7 +22,7 @@ export class FirmSetupScene {
     this.onDone = onDone; this.t = 0; this.rep = new Repeater();
     CLUBS.forEach(clubLogo);                                   // start loading the crests
     this.step = 'club';
-    this.clubSel = Math.max(0, CLUBS.findIndex(c => c.id === (save.data.club || 'nordhamn')));
+    this.clubSel = Math.max(0, CLUBS.findIndex(c => c.id === clubById(save.data.club).id));
     this.lads = FOUNDER_IDS.filter(id => id !== playerChar).map(founderInfo);
     this.picks = this.lads.slice(0, COACH).map(c => c.id);      // a sensible default: the first three
     this.ladSel = 0;

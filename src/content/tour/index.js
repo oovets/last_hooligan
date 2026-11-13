@@ -1,5 +1,5 @@
 // THE FOOTBALL TOUR (phase F): away days at real grounds, unlocked by the firm's reputation (game/firmdata.js).
-// The 8 Nordhamn levels (LEVELS) stay the story campaign; tour arenas live here and are reached from THE MAP in the pub
+// The 8 home levels (LEVELS, in your club's town) stay the story campaign; tour arenas live here and are reached from THE MAP in the pub
 // (ui/hub.js TourMapPanel). Each arena is a self-contained package in src/content/arenas/<id>/ (level.js imports its
 // own theme.js / boss.js / music.js), so arenas can be built independently.
 //
@@ -9,14 +9,16 @@
 // TOUR entry: { id, venue, club, nick, firm, city, region, rep (needed to travel), lat, lon (map pin),
 //               colors: [primary, secondary], danger 1-5, blurb, level }
 import { LEVELS } from '../levels/index.js';
+import { currentClub } from '../clubs.js';
 import theden from '../arenas/theden/level.js';
 import stamfordbridge from '../arenas/stamfordbridge/level.js';
 import anfield from '../arenas/anfield/level.js';
 import oldtrafford from '../arenas/oldtrafford/level.js';
 import ibrox from '../arenas/ibrox/level.js';
 
-// Nordhamn (fictional) sits on the north-east coast; the campaign's 8 trips are all in town
-export const HOME = { name: 'NORDHAMN', lat: 54.75, lon: -1.25 };
+// home: your club's city (clubs.js). Sweden is off the edge of the map, so the pin sits out in the North Sea on the
+// map's east edge: the ferry over, where every away day starts
+export const HOME = { get name() { return currentClub().city; }, lat: 56.2, lon: 1.6 };
 
 export const TOUR = [
   { id: 'theden', venue: 'THE DEN', club: 'MILLWALL', nick: 'THE LIONS', firm: 'THE BUSHWACKERS', city: 'BERMONDSEY, LONDON SE16',

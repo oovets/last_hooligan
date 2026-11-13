@@ -73,15 +73,15 @@ class StoryScene {
 // ---------------------------------------------------------------- know your enemy
 // One page per real firm on the Football Tour: three of their lads and their top boy, in the club's colours.
 const ENEMY_PREFIX = { oldtrafford: 'ot_' };
-// the Swedish firms (after the Football Tour's): grounds as they were in 1994
+// the Swedish firms (after the Football Tour's); their grounds (as in 1994) are in clubs.js
 const SWEDISH = {
-  aik: { venue: 'RÅSUNDA', lines: ['GNAGET HAR KOMMIT!', 'NORTH STAND. NOW.', 'BLACK AND YELLOW TILL I DIE'] },
-  dif: { venue: 'STOCKHOLMS STADION', lines: ['JÄRNKAMINERNA!', 'THE OLD STADIUM IS OURS', 'COME ON THEN, SÖDER!'] },
-  bajen: { venue: 'SÖDERSTADION', lines: ['WELCOME TO SÖDER', 'THIS IS OUR ISLAND', 'GREEN AND WHITE ARMY!'] },
-  blavitt: { venue: 'ULLEVI', lines: ['STOCKHOLM? NEVER HEARD OF IT', 'THE WISEMEN ARE HERE', 'BLÅVITT! BLÅVITT!'] },
-  mff: { venue: 'MALMÖ STADION', lines: ['DI BLÅE!', 'FERRY\'S GONE, MATE', 'SKÅNE IS SKY BLUE'] },
-  hbg: { venue: 'OLYMPIA', lines: ['DI RÖE!', 'ACROSS THE SOUND AND BACK', 'FRONTLINE. FRONT. LINE.'] },
-  peking: { venue: 'IDROTTSPARKEN', lines: ['WELCOME TO PEKING', 'WHITE AND BLUE!', 'NORRKÖPING DOESN\'T RUN'] },
+  aik: { lines: ['GNAGET HAR KOMMIT!', 'NORTH STAND. NOW.', 'BLACK AND YELLOW TILL I DIE'] },
+  dif: { lines: ['JÄRNKAMINERNA!', 'THE OLD STADIUM IS OURS', 'COME ON THEN, SÖDER!'] },
+  bajen: { lines: ['WELCOME TO SÖDER', 'THIS IS OUR ISLAND', 'GREEN AND WHITE ARMY!'] },
+  blavitt: { lines: ['STOCKHOLM? NEVER HEARD OF IT', 'THE WISEMEN ARE HERE', 'BLÅVITT! BLÅVITT!'] },
+  mff: { lines: ['DI BLÅE!', 'FERRY\'S GONE, MATE', 'SKÅNE IS SKY BLUE'] },
+  hbg: { lines: ['DI RÖE!', 'ACROSS THE SOUND AND BACK', 'FRONTLINE. FRONT. LINE.'] },
+  peking: { lines: ['WELCOME TO PEKING', 'WHITE AND BLUE!', 'NORRKÖPING DOESN\'T RUN'] },
 };
 function swedishPage(c, ci) {
   const S = SWEDISH[c.id], tag = rivalTag(c);
@@ -91,7 +91,7 @@ function swedishPage(c, ci) {
   const boss = { id: c.id + 'top', name: `${c.firm} TOP BOY`, hp: 560, boss: true, quote: c.chant,
     look: { ...casualLook(rng, { ...kit, scarf: kit, hatChance: 0, maskChance: 0, hoodChance: 0 }), build: 1.5, height: 1.24, facial: 'beard' } };
   return {
-    t: { colors: [c.a, c.b], club: c.name, nick: c.nick, firm: c.firm, venue: S.venue, city: c.city },
+    t: { colors: [c.a, c.b], club: c.name, nick: c.nick, firm: c.firm, venue: c.venue, city: c.city },
     cards: [
       lad(`${tag} LAD`, 34, S.lines[0]),
       lad(`${tag} BOOT BOY`, 42, S.lines[1], { hair: ['skinhead', 'shaved'], build: 1.15 }),

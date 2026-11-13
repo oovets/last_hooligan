@@ -7,7 +7,7 @@ import { Firm } from './firm.js';
 import { TileMap } from '../engine/tilemap.js';
 import { renderFloor, drawWallBlock } from '../engine/tiles.js';
 import { Camera } from '../engine/camera.js';
-import { drawText } from '../engine/font.js';
+import { drawText, filterText } from '../engine/font.js';
 import { shade, rgba } from '../engine/color.js';
 import { ATTACKS } from './combat.js';
 import { FX } from './fx.js';
@@ -150,6 +150,12 @@ export class World {
   // ================================================================== spatial queries
   addProp(spec) {
     if (!PROPS[spec.type]) { console.warn('[world] unknown prop type', spec.type); }
+    // signs, tickers, fanzines: the story's old made-up names -> your club and its real rivals (content/rivals.js)
+    if (typeof spec.text === 'string' || typeof spec.title === 'string') {
+      spec = { ...spec };
+      if (typeof spec.text === 'string') spec.text = filterText(spec.text);
+      if (typeof spec.title === 'string') spec.title = filterText(spec.title);
+    }
     const p = new Prop(spec);
     this.props.push(p);
     if (p.def.light || spec.light) { const L = { prop: p, x: p.cx, y: p.cy, ...(p.def.light || { z: 1, r: 3, color: '#ffcf7a', intensity: 0.8 }), ...(spec.light || {}) }; L.z = (L.z || 0) + p.base; this.lights.push(L); }

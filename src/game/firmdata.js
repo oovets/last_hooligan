@@ -14,12 +14,12 @@
 
 import { save } from '../save.js';
 import { characterById } from '../content/characters.js';
-import { clubById } from '../content/clubs.js';
+import { clubById, currentClub } from '../content/clubs.js';
 
 export const STATS = ['fists', 'kicks', 'tough', 'speed', 'nerve', 'loyalty'];
 export const STAT_NAME = { fists: 'FISTS', kicks: 'KICKS', tough: 'TOUGH', speed: 'SPEED', nerve: 'NERVE', loyalty: 'LOYAL' };
 export const MAX_ROSTER = 8;
-export const HOME = { a: '#c8102e', b: '#f4f1e8' };      // Nordhamn Athletic: red & white
+export const HOME = { get a() { return currentClub().a; }, get b() { return currentClub().b; } };   // your club's colours
 
 export const TRAITS = {
   hothead: { name: 'HOTHEAD', desc: 'GOES IN BEFORE THE ORDER. HITS HARDER, LEAVES HIS POST.' },
@@ -166,7 +166,7 @@ export function newFirm(playerChar = 'hooligan', setup = null) {
   const picks = setup && setup.lads && setup.lads.length ? setup.lads : ['mo', 'stig', 'kenny', 'bigal', 'hooligan'];
   for (const id of picks.filter(c => c !== playerChar && FOUNDERS[c]).slice(0, 4)) F.lads.push(founder(F, id));
   F.squad = F.lads.slice(0, 3).map(l => l.id);   // up to four founders, the first three on the coach
-  F.club = (setup && setup.club) || save.data.club || 'nordhamn';
+  F.club = clubById((setup && setup.club) || save.data.club).id;   // old saves' 'nordhamn' -> AIK
   refreshPool(F);
   const club = clubById(F.club);
   F.log.unshift(`DAY 1. THE ANCHOR. ${club.firm} (${club.name}) IS FORMED.`);

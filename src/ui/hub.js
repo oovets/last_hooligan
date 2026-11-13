@@ -379,7 +379,7 @@ class EventPanel extends BasePanel {
   }
 }
 
-// ---- the map: THE FOOTBALL TOUR (phase F). A 90s match-programme page: the fixture list (home trips in Nordhamn, then the
+// ---- the map: THE FOOTBALL TOUR (phase F). A 90s match-programme page: the fixture list (home trips in your club's town, then the
 // away days at real grounds, unlocked by reputation), a map of Britain with the grounds pinned, and a ticket stub for
 // the selected fixture. Locked away days can still be browsed (what it takes to get there).
 // Great Britain + Ireland, rough outlines (lon, lat) for the programme map
@@ -509,7 +509,7 @@ class MapPanel extends BasePanel {
     // pins
     const star = (x, y, r, col) => { ctx.fillStyle = col; ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r; ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } ctx.closePath(); ctx.fill(); ctx.strokeStyle = INK; ctx.stroke(); };
     star(home.x, home.y, 6, selRow.kind === 'home' ? '#ffd23a' : '#e8c060');
-    drawText(ctx, HOME.name, home.x + 8, home.y - 4, { color: INK });
+    drawText(ctx, HOME.name, home.x - 8, home.y - 4, { color: INK, align: 'right' });   // (the pin sits on the map's east edge)
     TOUR.forEach((tr, k) => {
       const p = this.proj(tr.lon, tr.lat, M), st = this.status(tr), sel = selRow.t === tr;
       const r = sel ? 5 + Math.sin(t * 6) * 1 : 4;
