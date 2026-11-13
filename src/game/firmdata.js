@@ -41,6 +41,31 @@ const FOUNDERS = {
   kenny: { nick: 'ULTRAVIOLENCE', stats: { fists: 8, kicks: 4, tough: 7, speed: 5, nerve: 8, loyalty: 5 }, traits: ['liability'] },
   vic: { nick: 'THE PYTHON', stats: { fists: 6, kicks: 3, tough: 7, speed: 3, nerve: 6, loyalty: 7 }, traits: ['biglad'] },
   hooligan: { nick: 'DEZ', stats: { fists: 6, kicks: 6, tough: 5, speed: 5, nerve: 6, loyalty: 8 }, traits: ['oldschool'] },
+  // lads who aren't playable characters: their own name and look (no signature moves)
+  gaz: { name: 'GAZZA', nick: 'THE GENT', stats: { fists: 6, kicks: 5, tough: 6, speed: 5, nerve: 7, loyalty: 7 }, traits: ['oldschool'],
+    look: { skin: '#e2a97a', hair: { style: 'crop', color: '#6a6a6a' }, facial: 'stubble', jacket: { style: 'overshirt', color: '#2a3346', trim: '#1c2230', hood: 'down', pockets: true },
+      badge: { base: '#141416', mark: '#c8d43a' }, shirt: '#f4f1e8', pants: { style: 'cargo', color: '#c8b48a' }, shoes: { color: '#f2f2ee', sole: '#e8e4dc' }, build: 1.05, height: 1.0 } },
+  tommo: { name: 'TOMMO', nick: 'THE GOB', stats: { fists: 5, kicks: 5, tough: 5, speed: 6, nerve: 8, loyalty: 7 }, traits: ['singer'],
+    look: { skin: '#f0c098', hair: { style: 'shaved', color: '#3a2717' }, facial: 'stubble', jacket: { style: 'track', color: '#c8102e', trim: '#f4f1e8' },
+      shirt: '#f4f1e8', pants: { style: 'jeans', color: '#34507a' }, shoes: { color: '#1a3a90', sole: '#e8e4dc', stripe: '#f4f1e8' }, build: 1.0, height: 0.98 } },
+  spider: { name: 'SPIDER', nick: 'THE LOOKOUT', stats: { fists: 5, kicks: 7, tough: 4, speed: 8, nerve: 6, loyalty: 6 }, traits: ['lookout'],
+    look: { skin: '#d49a6a', hair: { style: 'crop', color: '#141016' }, facial: 'none', jacket: { style: 'hoodie', color: '#141416' }, hood: true, mask: 'snood', maskColor: '#141416',
+      bag: true, gloves: '#141416', shirt: '#222', pants: { style: 'trackies', color: '#1c1c20' }, shoes: { color: '#f2f2ee', sole: '#e8e4dc' }, build: 0.9, height: 1.1 } },
+  shaz: { name: 'SHAZ', nick: 'THE SCRAPPER', stats: { fists: 7, kicks: 5, tough: 4, speed: 7, nerve: 7, loyalty: 6 }, traits: ['hothead'],
+    look: { female: true, skin: '#f0c098', hair: { style: 'ponytail', color: '#e8d27a' }, facial: 'none', jacket: { style: 'bomber', color: '#1a1a20', lining: '#e07020' },
+      shirt: '#f4f1e8', pants: { style: 'jeans', color: '#1e1e26' }, shoes: { color: '#f2f2ee', sole: '#c49a5a' }, build: 0.95, height: 0.96 } },
+  bigh: { name: 'BIG H', nick: 'THE WARDROBE', stats: { fists: 8, kicks: 3, tough: 8, speed: 3, nerve: 6, loyalty: 7 }, traits: ['biglad'],
+    look: { skin: '#b87a50', hair: { style: 'skinhead', color: '#141016' }, facial: 'beard', jacket: { style: 'parka', color: '#3e4530' },
+      shirt: '#2a2a2e', pants: { style: 'jeans', color: '#2a3346' }, shoes: { color: '#1a1a1a', sole: '#3a3a3e' }, build: 1.5, height: 1.1 } },
+  ronnie: { name: 'RONNIE', nick: 'THE ACCOUNTANT', stats: { fists: 4, kicks: 4, tough: 5, speed: 6, nerve: 5, loyalty: 9 }, traits: ['grafter'],
+    look: { skin: '#f4d0b0', hair: { style: 'mod', color: '#6a4a2a' }, facial: 'none', shades: true, jacket: { style: 'harrington', color: '#c8b48a', lining: '#a01818' },
+      shirt: '#f4f1e8', pants: { style: 'jeans', color: '#5a6a7a' }, shoes: { color: '#b9a07a', sole: '#e8d8a8' }, build: 0.95, height: 1.0 } },
+  decks: { name: 'DECKS', nick: 'THE DJ', stats: { fists: 7, kicks: 6, tough: 5, speed: 6, nerve: 6, loyalty: 4 }, traits: ['liability'],
+    look: { skin: '#8a5636', hair: { style: 'shaved', color: '#141016' }, facial: 'none', jacket: { style: 'track', color: '#1a1a22', trim: '#f2c811' }, mask: 'balaclava', maskColor: '#141416',
+      shirt: '#222', pants: { style: 'cargo', color: '#3a3c34' }, shoes: { color: '#121214', sole: '#e8e4dc', stripe: '#f2c811' }, gloves: '#141416', build: 1.1, height: 1.02 } },
+  paddy: { name: 'PADDY', nick: 'THE POSTMAN', stats: { fists: 5, kicks: 5, tough: 6, speed: 5, nerve: 4, loyalty: 8 }, traits: ['lightweight'],
+    look: { skin: '#f0c098', hair: { style: 'curtains', color: '#b4521c' }, facial: 'tache', hat: { style: 'cap', color: '#1d2742' }, jacket: { style: 'hivis', color: '#d8e83a' },
+      shirt: '#1d2742', pants: { style: 'jeans', color: '#34507a' }, shoes: { color: '#1a1a1a', sole: '#3a3a3e' }, build: 1.0, height: 0.99 } },
 };
 
 // ------------------------------------------------------------------ randomness (seedable for tests)
@@ -84,11 +109,18 @@ function randomLook(female, big) {
 // ------------------------------------------------------------------ creation
 function newId(F) { return 'lad' + (F.nextId++); }
 
+// name / nick / look / stats / traits of a founder (playable character or one of the extra lads), for the FIRM SETUP screen
+export function founderInfo(id) {
+  const fd = FOUNDERS[id] || FOUNDERS.hooligan;
+  if (fd.look) return { id, name: fd.name, nick: fd.nick, look: fd.look, stats: fd.stats, traits: fd.traits, char: null };
+  const ch = characterById(id);
+  return { id, name: ch.name, nick: fd.nick, look: ch.look || null, stats: fd.stats, traits: fd.traits, char: id };
+}
+
 export function founder(F, charId) {
-  const ch = characterById(charId);
-  const fd = FOUNDERS[charId] || FOUNDERS.hooligan;
+  const fi = founderInfo(charId), fd = FOUNDERS[charId] || FOUNDERS.hooligan;
   return {
-    id: newId(F), name: ch.name, nick: fd.nick, char: charId, look: ch.look || null,
+    id: newId(F), name: fi.name, nick: fi.nick, char: fi.char, look: fi.look ? JSON.parse(JSON.stringify(fi.look)) : null,
     stats: { ...fd.stats }, traits: [...fd.traits], xp: 0, lvl: 1, kos: 0, trips: 0, injury: 0, banned: 0,
     mood: 75, bonds: {}, hired: F.day,
   };
@@ -126,7 +158,7 @@ export function squadSize(F) { return F.rep >= 60 ? 4 : 3; }
 export function recruitTier(F) { return F.rep >= 120 ? 3 : F.rep >= 60 ? 2 : F.rep >= 20 ? 1 : 0; }
 
 // the lads you can found a firm with (FIRM SETUP): the playable characters (more to come)
-export const FOUNDER_IDS = ['mo', 'stig', 'kenny', 'bigal', 'vic', 'hooligan'];
+export const FOUNDER_IDS = ['mo', 'stig', 'kenny', 'bigal', 'vic', 'hooligan', 'gaz', 'tommo', 'spider', 'shaz', 'bigh', 'ronnie', 'decks', 'paddy'];
 
 // setup (FIRM SETUP screen, optional): { club, lads: [charId...] } - the founders in the order picked (first ones travel)
 export function newFirm(playerChar = 'hooligan', setup = null) {

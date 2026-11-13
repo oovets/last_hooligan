@@ -17,11 +17,11 @@ export const CLUBS = [
     a: '#00843d', b: '#f4f4f0', chant: 'BAJEN! BAJEN!' },
   { id: 'blavitt', short: 'IFK', name: 'IFK GÖTEBORG', nick: 'BLÅVITT', firm: 'WISEMEN', city: 'GÖTEBORG',
     a: '#0a3d91', b: '#f4f4f0', chant: 'BLÅVITT! BLÅVITT!' },
-  // made-up firm names from here
-  { id: 'mff', short: 'MFF', name: 'MALMÖ FF', nick: 'DI BLÅE', firm: 'DI BLÅES FINEST', city: 'MALMÖ',
+  { id: 'mff', short: 'MFF', name: 'MALMÖ FF', nick: 'DI BLÅE', firm: 'TRUE ROCKERS', city: 'MALMÖ',
     a: '#7fb8e6', b: '#f4f4f0', chant: 'MALMÖ! MALMÖ!' },
-  { id: 'hbg', short: 'HIF', name: 'HELSINGBORGS IF', nick: 'DI RÖE', firm: 'KÄRNAN CREW', city: 'HELSINGBORG',
+  { id: 'hbg', short: 'HIF', name: 'HELSINGBORGS IF', nick: 'DI RÖE', firm: 'FRONTLINE', city: 'HELSINGBORG',
     a: '#d0102a', b: '#0a3d91', chant: 'DI RÖE! DI RÖE!' },
+  // made-up firm name
   { id: 'peking', short: 'IFKN', name: 'IFK NORRKÖPING', nick: 'PEKING', firm: 'PEKING FIRM', city: 'NORRKÖPING',
     a: '#f4f4f0', b: '#0a3d91', chant: 'PEKING! PEKING!' },
 ];

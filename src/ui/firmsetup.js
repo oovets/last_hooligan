@@ -9,20 +9,19 @@ import { app } from '../app.js';
 import { save } from '../save.js';
 import { audio } from '../audio/audio.js';
 import { CLUBS } from '../content/clubs.js';
-import { characterById } from '../content/characters.js';
-import { FOUNDER_IDS } from '../game/firmdata.js';
+import { FOUNDER_IDS, founderInfo, TRAITS } from '../game/firmdata.js';
 import { backdrop } from './backdrop.js';
 import { frame, hintBar, heading, Repeater, C, rrect, devScale } from './widgets.js';
 import { r3d } from '../render3d/index.js';
 
-const MAX_LADS = 4, COACH = 3;
+const MAX_LADS = 4, COACH = 3, VIS = 5;      // VIS: lad cards on screen at once (the row scrolls)
 
 export class FirmSetupScene {
   constructor(playerChar, onDone) {
     this.onDone = onDone; this.t = 0; this.rep = new Repeater();
     this.step = 'club';
     this.clubSel = Math.max(0, CLUBS.findIndex(c => c.id === (save.data.club || 'nordhamn')));
-    this.lads = FOUNDER_IDS.filter(id => id !== playerChar && characterById(id)).map(id => characterById(id));
+    this.lads = FOUNDER_IDS.filter(id => id !== playerChar).map(founderInfo);
     this.picks = this.lads.slice(0, COACH).map(c => c.id);      // a sensible default: the first three
     this.ladSel = 0;
   }
@@ -98,17 +97,22 @@ export class FirmSetupScene {
     const club = CLUBS[this.clubSel];
     heading(ctx, 'WHO COMES WITH YOU?', VIEW_W / 2, 8, { scale: 3 });
     drawText(ctx, `${club.firm} (${club.name})   PICK UP TO ${MAX_LADS}. THE FIRST ${COACH} TRAVEL ON THE COACH.`, VIEW_W / 2, 36, { color: '#c0b8d0', align: 'center' });
-    const n = this.lads.length, cw = 92, gap = 8, total = n * (cw + gap) + 70, x0 = Math.round((VIEW_W - total) / 2), y0 = 52, chh = 222;
+    const n = this.lads.length, cw = 92, gap = 8, vis = Math.min(VIS, n), total = vis * (cw + gap) + 70, x0 = Math.round((VIEW_W - total) / 2), y0 = 52, chh = 222;
+    // the visible window follows the selection
+    this.first = Math.max(0, Math.min(n - vis, Math.min(this.ladSel, n - 1) - Math.floor(vis / 2)));
+    const first = this.first, shown = this.lads.slice(first, first + vis);
+    if (first > 0) drawText(ctx, '<', x0 - 10, y0 + 100, { color: C.gold, scale: 2, align: 'center', outline: '#000' });
+    if (first + vis < n) drawText(ctx, '>', x0 + vis * (cw + gap) - 4, y0 + 100, { color: C.gold, scale: 2, align: 'center', outline: '#000' });
     const stage = r3d.menu, actors = [];
-    this.lads.forEach((c, i) => {
-      const x = x0 + i * (cw + gap), sel = i === this.ladSel, k = this.picks.indexOf(c.id);
+    shown.forEach((c, j) => {
+      const i = first + j, x = x0 + j * (cw + gap), sel = i === this.ladSel, k = this.picks.indexOf(c.id);
       frame(ctx, x, y0 + (sel ? -2 : 0), cw, chh, { fill: k >= 0 ? 'rgba(40,10,20,0.95)' : 'rgba(14,9,22,0.92)', accent: sel ? C.gold : k >= 0 ? club.a : '#3a2e44', edge: sel ? '#c8a030' : undefined });
       const look = c.look;
       if (look) actors.push({ look, x: x + cw / 2, feet: y0 + 168, h: 150 * (look.height || 1) * 0.92, anim: 'idle', phase: i * 0.6, yaw: sel ? 0.3 + Math.sin(this.t * 2) * 0.25 : 0.4 });
     });
-    if (stage && stage.ready && actors.length) stage.draw(ctx, 'firm_lads', actors, { x: x0, y: y0, w: n * (cw + gap), h: 175 }, this.t, { light: 'studio' });
-    this.lads.forEach((c, i) => {
-      const x = x0 + i * (cw + gap), sel = i === this.ladSel, k = this.picks.indexOf(c.id);
+    if (stage && stage.ready && actors.length) stage.draw(ctx, 'firm_lads', actors, { x: x0, y: y0, w: vis * (cw + gap), h: 175 }, this.t, { light: 'studio' });
+    shown.forEach((c, j) => {
+      const i = first + j, x = x0 + j * (cw + gap), sel = i === this.ladSel, k = this.picks.indexOf(c.id);
       drawText(ctx, c.name.length > 13 ? c.name.split(' ').pop() : c.name, x + cw / 2, y0 + 176, { color: sel ? '#fff' : '#e0d8e8', align: 'center' });
       drawText(ctx, c.nick || '', x + cw / 2, y0 + 188, { color: '#8a7a9a', align: 'center' });
       const tag = k < 0 ? 'NOT COMING' : k < COACH ? 'ON THE COACH' : 'AT THE PUB';
@@ -116,8 +120,16 @@ export class FirmSetupScene {
       if (k >= 0) { ctx.fillStyle = club.a; rrect(ctx, x + 4, y0 + 4, 16, 13, 3); ctx.fill(); drawText(ctx, String(k + 1), x + 12, y0 + 7, { color: '#fff', align: 'center', outline: '#000' }); }
       if (sel) { ctx.save(); ctx.shadowColor = 'rgba(255,210,58,0.9)'; ctx.shadowBlur = 10 * devScale(ctx); ctx.strokeStyle = C.gold; ctx.lineWidth = 1.2; rrect(ctx, x - 2.5, y0 - 4.5, cw + 5, chh + 5, 7); ctx.stroke(); ctx.restore(); }
     });
+    // the selected lad: trait and stats
+    const cur = this.lads[Math.min(this.ladSel, n - 1)];
+    if (cur && this.ladSel < n) {
+      const tr = (cur.traits || []).map(t => (TRAITS[t] ? TRAITS[t].name : t)).join(', ');
+      const st = cur.stats || {};
+      drawText(ctx, `${cur.name}${tr ? '  -  ' + tr : ''}   FISTS ${st.fists}  KICKS ${st.kicks}  TOUGH ${st.tough}  SPEED ${st.speed}  NERVE ${st.nerve}  LOYAL ${st.loyalty}`,
+        VIEW_W / 2, y0 + chh + 10, { color: '#c0b8d0', align: 'center' });
+    }
     // LET'S GO
-    const gx = x0 + n * (cw + gap), gsel = this.ladSel === n;
+    const gx = x0 + vis * (cw + gap), gsel = this.ladSel === n;
     frame(ctx, gx, y0 + 80, 62, 56, { fill: gsel ? 'rgba(80,10,24,0.95)' : 'rgba(14,9,22,0.92)', accent: gsel ? C.gold : C.red });
     drawText(ctx, "LET'S", gx + 31, y0 + 96, { color: gsel ? C.gold : '#fff', align: 'center' });
     drawText(ctx, 'GO >', gx + 31, y0 + 110, { color: gsel ? C.gold : '#fff', align: 'center' });
