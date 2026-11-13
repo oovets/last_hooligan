@@ -11,6 +11,7 @@ import { drawDoll } from '../game/doll.js';
 import { sampleAnim } from '../game/poses.js';
 import { ENEMIES } from '../content/enemies.js';
 import { LEVELS } from '../content/levels/index.js';
+import { TOUR } from '../content/tour/index.js';
 import { World } from '../game/world.js';
 import { game } from '../game/state.js';
 import { backdrop } from './backdrop.js';
@@ -68,65 +69,76 @@ class StoryScene {
 }
 
 // ---------------------------------------------------------------- know your enemy
-const FIRMS = [
-  { name: 'PORTSIDE CITY', a: '#1f4fb4', b: '#f2f2f2', line: 'THE BLUES ACROSS THE RIVER. LOUD, MANY, MOUTHY.' },
-  { name: 'VARGBY WANDERERS', a: '#f0c020', b: '#141414', line: 'YELLOW AND BLACK. BIG BOOTS FROM UP THE COAST.' },
-];
+// One page per real firm on the Football Tour: three of their lads and their top boy, in the club's colours.
+const ENEMY_PREFIX = { oldtrafford: 'ot_' };
 class GalleryScene {
   constructor(next) { this.next = next; this.t = 0; }
   enter() {
     this.t = 0;
-    const ids = Object.keys(ENEMIES).filter(k => !ENEMIES[k].boss).slice(0, 8);
-    this.list = ids.map((id, i) => {
+    const card = (id, i) => {
       const d = ENEMIES[id];
       let look = {};
       try { look = typeof d.look === 'function' ? d.look(makeRng(i * 31 + 5)) : (d.look || {}); } catch (e) { look = {}; }
-      const tq = (d.ai && d.ai.shouts && (d.ai.shouts.taunt || d.ai.shouts.aggro)) || ['...'];
-      return { id, name: d.name || id.toUpperCase(), look, quote: tq[i % tq.length], hp: d.hp || 40 };
-    });
-    this.pages = Math.max(1, Math.ceil(this.list.length / 4));
+      const sh = d.ai && d.ai.shouts;
+      const tq = (Array.isArray(sh) ? sh : sh && (sh.taunt || sh.aggro || sh.intro)) || (d.intro ? [d.intro] : null) || ['...'];
+      return { id, name: d.name || id.toUpperCase(), look, quote: String(tq[i % tq.length] || '...'), hp: d.hp || 40, boss: !!d.boss };
+    };
+    this.pages = TOUR.map(t => {
+      const pre = ENEMY_PREFIX[t.id] || t.id + '_';
+      const ids = Object.keys(ENEMIES).filter(k => k.startsWith(pre));
+      const lads = ids.filter(k => !ENEMIES[k].boss).sort((a, b) => (ENEMIES[a].hp || 0) - (ENEMIES[b].hp || 0)).slice(0, 3);
+      const boss = ids.find(k => ENEMIES[k].boss);
+      const cards = [...lads, ...(boss ? [boss] : [])].map(card);
+      // the top boy's line: from the level's boss intro when his own def has none
+      const bi = t.level && t.level.boss && t.level.boss.intro;
+      const last = cards[cards.length - 1];
+      if (last && last.boss && last.quote === '...' && bi) last.quote = Array.isArray(bi) ? bi[0] : String(bi);
+      return { t, cards };
+    }).filter(p => p.cards.length);
   }
   update(dt) {
     this.t += dt; backdrop.update(dt);
     if (this.t > 0.4 && leaveKeys()) { app.go(app.scenes.title({ skipIntro: true })); return; }
-    if (this.t > 6 * this.pages) app.go(this.next());
+    if (this.t > 6 * this.pages.length) app.go(this.next());
   }
   draw(ctx) {
     backdrop.draw(ctx, { dim: 0.7 });
     heading(ctx, 'KNOW YOUR ENEMY', VIEW_W / 2, 16, { scale: 3 });
-    const page = Math.min(this.pages - 1, Math.floor(this.t / 6));
-    const pt = this.t - page * 6;
-    const items = this.list.slice(page * 4, page * 4 + 4);
-    items.forEach((e, i) => {
+    if (!this.pages.length) { scanlines(ctx); return; }
+    const pi = Math.min(this.pages.length - 1, Math.floor(this.t / 6));
+    const { t: club, cards } = this.pages[pi];
+    const pt = this.t - pi * 6;
+    const [ca, cb] = club.colors;
+    cards.forEach((e, i) => {
       const x = 24 + i * 152, y = 62;
       const k = Math.min(1, Math.max(0, (pt - i * 0.18) * 4));
       if (k <= 0) return;
       const yy = y + Math.round((1 - k) * 40);
       ctx.globalAlpha = k;
-      frame(ctx, x, yy, 140, 200, { fill: 'rgba(12,8,22,0.9)', accent: '#1f4fb4' });
-      ctx.fillStyle = 'rgba(31,79,180,0.18)'; ctx.fillRect(x + 4, yy + 4, 132, 130);
-      // spotlight
+      frame(ctx, x, yy, 140, 200, { fill: 'rgba(12,8,22,0.9)', accent: e.boss ? '#ffd23a' : ca });
+      ctx.fillStyle = ca; ctx.globalAlpha = k * 0.22; ctx.fillRect(x + 4, yy + 4, 132, 130); ctx.globalAlpha = k;
       ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.ellipse(x + 70, yy + 124, 40, 8, 0, 0, Math.PI * 2); ctx.fill();
       const anim = Math.floor(pt + i) % 3 === 0 ? 'taunt' : 'guard';
       ladFigure(ctx, e.look, x + 70, yy + 124, 2.4, pt + i * 0.3, { key: 'rogue' + i, anim, flip: true, yaw: -0.45, face: anim === 'taunt' ? 'shout' : 'angry' });
-      drawText(ctx, e.name, x + 70, yy + 140, { color: '#ffb0b0', align: 'center', outline: '#000' });
-      // threat meter
-      const thr = Math.min(5, Math.max(1, Math.round(e.hp / 15)));
+      if (e.boss) { ctx.fillStyle = '#ffd23a'; ctx.fillRect(x + 6, yy + 6, 46, 11); drawText(ctx, 'TOP BOY', x + 29, yy + 8, { color: '#120c14', align: 'center' }); }
+      drawText(ctx, e.name, x + 70, yy + 140, { color: e.boss ? '#ffd23a' : '#ffb0b0', align: 'center', outline: '#000' });
+      const thr = Math.min(5, Math.max(1, Math.round(e.hp / (e.boss ? 130 : 22))));
       drawText(ctx, 'THREAT', x + 12, yy + 154, { color: C.dim });
       for (let s = 0; s < 5; s++) { ctx.fillStyle = s < thr ? '#ff3a3a' : '#3a2e44'; ctx.fillRect(x + 56 + s * 14, yy + 154, 10, 6); }
-      // quote bubble
-      const q = '"' + e.quote + '"';
-      const lines = q.length > 20 ? [q.slice(0, q.lastIndexOf(' ', 20)), q.slice(q.lastIndexOf(' ', 20) + 1)] : [q];
-      lines.forEach((l, j) => drawText(ctx, l, x + 70, yy + 170 + j * 10, { color: '#ffffff', align: 'center' }));
+      const q = '"' + e.quote.toUpperCase() + '"';
+      const lines = [];   // word-wrap at ~22 characters, up to three lines
+      for (const w of q.split(' ')) { const L = lines[lines.length - 1]; if (L !== undefined && (L + ' ' + w).length <= 22) lines[lines.length - 1] = L + ' ' + w; else lines.push(w); }
+      lines.splice(3);
+      lines.forEach((l, j) => drawText(ctx, l, x + 70, yy + 166 + j * 10, { color: '#ffffff', align: 'center' }));
       ctx.globalAlpha = 1;
     });
-    // firms strip
-    FIRMS.forEach((f, i) => {
-      const y = 280 + i * 16;
-      ctx.fillStyle = f.a; ctx.fillRect(40, y, 8, 8); ctx.fillStyle = f.b; ctx.fillRect(44, y, 4, 8);
-      drawText(ctx, f.name, 54, y + 1, { color: f.a === '#f0c020' ? f.a : '#7aa0ff', outline: '#000' });
-      drawText(ctx, f.line, 176, y + 1, { color: '#d0c8e0', outline: '#000' });
-    });
+    // the club and its firm
+    const y = 280;
+    ctx.fillStyle = ca; ctx.fillRect(40, y, 10, 10); ctx.fillStyle = cb; ctx.fillRect(45, y, 5, 10);
+    drawText(ctx, `${club.club} (${club.nick})`, 58, y + 1, { color: '#ffffff', outline: '#000' });
+    drawText(ctx, club.firm, 58, y + 14, { color: '#ffd23a', outline: '#000' });
+    drawText(ctx, `${club.venue}, ${club.city}`, VIEW_W - 40, y + 1, { color: '#d0c8e0', align: 'right', outline: '#000' });
+    drawText(ctx, `PAGE ${pi + 1}/${this.pages.length}`, VIEW_W - 40, y + 14, { color: C.dim, align: 'right', outline: '#000' });
     if (blink(this.t)) drawText(ctx, 'PRESS START', VIEW_W / 2, VIEW_H - 14, { color: C.gold, align: 'center', outline: '#000' });
     scanlines(ctx);
   }
