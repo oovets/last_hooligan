@@ -113,7 +113,67 @@ function badgeTexture() {
   }
   BADGE = new THREE.CanvasTexture(cv);
   BADGE.colorSpace = THREE.SRGBColorSpace; BADGE.anisotropy = 4;
+  BADGE.flipY = false;                                   // glTF UVs have v pointing down (like canvas rows)
   return BADGE;
+}
+
+// ---- arm tattoos (material ID_26, layer 'tattoo:arm'), drawn once per design. 'clockwork': the four droogs walking
+// at you as black silhouettes (bowler, bowler with a bat across his shoulders, tall hat, flat cap; clubs and canes),
+// long shadows stretching down behind them, in worn black ink.
+const TATTOOS = {};
+function tattooTexture(kind = 'clockwork') {
+  if (TATTOOS[kind]) return TATTOOS[kind];
+  const S = 512, cv = document.createElement('canvas'); cv.width = S; cv.height = S;
+  const g = cv.getContext('2d'), INK = '#141016';
+  g.fillStyle = INK; g.strokeStyle = INK; g.lineCap = 'round'; g.lineJoin = 'round';
+  const line = (w, ...p) => { g.lineWidth = w; g.beginPath(); g.moveTo(p[0], p[1]); for (let i = 2; i < p.length; i += 2) g.lineTo(p[i], p[i + 1]); g.stroke(); };
+  const poly = (...p) => { g.beginPath(); g.moveTo(p[0], p[1]); for (let i = 2; i < p.length; i += 2) g.lineTo(p[i], p[i + 1]); g.closePath(); g.fill(); };
+  // one droog: x = centre, top of head at y0, feet at y1
+  const droog = (x, hat, arms) => {
+    const y0 = 118, y1 = 330;
+    // long shadows from each foot, down and fanning out
+    poly(x - 16, y1, x - 6, y1, x - 34, 500, x - 70, 500);
+    poly(x + 6, y1, x + 16, y1, x + 40, 500, x + 6, 500);
+    // legs, walking: one leg a little forward
+    line(19, x - 10, 230, x - 13, y1 - 4); line(19, x + 10, 230, x + 14, y1 - 12);
+    poly(x - 24, y1 - 6, x - 2, y1 - 6, x - 2, y1 + 2, x - 26, y1 + 2);                   // boots
+    poly(x + 4, y1 - 14, x + 26, y1 - 14, x + 26, y1 - 6, x + 2, y1 - 6);
+    // torso (jacket over the white kit reads solid in silhouette)
+    poly(x - 26, 158, x + 26, 158, x + 21, 238, x - 21, 238);
+    // head + hat
+    g.beginPath(); g.ellipse(x, y0 + 22, 14, 17, 0, 0, Math.PI * 2); g.fill();
+    if (hat === 'bowler') { g.beginPath(); g.ellipse(x, y0 + 9, 22, 5, 0, 0, Math.PI * 2); g.fill(); g.beginPath(); g.ellipse(x, y0 + 3, 14, 13, 0, Math.PI, Math.PI * 2); g.fill(); }
+    if (hat === 'tall') { g.beginPath(); g.ellipse(x, y0 + 9, 22, 5, 0, 0, Math.PI * 2); g.fill(); poly(x - 13, y0 + 8, x + 13, y0 + 8, x + 12, y0 - 18, x - 12, y0 - 18); }
+    if (hat === 'cap') { poly(x - 16, y0 + 12, x + 18, y0 + 4, x + 22, y0 + 10, x - 14, y0 + 16); g.beginPath(); g.ellipse(x, y0 + 6, 16, 9, -0.2, Math.PI, Math.PI * 2); g.fill(); }
+    g.fillRect(x - 6, y0 + 36, 12, 12);                                                   // neck
+    // arms + weapons
+    if (arms === 'bat') {             // bat across the shoulders, both hands up behind the head
+      line(13, x - 24, 165, x - 40, y0 + 26); line(13, x + 24, 165, x + 40, y0 + 26);
+      line(9, x - 70, y0 + 34, x + 72, y0 + 30);
+    } else if (arms === 'clubL') {     // club held across the body at hip height
+      line(13, x - 24, 165, x - 30, 236); line(13, x + 24, 165, x + 32, 238);
+      line(9, x - 46, 246, x + 52, 232);
+    } else if (arms === 'caneL') {     // cane hanging down on his right, pointing out
+      line(13, x - 24, 165, x - 32, 240); line(13, x + 24, 165, x + 28, 242);
+      line(6, x - 34, 238, x - 52, 196);
+    } else {                           // club pointing down and out to the left of the picture
+      line(13, x - 24, 165, x - 30, 242); line(13, x + 24, 165, x + 22, 244);
+      line(9, x + 18, 244, x + 70, 262);
+    }
+  };
+  droog(78, 'bowler', 'clubL');
+  droog(198, 'bowler', 'bat');
+  droog(318, 'tall', 'caneL');
+  droog(436, 'cap', 'club');
+  // worn ink: knock random flecks out of it
+  g.globalCompositeOperation = 'destination-out';
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let k = 0; k < 2600; k++) { const r = 0.6 + rnd() * 2.2; g.beginPath(); g.arc(rnd() * S, rnd() * S, r, 0, Math.PI * 2); g.fill(); }
+  g.globalCompositeOperation = 'source-over';
+  const t = TATTOOS[kind] = new THREE.CanvasTexture(cv);
+  t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  t.flipY = false;                                       // glTF UVs have v pointing down (like canvas rows)
+  return t;
 }
 
 let RAMP = null;
@@ -177,6 +237,10 @@ export class Character2 {
           m = src.clone();
           m.metalness = 0;                                  // glTF from scan / AI tools often defaults to metallic
           if (named) m.color = toColor(c);
+        } else if (id === 26) {
+          // arm tattoo (layer 'tattoo:arm'): ink with alpha over the skin
+          m = new THREE.MeshStandardMaterial({ map: tattooTexture(look.tattoo), alphaTest: 0.35, roughness: 0.6, metalness: 0,
+            polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
         } else if (id === 24) {
           m = new THREE.MeshStandardMaterial({ map: badgeTexture(), roughness: 0.92, metalness: 0 });   // the arm badge
         } else {
@@ -184,8 +248,10 @@ export class Character2 {
           m = new THREE.MeshStandardMaterial({ color: toColor(c), roughness: ROUGH[id] ?? 0.88, metalness: 0 });
           if (id === 13 || id === 19) m.color.multiplyScalar(0.5);
         }
-        // authored blending, so the hit flash / fade in update() combines with it instead of replacing it
-        m.userData.base = { transparent: m.transparent, opacity: m.opacity, depthWrite: m.depthWrite };
+        // fluorescent kit (hat.neon: hi-vis / neon balaclavas) glows a little so it pops even in shadow
+        if (id === 14 && look.hat && look.hat.neon && m.emissive) m.emissive.copy(m.color).multiplyScalar(0.45);
+        // authored blending + glow, so the hit flash / fade in update() combines with them instead of replacing them
+        m.userData.base = { transparent: m.transparent, opacity: m.opacity, depthWrite: m.depthWrite, emissive: m.emissive ? m.emissive.clone() : null };
         this.mats[mk] = m;
       }
       o.material = m;
@@ -476,8 +542,8 @@ export class Character2 {
     if (f.state === 'dead' && f.team !== 'player' && f.deadT > 0.4 && Math.floor(f.deadT * 12) % 2 === 0) alpha *= 0.5;
     const flash = f.flashT > 0;
     for (const m of Object.values(this.mats)) {
-      if (m.emissive) m.emissive.setScalar(flash ? 0.6 : 0);
       const b = m.userData.base || { transparent: false, opacity: 1, depthWrite: true };
+      if (m.emissive) { if (flash) m.emissive.setScalar(0.6); else if (b.emissive) m.emissive.copy(b.emissive); else m.emissive.setScalar(0); }
       const tr = b.transparent || alpha < 0.999;
       if (m.transparent !== tr) { m.transparent = tr; m.depthWrite = b.depthWrite; m.needsUpdate = true; }
       m.opacity = b.opacity * alpha;

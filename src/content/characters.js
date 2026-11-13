@@ -103,7 +103,8 @@ export const CHARACTERS = [
     winLine: 'IT\'S SHOWTIME!', koLines: ['SHOWTIME!', 'NEXT!', 'IS THAT IT?', 'WHO\'S NEXT?!', 'GET UP! I\'M NOT DONE!'],
     look: {
       skin: '#d99a6c', hair: { style: 'skinhead', color: '#2a1a10' }, facial: 'none', muscle: true,
-      hat: { style: 'balaclava', color: '#141416' },
+      hat: { style: 'balaclava', color: '#ff5a00', neon: true },   // NEON orange balaclava (glows a little in 3D)
+      tattoo: 'clockwork',                                   // A Clockwork Orange on his left arm (3D)
       jacket: { style: 'vest', color: '#ecebe4' }, shirt: '#ecebe4',
       pants: { style: 'cargo', color: '#3e4632' }, shoes: { color: '#16161a', sole: '#2a2a2e' },
       scarf: null, build: 1.2, height: 1.08,

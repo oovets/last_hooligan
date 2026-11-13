@@ -31,7 +31,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 def P(p): return p if os.path.isabs(p) else os.path.join(ROOT, p)
 
 ID = dict(skin=1, hair=2, jacket=3, trim=4, lining=5, shirt=6, pants=7, pantsTrim=8, shoes=9, sole=10,
-          scarfA=11, scarfB=12, eye=13, hat=14, hatTrim=15, glove=16, band=17, facial=18, shades=19, mouth=20, belt=21, stripe=22, shoeStripe=23, badge=24, badgeMark=25)
+          scarfA=11, scarfB=12, eye=13, hat=14, hatTrim=15, glove=16, band=17, facial=18, shades=19, mouth=20, belt=21, stripe=22, shoeStripe=23, badge=24, badgeMark=25, tattoo=26)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -606,6 +606,31 @@ if SLEEVED:
         bd = [bm_obj('badge', bmq, ID['badge'], 'upperArm_L'),
               plate('badgeBack', p - nrm * 0.004, across, up, nrm, (BW * 0.96, BH * 0.94, 0.004), ID['shades'], 'upperArm_L')]   # stays behind the textured face
         acc('badge:arm', bd)
+def arm_decal(name, idn, size, at=0.32, lift=0.0012, cols=8, rows=8):
+    """A UV-mapped square that hugs the outside of the left upper arm (tattoos on bare arms)."""
+    ua, fa = J['upperArm_L'], J['forearm_L']; d_ = (fa - ua).normalized()
+    lat = Vector((1, 0, 0)); lat = (lat - d_ * lat.dot(d_)).normalized()
+    h = surf(ua.lerp(fa, at), (lat + FRONT * 0.15).normalized(), lift, 0.25)
+    if not h: return None
+    p, nrm = h; up = -d_; across = up.cross(nrm).normalized(); up = nrm.cross(across).normalized()
+    bmq = bmesh.new(); uvl = bmq.loops.layers.uv.new('UVMap'); grid = {}
+    for i in range(cols + 1):
+        for j in range(rows + 1):
+            q = p + across * (i / cols - 0.5) * size + up * (j / rows - 0.5) * size
+            t = max(0.0, min(1.0, (q - ua).dot(fa - ua) / (fa - ua).length_squared)); axis = ua.lerp(fa, t)
+            o2 = (q - axis); o2 = (o2 - d_ * o2.dot(d_)).normalized()
+            hq = surf(axis, o2, lift, 0.2)
+            grid[i, j] = (bmq.verts.new(hq[0] if hq else q), (i / cols, j / rows))
+    for i in range(cols):
+        for j in range(rows):
+            quad = [grid[i, j], grid[i + 1, j], grid[i + 1, j + 1], grid[i, j + 1]]
+            f = bmq.faces.new([q[0] for q in quad])
+            for loop, (_, uv) in zip(f.loops, quad): loop[uvl].uv = uv
+    return bm_obj(name, bmq, idn, 'upperArm_L')
+if not SLEEVED:
+    # bare-armed builds: an arm tattoo (layer 'tattoo:arm'); the design is a runtime texture with alpha (ID 26)
+    tt = arm_decal('tattoo', ID['tattoo'], 0.13 if MUS else 0.095)
+    if tt: acc('tattoo:arm', [tt])
 
 # ------------------------------------------------------------------ accessories: hair, facial hair, hats, hoods, masks, bag
 def skull_shell(name, inflate, keep, idn, voxel=0.003, rough=0.0, freq=60.0):

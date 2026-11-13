@@ -190,7 +190,8 @@ export function specForLook(look) {
   if (look.hat && !hood) layers.push('hat:' + look.hat.style);
   if (hood) layers.push('hood:up'); else if (J.style === 'hoodie' || J.hood === 'down') layers.push('hood:down');
   if (J.pockets) layers.push('pockets:chest');
-  if (look.badge) layers.push('badge:arm');                 // black arm badge with a compass rose (3D)
+  if (look.badge) layers.push('badge:arm');
+  if (look.tattoo) layers.push('tattoo:arm');               // arm tattoo on bare arms (3D; design: look.tattoo)                 // black arm badge with a compass rose (3D)
   if (mask) layers.push('mask:' + mask);
   if (look.bag) layers.push('bag');
   if (Pn.style === 'cargo') layers.push('pants:cargo');
