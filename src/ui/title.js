@@ -22,6 +22,7 @@ import { startNewRun, LevelSelectScene, OptionsScene, HowToPlayScene, CreditsSce
 import { WardrobeScene } from './wardrobe_ui.js';
 import { frame, MenuList, hintBar, scanlines, blink, fmtScore, fmtTime, scarfIcon, badgeIcon, secretIcon, coinIcon, hideLoader, C, rrect, devScale } from './widgets.js';
 import { r3d } from '../render3d/index.js';
+import { makeRng } from '../engine/rng.js';
 
 const TAG = 'WHAT ELSE ARE YOU GONNA DO ON A SATURDAY?';
 
@@ -138,10 +139,68 @@ function drawFirm(ctx, t, k) {
   if (fit < 1) for (const a of actors) a.h *= fit;
   ctx.save();
   ctx.globalAlpha = k;
+  drawBackMob(ctx, t, stage);
   // floor: the key light casts the lads' real shadows on the ground they stand on (menustage opts.floor)
   const ok = stage.draw(ctx, 'titlefirm', actors, { x: 0, y: 70, w: VIEW_W, h: 230 }, t, { light: 'studio', floor: true });
   ctx.restore();
   if (!ok) { drawMob(ctx, t, { charge: k }); return; }
+}
+
+// the mob behind the line-up: rows of masked-up lads (black track tops with white piping, balaclavas, olive cargos,
+// white trainers), smaller and darker the further back they stand, all in the same fight stance. A stage of its own (no floor shadows:
+// cheap), drawn first and then pushed back into the dark, so the firm reads in front.
+const MOB_ROWS = [   // back to front: feet y, body height, how many, darkening on top
+  { feet: 204, h: 96, n: 13, dim: 0.35 },
+  { feet: 220, h: 110, n: 11, dim: 0.3 },
+  { feet: 238, h: 126, n: 10, dim: 0.3 },
+];
+let MOB = null;
+// all in the same kit: black track top with white piping, black balaclava, olive cargos, white trainers, black gloves
+function mobLook(rng) {
+  return normalizeLook({
+    skin: rng.pick(['#e2a97a', '#d49a6a', '#f0c098', '#b87a50', '#8a5636']), hair: { style: 'shaved', color: '#141016' }, facial: 'none',
+    jacket: { style: 'track', color: '#16161a', trim: '#ecebe6' }, shirt: '#141416',
+    pants: { style: 'cargo', color: '#3e4632' },
+    shoes: { color: '#f4f4f0', sole: '#ecebe6', stripe: '#141416' },
+    mask: 'balaclava', maskColor: '#141416', gloves: '#141416', scarf: null,
+    build: 1.15, height: 1.0,
+  });
+}
+function mobActors() {
+  if (MOB) return MOB;
+  const rng = makeRng(1994);
+  MOB = [];
+  MOB_ROWS.forEach((r, ri) => {
+    const gap = (VIEW_W + 40) / r.n, off = ri % 2 ? gap / 2 : 0;
+    for (let i = 0; i < r.n; i++) {
+      const x = -20 + off + i * gap;
+      // the same fight stance, in step, everyone squared up to the front
+      MOB.push({ look: mobLook(rng), x, feet: r.feet, h: r.h, anim: 'idle', fight: true, sync: true, phase: 0, yaw: 0, row: ri });
+    }
+  });
+  return MOB;
+}
+let mobCanvas = null;
+function drawBackMob(ctx, t, stage) {
+  const actors = mobActors();
+  // drawn on a canvas of its own so the darkening only lands on the lads (source-atop), never the poster behind them:
+  // back rows first, everything so far pushed further into the dark before the next row goes on top
+  const cw = ctx.canvas.width, chh = ctx.canvas.height;
+  if (!mobCanvas) mobCanvas = document.createElement('canvas');
+  if (mobCanvas.width !== cw || mobCanvas.height !== chh) { mobCanvas.width = cw; mobCanvas.height = chh; }
+  const m = mobCanvas.getContext('2d');
+  m.setTransform(1, 0, 0, 1, 0, 0); m.clearRect(0, 0, cw, chh);
+  m.setTransform(ctx.getTransform());
+  for (let ri = 0; ri < MOB_ROWS.length; ri++) {
+    const r = MOB_ROWS[ri];
+    if (!stage.draw(m, 'titlemob' + ri, actors.filter(a => a.row === ri), { x: 0, y: 70, w: VIEW_W, h: 230 }, t, { light: 'studio' })) return;
+    m.save(); m.globalCompositeOperation = 'source-atop';
+    const g = m.createLinearGradient(0, 90, 0, 250);
+    g.addColorStop(0, `rgba(10,4,8,${r.dim})`); g.addColorStop(1, `rgba(10,4,8,${Math.min(0.92, r.dim + 0.25)})`);
+    m.fillStyle = g; m.fillRect(0, 0, VIEW_W, VIEW_H);
+    m.restore();
+  }
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(mobCanvas, 0, 0); ctx.restore();
 }
 
 // ---------------------------------------------------------------- main menu

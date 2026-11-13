@@ -4,9 +4,10 @@
 //
 //   r3d.menu.draw(ctx, key, actors, rect, t, opts) -> true if drawn
 //     key:    scene id (each key keeps its own characters and camera)
-//     actors: [{ look, x, feet, h, anim, phase, yaw, pose?, dark?, run? }] in logical screen px: feet position and body height;
+//     actors: [{ look, x, feet, h, anim, phase, yaw, pose?, dark?, run?, fight?, sync? }] in logical screen px: feet position and body height;
 //             run = running speed (tiles/s): the in-game procedural run cycle, charging the way he faces (title screen)
 //             pose = an explicit pose-library pose (overrides anim), dark = a black silhouette (locked characters)
+//             fight = fists up: the in-game guard stance (the title screen's mob), sync = in step with the others
 //     rect:   logical rect of the 2D canvas the stage covers (also the render viewport)
 //     opts:   { light: 'terrace' | 'studio', persp: bool, shadows?: bool (self-shadows; off unless asked for),
 //               floor?: bool (the lads cast real shadows on the ground they stand on; the camera tips down a little so the
@@ -145,6 +146,8 @@ export class MenuStage {
       g.scale.setScalar((a.h / PPU) / A.H);
       A.f.anim = a.anim || 'idle'; A.f.t = t + (a.phase || 0); A.f.pose = a.pose || null;
       A.f.fx = Math.sin(a.yaw || 0); A.f.fy = Math.cos(a.yaw || 0);
+      A.f.combat = !!a.fight;                                          // fight = fists up (the in-game guard stance)
+      A.f.id = a.sync ? 0 : i * 7;                                     // sync = everyone bounces in step
       if (a.run) { A.f.state = 'run'; A.f.y += a.run * dt; }           // treadmill: the animator's run cycle follows distance
       else A.f.state = (a.pose || (a.anim && a.anim !== 'idle' && a.anim !== 'guard')) ? 'menu' : 'idle';   // poses/anims go through the pose library
       A.char.animate(A.f, { time: t }, dt);
