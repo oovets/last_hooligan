@@ -36,7 +36,7 @@ const TRAIT_IDS = Object.keys(TRAITS);
 const FOUNDERS = {
   mo: { nick: 'THE FRIDGE', stats: { fists: 7, kicks: 3, tough: 8, speed: 3, nerve: 7, loyalty: 8 }, traits: ['biglad'] },
   stig: { nick: 'THE TERRACE RAT', stats: { fists: 6, kicks: 4, tough: 3, speed: 8, nerve: 5, loyalty: 6 }, traits: ['hothead'] },
-  bigal: { nick: 'THE STEPLADDER', stats: { fists: 5, kicks: 7, tough: 4, speed: 6, nerve: 7, loyalty: 8 }, traits: ['singer'] },
+  bigal: { nick: 'THE STEPLADDER', stats: { fists: 5, kicks: 7, tough: 10, speed: 6, nerve: 7, loyalty: 8 }, traits: ['singer'] },
   kenny: { nick: 'ULTRAVIOLENCE', stats: { fists: 8, kicks: 4, tough: 7, speed: 5, nerve: 8, loyalty: 5 }, traits: ['liability'] },
   vic: { nick: 'THE PYTHON', stats: { fists: 6, kicks: 3, tough: 7, speed: 3, nerve: 6, loyalty: 7 }, traits: ['biglad'] },
   hooligan: { nick: 'DEZ', stats: { fists: 6, kicks: 6, tough: 5, speed: 5, nerve: 6, loyalty: 8 }, traits: ['oldschool'] },

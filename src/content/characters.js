@@ -115,8 +115,9 @@ export const CHARACTERS = [
   {
     id: 'bigal', name: 'BIG AL', nick: 'THE STEPLADDER', tagline: 'SIX FOOT SIX OF ELBOWS. THE SHIRT COMES OFF.',
     bio: ['TALLEST LAD AT THE ANCHOR.', 'HAS NOT WORN A COAT SINCE 1989.', 'THE SHIRT ALWAYS COMES OFF. ALWAYS.'],
-    stats: { power: 3, speed: 4, toughness: 2, technique: 4 },
-    fighter: { hp: 95, speed: 3.25, runSpeed: 5.9, power: 1.0, defense: 0.95, weight: 0.82, guard: 38, reachMul: 1.22 },
+    stats: { power: 3, speed: 4, toughness: 5, technique: 4 },
+    // the hardest man at THE ANCHOR: most hp, least damage taken and the strongest guard of anyone (Mo 140 / 0.75 / 60)
+    fighter: { hp: 150, speed: 3.25, runSpeed: 5.9, power: 1.0, defense: 0.7, weight: 0.82, guard: 62, reachMul: 1.22 },
     moves: { kick: 'al_stepladder' }, kickMul: 1.1, strip: true,
     winLine: 'ANYONE GOT A JUMPER? IT\'S BALTIC.', koLines: ['ANYONE GOT A JUMPER?', 'IT\'S BALTIC!', 'GET IN!', 'LOOK AT THE STATE OF YOU!', 'SIX FOOT SIX, SON!'],
     look: {

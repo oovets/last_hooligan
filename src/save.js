@@ -19,7 +19,7 @@ export const DEFAULT_HISCORES = [
 
 export function defaultSave() {
   return {
-    version: 4,                  // 2: 3D renderer became the default; 3: Terrace Tina replaced by Kenny Showtime; 4: Big Al joins
+    version: 5,                  // 2: 3D renderer became the default; 3: Terrace Tina replaced by Kenny Showtime; 4: Big Al joins; 5: Big Al max TOUGH
     unlocked: 1,                 // number of levels unlocked (1..8)
     character: 'hooligan',       // last selected playable character (content/characters.js)
     best: {},                    // levelId -> best score
@@ -81,6 +81,10 @@ export const save = {
       if ((this.data.version || 1) < 2) { this.data.settings.renderer = '3d'; this.data.version = 2; }
       if (this.data.version < 3) { migrateTina(this.data); this.data.version = 3; }
       if (this.data.version < 4) { this.data.addBigAl = true; this.data.version = 4; }   // firmdata.getFirm adds him to an existing firm
+      if (this.data.version < 5) {                // Big Al became the hardest man in the firm: TOUGH 10 for the one already in it
+        for (const l of (this.data.firm && this.data.firm.lads) || []) if (l.char === 'bigal' && l.stats) l.stats.tough = 10;
+        this.data.version = 5;
+      }
     } catch (e) { console.warn('save load failed', e); }
     if (!Array.isArray(this.data.hiscores) || !this.data.hiscores.length) this.data.hiscores = DEFAULT_HISCORES.map(h => ({ ...h }));
     return this.data;
