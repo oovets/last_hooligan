@@ -32,6 +32,7 @@ const { LEVELS } = await import('../src/content/levels/index.js');
 const { World } = await import('../src/game/world.js');
 const { game } = await import('../src/game/state.js');
 const { save } = await import('../src/save.js');
+save.data.character = 'hooligan';   // (written for him as the player: Kenny, the default lad since save v7, fights in the firm)
 const FD = await import('../src/game/firmdata.js');
 const HUB = (await import('../src/content/hub.js')).default;
 const { STEP_UP } = await import('../src/engine/constants.js');

@@ -38,6 +38,9 @@ globalThis.addEventListener = noop;
 globalThis.requestAnimationFrame = noop;
 
 await import('../src/content/index.js');
+// the checks were written for The Last Hooligan as the player (Kenny, the default lad since save v7, then fights in the
+// firm), so they play as him
+{ const { save } = await import('../src/save.js'); save.data.character = 'hooligan'; }
 const { ALL_LEVELS: LEVELS } = await import('../src/content/tour/index.js');
 const { World } = await import('../src/game/world.js');
 const { game } = await import('../src/game/state.js');
