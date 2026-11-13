@@ -12,9 +12,9 @@
     "height": 0.55
   },
   "targets": {
-    "head-round": 1.0,
+    "head-round": 0.6,
     "head-fat-incr": 0.2,
-    "head-scale-horiz-incr": 0.8,
+    "head-scale-horiz-incr": 0.4,
     "head-scale-depth-incr": 0.3,
     "chin-width-incr": 0.5,
     "neck-double-incr": 0.0,
@@ -40,7 +40,7 @@
     "forehead-scale-vert-incr": 0.3,
     "forehead-temple-incr": 1.0,
     "nose-scale-depth-incr": 0.8,
-    "head-square": 0.3,
+    "head-square": 0.0,
     "mouth-trans-forward": 0.3,
     "head-angle-out": 0.6,
     "mouth-angles-up": 0.7,
@@ -59,7 +59,9 @@
     "measure-calf-circ-incr": 0.3,
     "measure-knee-circ-incr": 0.3,
     "l-cheek-volume-incr": 0.5,
-    "r-cheek-volume-incr": 0.5
+    "r-cheek-volume-incr": 0.5,
+    "head-oval": 0.5,
+    "head-scale-vert-incr": 0.35
   },
   "assets": {
     "hair": null,
@@ -71,7 +73,9 @@
   "tints": {
     "top": "#a3ad97",
     "pants": "#7d97bf",
-    "shoes": "#2d5bb3"
+    "shoes": "#2d5bb3",
+    "stripes": "#f07a1a",
+    "sole": "#b5793a"
   },
   "skin_tex": "build/mpfb/vic_skin.png",
   "skin_mat": "skin_vic",
@@ -235,14 +239,16 @@
   "cranium": {
     "strength": 0.95,
     "scale": [
-      1.07,
+      1.03,
       1.13,
-      1.16
+      1.24
     ],
     "lift": 0.004,
     "back": 0.008
   },
   "xform": "build/mpfb/vic_xform.json",
   "badge": true,
-  "hide_pants_under_top": true
+  "hide_pants_under_top": true,
+  "shoe_stripes": true,
+  "sole_h": 0.026
 }

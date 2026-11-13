@@ -275,6 +275,53 @@ if JOB.get('badge'):
     OBJ['badge'] = ob_b
     print('BADGE at', tuple(round(x, 3) for x in p))
 
+# three stripes on the trainers (job "shoe_stripes": true): on both sides of each shoe, slanting back from the laces to
+# the sole, plus a heel tab. Material ID_23 (look.shoes.stripe), layer 'shoes:stripes', each shoe's stripes ride its foot.
+SOLE_H = JOB.get('sole_h')                         # (m) the sole's top edge: faces below get their own material (ID_10)
+if JOB.get('shoe_stripes'):
+    from mathutils.bvhtree import BVHTree
+    import bmesh
+    sh = OBJ['shoes']; SV = [v.co.copy() for v in sh.data.vertices]
+    sole_top = SOLE_H or 0.025
+    for sg, side_ in ((1, 'L'), (-1, 'R')):
+        polys = [list(pl.vertices) for pl in sh.data.polygons if sum(SV[i].x for i in pl.vertices) * sg > 0]
+        bvh = BVHTree.FromPolygons(SV, polys)
+        fv = [SV[i] for pl in polys for i in pl]
+        xc = sum(v.x for v in fv) / len(fv)
+        y0, y1 = min(v.y for v in fv), max(v.y for v in fv); zt = max(v.z for v in fv); Lg = y1 - y0
+        W = Lg * 0.034; z_top = min(zt * 0.78, 0.085)
+        bms = bmesh.new()
+        def ribbon(pts_dirs, width):
+            """pts_dirs: [(point near the surface, direction to cast along)] -> a strip on the shoe, width wide."""
+            hits = []
+            for q, d in pts_dirs:
+                h = bvh.ray_cast(q - d * 0.2, d, 0.4)
+                if h[0] is not None: hits.append((h[0], h[1] if h[1].dot(d) < 0 else -h[1]))
+            if len(hits) < 3: return 0
+            row = []
+            for i, (pp, nn) in enumerate(hits):
+                t = (hits[min(i + 1, len(hits) - 1)][0] - hits[max(i - 1, 0)][0]).normalized()
+                w = nn.cross(t).normalized()
+                row.append((bms.verts.new(pp + w * width / 2 + nn * 0.0016), bms.verts.new(pp - w * width / 2 + nn * 0.0016), nn))
+            for i in range(len(row) - 1):
+                a, b = row[i], row[i + 1]
+                f = bms.faces.new((a[0], b[0], b[1], a[1]))
+                f.normal_update()
+                if f.normal.dot(a[2]) < 0: f.normal_flip()
+            return 1
+        made = 0
+        for out in (sg, -sg):                      # outer side, then inner side
+            d = Vector((-out, 0, 0))
+            for k in range(3):
+                ya, yb = y0 + Lg * (0.40 + 0.075 * k), y0 + Lg * (0.53 + 0.075 * k)
+                pts = [(Vector((xc, ya + (yb - ya) * i / 9, z_top + (sole_top + 0.004 - z_top) * i / 9)), d) for i in range(10)]
+                made += ribbon(pts, W)
+        made += ribbon([(Vector((xc, y1, sole_top + 0.006 + (zt * 0.9 - sole_top) * i / 7)), Vector((0, -1, 0))) for i in range(8)], Lg * 0.085)   # heel tab
+        me_s = bpy.data.meshes.new('stripes_' + side_); bms.to_mesh(me_s); bms.free()
+        ob_s = bpy.data.objects.new('stripes_' + side_, me_s); scene.collection.objects.link(ob_s)
+        OBJ['stripes_' + side_] = ob_s
+        print('SHOE STRIPES', side_, made, 'strips')
+
 # ------------------------------------------------------------------ 4. weights -> our bone names, our rig
 def our_bone(g):
     fixed = {'Root': 'root', 'pelvis': 'hips', 'spine_01': 'spine', 'spine_02': 'spine', 'spine_03': 'chest', 'neck_01': 'neck', 'head': 'head'}
@@ -312,7 +359,7 @@ def conform_weights(ob, force=None):
 
 FORCE_HEAD = ('eyes', 'brows', 'lashes', 'teeth', 'hair')       # everything on the head rides the head bone only
 for role, ob in OBJ.items():
-    n = conform_weights(ob, 'head' if role in FORCE_HEAD else 'upperArm_L' if role == 'badge' else None)
+    n = conform_weights(ob, 'head' if role in FORCE_HEAD else 'upperArm_L' if role == 'badge' else 'foot_' + role[-1] if role.startswith('stripes_') else None)
     if n: print('WARN %s: %d unweighted verts -> hips' % (role, n))
 
 BONES = [('root', 'root', None, None), ('hips', 'hips', 'spine', 'root'), ('spine', 'spine', 'chest', 'hips'),
@@ -346,12 +393,12 @@ def strip_props(idb):
         for k in list(sp.keys()): del sp[k]
 
 NAMES = {'body': 'body', 'eyes': 'eyes', 'brows': 'eyebrows', 'lashes': 'eyelashes', 'teeth': 'teeth', 'hair': 'hair',
-         'top': 'top', 'pants': 'pants', 'shoes': 'shoes', 'badge': 'badge'}
-TAGS = {'hair': 'acc:hair:crop', 'badge': 'acc:badge:arm'}   # the runtime shows these only for LOOKs with hair / a badge
+         'top': 'top', 'pants': 'pants', 'shoes': 'shoes', 'badge': 'badge', 'stripes_L': 'shoeStripesL', 'stripes_R': 'shoeStripesR'}
+TAGS = {'hair': 'acc:hair:crop', 'badge': 'acc:badge:arm', 'stripes_L': 'acc:shoes:stripes', 'stripes_R': 'acc:shoes:stripes'}   # shown only for LOOKs with hair / a badge / striped trainers
 for role, ob in OBJ.items():
     strip_props(ob)                              # MPFB bookkeeping props would leak into glTF extras
     ob.name = ob.data.name = NAMES[role]
-    ob['tags'] = TAGS.get(role, ''); ob['bone'] = 'head' if role in FORCE_HEAD else 'upperArm_L' if role == 'badge' else ''
+    ob['tags'] = TAGS.get(role, ''); ob['bone'] = 'head' if role in FORCE_HEAD else 'upperArm_L' if role == 'badge' else 'foot_' + role[-1] if role.startswith('stripes_') else ''
     ob.parent = rig
     md = ob.modifiers.new('arm', 'ARMATURE'); md.object = rig
 
@@ -371,7 +418,7 @@ MAT = {
     'teeth': ('teeth', None, None, 256, False, 0.35),
 }
 for role, hx in JOB.get('tints', {}).items():      # preview / baseColorFactor colour of a palette part (the LOOK overrides it)
-    MAT[role] = MAT[role][:2] + (hx,) + MAT[role][3:]
+    if role in MAT: MAT[role] = MAT[role][:2] + (hx,) + MAT[role][3:]     # ('stripes', 'sole': used where those are built)
 SKIN_TEX = JOB.get('skin_tex')
 if SKIN_TEX:            # authored skin (a projected likeness): keep its colour, and keep it out of the ID_ tint path
     MAT['body'] = (JOB.get('skin_mat', 'skin'), None, None, 1024, False, 0.55)
@@ -433,8 +480,14 @@ if 'badge' in OBJ:      # untextured ID_24: the runtime swaps in its own felt ba
     bb = bm_mat.node_tree.nodes['Principled BSDF']
     bb.inputs['Base Color'].default_value = (0.012, 0.012, 0.014, 1); bb.inputs['Roughness'].default_value = 0.92
     OBJ['badge'].data.materials.append(bm_mat)
+for sd in ('L', 'R'):   # untextured ID_23: the runtime colours the stripes with look.shoes.stripe
+    if 'stripes_' + sd in OBJ:
+        st_mat = bpy.data.materials.get('ID_23') or bpy.data.materials.new('ID_23'); st_mat.use_nodes = True
+        sb = st_mat.node_tree.nodes['Principled BSDF']
+        sb.inputs['Base Color'].default_value = hexlin(JOB.get('tints', {}).get('stripes', '#f2f2ee')); sb.inputs['Roughness'].default_value = 0.6
+        OBJ['stripes_' + sd].data.materials.append(st_mat)
 for role, ob in OBJ.items():
-    if role == 'badge': continue
+    if role == 'badge' or role.startswith('stripes_'): continue
     mname, pid, prev, cap, alpha, rough = MAT[role]
     m = ob.data.materials[0]
     strip_props(m)
@@ -473,6 +526,16 @@ for role, ob in OBJ.items():
     for n in [n for n in N if n.type == 'TEX_IMAGE' and n.image is None]: N.remove(n)
     alpha_tex = N.get('AlphaMapTexture')
     if alpha_tex is not None: N.remove(alpha_tex)
+
+if SOLE_H:   # the sole (job "sole_h", m): the shoe faces below it get a copy of the trainer material named ID_10 (look.shoes.sole)
+    shm = OBJ['shoes'].data; m9 = shm.materials[0]; m10 = m9.copy(); m10.name = 'ID_10'
+    for nd in m10.node_tree.nodes:
+        if nd.type == 'MIX' and nd.data_type == 'RGBA': nd.inputs[7].default_value = hexlin(JOB.get('tints', {}).get('sole', '#b9a27a'))
+    shm.materials.append(m10)
+    n_sole = 0
+    for pl in shm.polygons:
+        if pl.center.z < SOLE_H: pl.material_index = 1; n_sole += 1
+    print('SOLE', n_sole, 'faces')
 
 # ------------------------------------------------------------------ 6. export
 HC = sum((v.co for v in OBJ['eyes'].data.vertices), Vector()) / len(OBJ['eyes'].data.vertices) + Vector((0, 0.07, 0.03))

@@ -49,6 +49,7 @@ not committed); the rest of the skin is MakeHuman's CC0 `young_caucasian_male` m
 | trousers (`ID_7`) | `punkduck_male_classic_jeans` | punkduck | **CC-BY 4.0** | pants02 |
 | trainers (`ID_9`) | `punkduck_running_shoes_01` | punkduck | **CC-BY 3.0** | shoes02 |
 | arm badge (`ID_24`) | none: a generated patch on the left sleeve, design drawn at runtime | | | |
+| trainer stripes + heel tab (`ID_23`), sole (`ID_10`) | none: generated strips on the trainers; the sole is the trainers' own faces in a second material | | | |
 
 No hair (he's shaved), no eyebrows and no eyelashes (his are pale; MakeHuman's lash cards read as mascara). The
 trousers' waistband is cut away where the overshirt covers it (so the belt loops can't poke through).
