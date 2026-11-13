@@ -72,7 +72,7 @@ export function updateFirmInput(world, ui, dt = 1 / 60) {
       for (const l of F.lads) {
         if (!l.alive) continue;
         const s = toScreen(l.x, l.y, l.z + 0.8);
-        const sx = s.x + cam.tx, sy = s.y + cam.ty;
+        const v = cam.toView(s.x, s.y), sx = v.x, sy = v.y;
         if (sx >= x0 && sx <= x1 && sy >= y0 - 12 && sy <= y1 + 12) F.selected.add(l);
       }
     }
@@ -81,7 +81,7 @@ export function updateFirmInput(world, ui, dt = 1 / 60) {
     const foe = pickFighter(world, M.x, M.y, f => f.team !== 'player' && f.alive && !f.removed);
     if (foe) F.order('attack', { target: foe });
     else {
-      const g = toWorld(M.x - cam.tx, M.y - cam.ty);
+      const w0 = cam.fromView(M.x, M.y), g = toWorld(w0.x, w0.y);
       if (world.heightAt(g.x, g.y) < 0.4 || world.heightAt(g.x, g.y) <= world.heightAt(p.x, p.y) + 0.35) F.order('move', { x: g.x, y: g.y });
       else world.toast("CAN'T GET THERE");
     }
@@ -92,7 +92,7 @@ export function updateFirmInput(world, ui, dt = 1 / 60) {
 function updateCursor(world, ui, dt) {
   const F = world.firm, p = world.player, M = input.mouse, cam = world.camera;
   const c = ui.cur || (ui.cur = { x: p.x, y: p.y });
-  if (M.moved && M.inside) { const g = toWorld(M.x - cam.tx, M.y - cam.ty); c.x = g.x; c.y = g.y; ui.mouseAim = true; }
+  if (M.moved && M.inside) { const w0 = cam.fromView(M.x, M.y), g = toWorld(w0.x, w0.y); c.x = g.x; c.y = g.y; ui.mouseAim = true; }
   M.moved = false;
   const m = input.move();
   if (m.mag > 0.1) {
@@ -140,7 +140,7 @@ function pickFighter(world, sx, sy, filter) {
   for (const f of world.fighters) {
     if (!filter(f)) continue;
     const s = toScreen(f.x, f.y, f.z + 0.9);
-    const d = Math.hypot(s.x + cam.tx - sx, (s.y + cam.ty - sy) * 0.7);
+    const v = cam.toView(s.x, s.y), d = Math.hypot(v.x - sx, (v.y - sy) * 0.7);
     if (d < bd) { bd = d; best = f; }
   }
   return best;
@@ -154,7 +154,7 @@ export function drawAimMarkers(ctx, world) {
   if (!P || !P.alive) return;
   const cam = world.camera, t = world.time;
   ctx.save();
-  ctx.translate(cam.tx, cam.ty);
+  cam.apply(ctx);
   const ps = toScreen(P.x, P.y, world.groundHeight(P.x, P.y, P.z));
   ring(ctx, ps.x, ps.y, 10, 5, '#ffd23a', 0.9);
   const e = world.aimTarget;
@@ -177,7 +177,7 @@ export function drawFirmWorld(ctx, world) {
   if (!F) return;
   const cam = world.camera, t = world.time;
   ctx.save();
-  ctx.translate(cam.tx, cam.ty);
+  cam.apply(ctx);
   // order markers
   for (const m of F.markers) {
     const k = Math.min(1, m.t * 4), a = Math.max(0, 1 - m.t / 3);
@@ -271,7 +271,7 @@ function drawCursor(ctx, world, ui) {
   if (!c) return;
   const cam = world.camera, t = world.time, h = ui.hover;
   ctx.save();
-  ctx.translate(cam.tx, cam.ty);
+  cam.apply(ctx);
   let s, col, label;
   if (h && h.team !== 'player') { s = toScreen(h.x, h.y, world.groundHeight(h.x, h.y, h.z)); col = '#ff4a4a'; label = input.lastDevice === 'pad' ? 'X HAVE HIM  LB GRAB HIM' : 'J HAVE HIM  I GRAB HIM'; }
   else if (h && h.isLad) { s = toScreen(h.x, h.y, world.groundHeight(h.x, h.y, h.z)); col = SEL_COL; label = 'PICK ' + short(h.name); }

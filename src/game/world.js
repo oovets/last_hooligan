@@ -50,6 +50,8 @@ const DIFF = {
 ATTACKS.throwItem = { pose: 'throwItem', startup: 0.3, active: 0.06, recovery: 0.3, dmg: 0, reach: 0, arc: 0, kb: 0, stun: 0, spawnProjectile: true, whiff: 'whoosh' };
 ATTACKS.playerThrow = { pose: 'throwItem', startup: 0.1, active: 0.05, recovery: 0.2, dmg: 0, reach: 0, arc: 0, kb: 0, stun: 0, spawnProjectile: true, whiff: 'whoosh' };
 
+const ZOOM_MIN = 0.78;   // how far the camera eases out in the biggest scrum
+
 export class World {
   constructor(level, game, callbacks = {}) {
     this.level = level;
@@ -852,6 +854,19 @@ export class World {
 
     // camera
     const look = 14;
+    // a crowded fight: the camera eases out so you can see who's who (out fairly quickly, back in slowly)
+    {
+      let foes = 0, mates = 0;
+      for (const f of this.fighters) {
+        if (f === p || !f.alive || f.removed || f.dying || f.routT > 0) continue;
+        if (Math.abs(f.x - p.x) + Math.abs(f.y - p.y) > 6) continue;
+        if (f.team !== p.team) foes++; else if (f.isLad) mates++;
+      }
+      const n = foes ? foes + mates : 0;
+      const want = n <= 4 ? 1 : Math.max(ZOOM_MIN, 1 - (n - 4) * 0.045);
+      const cz = this.camera.zoom, k = 1 - Math.pow(want < cz ? 0.3 : 0.65, dt);
+      this.camera.zoom = Math.abs(want - cz) < 0.002 ? want : cz + (want - cz) * k;
+    }
     this.camera.follow(p.x, p.y, p.z, dt, (p.fx - p.fy) * look, (p.fx + p.fy) * look * 0.5);
     // who the player's next swing goes at (the marker over his head, firmhud drawAimMarkers; the lads leave him to you)
     this.aimTarget = p.alive && !p.isDown && !p.dying ? this.aimPick(p, p.intent ? p.intent.mx : 0, p.intent ? p.intent.my : 0) : null;
@@ -1098,8 +1113,9 @@ export class World {
     ctx.fillStyle = this.level.bg || '#07060c';
     ctx.fillRect(0, 0, VIEW_W, VIEW_H);
     ctx.save();
-    ctx.translate(cam.tx, cam.ty);
-    const vx0 = cam.x - VIEW_W / 2 - 40, vx1 = cam.x + VIEW_W / 2 + 40, vy0 = cam.y - VIEW_H / 2 - 40, vy1 = cam.y + VIEW_H / 2 + 260;
+    cam.apply(ctx);
+    const hw = VIEW_W / 2 / cam.zoom, hh = VIEW_H / 2 / cam.zoom;
+    const vx0 = cam.x - hw - 40, vx1 = cam.x + hw + 40, vy0 = cam.y - hh - 40, vy1 = cam.y + hh + 260;
 
     // ground
     const fl = this.floor;
@@ -1185,7 +1201,7 @@ export class World {
     this.drawWeather(ctx);
     // overhead UI (speech bubbles, telegraph "!") above lighting so it stays readable in dark levels
     if (this.overheadQueue && this.overheadQueue.length) {
-      ctx.save(); ctx.translate(cam.tx, cam.ty);
+      ctx.save(); cam.apply(ctx);
       for (const fn of this.overheadQueue) fn();
       ctx.restore();
       this.overheadQueue.length = 0;
@@ -1198,7 +1214,7 @@ export class World {
   drawOverlay3D(ctx) {
     const cam = this.camera;
     ctx.save();
-    ctx.translate(cam.tx, cam.ty);
+    cam.apply(ctx);
     for (const a of this.actors) if (a.draw && !a.removed) a.draw(ctx, this);
     this.fx.draw(ctx);
     if (this.level.drawOverlay) this.level.drawOverlay(ctx, this);
@@ -1308,8 +1324,8 @@ export class World {
     for (const l of lights) {
       if (l.active === false) continue;
       const s = toScreen(l.x, l.y, 0);
-      const x = s.x + cam.tx, y = s.y + cam.ty;
-      const r = (l.r || 4) * HALF_W * 1.4;
+      const v = cam.toView(s.x, s.y), x = v.x, y = v.y;
+      const r = (l.r || 4) * HALF_W * 1.4 * cam.zoom;
       if (x < -r || x > VIEW_W + r || y < -r || y > VIEW_H + r) continue;
       let inten = l.intensity ?? 0.9;
       if (l.flicker) inten *= 0.75 + 0.25 * Math.sin(this.time * 23 + l.x * 3) * Math.sin(this.time * 7 + l.y);

@@ -648,7 +648,7 @@ export default {
     // moving belt slats
     for (const b of S.belts) {
       const s = toScreen(b.tx + 0.5, b.ty + 0.5, 0);
-      if (Math.abs(s.x - cam.x) > 360 || Math.abs(s.y - cam.y) > 230) continue;
+      if (Math.abs(s.x - cam.x) > 360 / cam.zoom || Math.abs(s.y - cam.y) > 230 / cam.zoom) continue;
       const [dx, dy] = b.d;
       for (let k = 0; k < 3; k++) {
         let o = ((t * BELT_SPEED) + k / 3) % 1;
@@ -666,7 +666,7 @@ export default {
     for (let ty = 53; ty <= 55; ty++) for (let tx = 42; tx <= 63; tx++) {
       if (tx === 60 || tx === 61) continue;
       const s = toScreen(tx + 0.5, ty + 0.5, 0);
-      if (Math.abs(s.x - cam.x) > 360 || Math.abs(s.y - cam.y) > 230) continue;
+      if (Math.abs(s.x - cam.x) > 360 / cam.zoom || Math.abs(s.y - cam.y) > 230 / cam.zoom) continue;
       const h = hash2(tx, ty, 77);
       const u = (h + t * 0.08) % 1, v = (h * 7.3 + Math.sin(t * 0.7 + h * 6) * 0.1) % 1;
       const q = toScreen(tx + u, ty + Math.abs(v), 0);

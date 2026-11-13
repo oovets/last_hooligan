@@ -42,9 +42,9 @@ export class Camera {
   clamp() {
     const b = this.bounds;
     if (!b) return;
-    const hw = VIEW_W / 2, hh = VIEW_H / 2;
-    this.x = b.maxX - b.minX < VIEW_W ? (b.minX + b.maxX) / 2 : Math.max(b.minX + hw, Math.min(b.maxX - hw, this.x));
-    this.y = b.maxY - b.minY < VIEW_H ? (b.minY + b.maxY) / 2 : Math.max(b.minY + hh, Math.min(b.maxY - hh, this.y));
+    const hw = VIEW_W / 2 / this.zoom, hh = VIEW_H / 2 / this.zoom;   // (zoomed out, the view covers more)
+    this.x = b.maxX - b.minX < hw * 2 ? (b.minX + b.maxX) / 2 : Math.max(b.minX + hw, Math.min(b.maxX - hw, this.x));
+    this.y = b.maxY - b.minY < hh * 2 ? (b.minY + b.maxY) / 2 : Math.max(b.minY + hh, Math.min(b.maxY - hh, this.y));
   }
 
   // short directional nudge (hit impact); decays quickly
@@ -54,7 +54,18 @@ export class Camera {
     if (mag >= this.shakeMag || this.shakeT <= 0) { this.shakeMag = mag; this.shakeT = t; }
   }
 
-  // Top-left translation to apply to world drawing.
+  // Top-left translation to apply to world drawing (zoom 1).
   get tx() { return Math.round(VIEW_W / 2 - this.x + this.ox); }
   get ty() { return Math.round(VIEW_H / 2 - this.y + this.oy); }
+
+  // zoom (< 1 = further out: a crowded fight, world.js). Everything drawn in world pixels goes through apply(ctx), so
+  // the 2D world, the 3D scene (render3d/renderer.js reads camera.zoom) and the overlays (rings, numbers, bubbles)
+  // always line up. toView / fromView: world px <-> view px.
+  apply(ctx) {
+    const z = this.zoom;
+    if (z === 1) { ctx.translate(this.tx, this.ty); return; }
+    ctx.translate(VIEW_W / 2, VIEW_H / 2); ctx.scale(z, z); ctx.translate(-this.x + this.ox, -this.y + this.oy);
+  }
+  toView(px, py) { const z = this.zoom; return { x: VIEW_W / 2 + (px - this.x + this.ox) * z, y: VIEW_H / 2 + (py - this.y + this.oy) * z }; }
+  fromView(sx, sy) { const z = this.zoom; return { x: (sx - VIEW_W / 2) / z + this.x - this.ox, y: (sy - VIEW_H / 2) / z + this.y - this.oy }; }
 }

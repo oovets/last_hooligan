@@ -492,7 +492,7 @@ const L = {
       const h = hash2(tx, ty, beat);
       if (h < 0.42) continue;
       const a = toScreen(tx + 0.08, ty + 0.08), b = toScreen(tx + 0.92, ty + 0.08), c = toScreen(tx + 0.92, ty + 0.92), d = toScreen(tx + 0.08, ty + 0.92);
-      if (a.x + cam.tx < -40 || a.x + cam.tx > 680) continue;
+      { const v = cam.toView(a.x, a.y); if (v.x < -40 || v.x > 680) continue; }
       ctx.globalAlpha = 0.35 + 0.35 * (h - 0.42) / 0.58;
       fillPoly(ctx, [a, b, c, d], DANCE_COLS[(tx + ty * 2 + beat) % DANCE_COLS.length]);
     }

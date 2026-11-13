@@ -184,7 +184,7 @@ export class HubScene {
   // floating labels: lads' names, the station you're next to
   drawLabels(ctx) {
     const w = this.world, cam = w.camera;
-    ctx.save(); ctx.translate(cam.tx, cam.ty);
+    ctx.save(); cam.apply(ctx);
     const near = this.panel ? null : this.nearLad();
     for (const f of this.npcs) {
       const s = toScreen(f.x, f.y, f.z);

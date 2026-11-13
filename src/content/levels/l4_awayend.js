@@ -91,7 +91,7 @@ function crowdActor(tx, ty, home) {
     draw(ctx, world) {
       const c = toScreen(tx + 0.5, ty + 0.5);
       const cam = world.camera;
-      if (Math.abs(c.x - cam.x) > 360 || c.y - cam.y > 230 || c.y - cam.y < -250) return;
+      if (Math.abs(c.x - cam.x) > 360 / cam.zoom || c.y - cam.y > 230 / cam.zoom || c.y - cam.y < -250 / cam.zoom) return;
       const S = world.__ae || {};
       const surge = (home ? S.surgeHome : S.surgeAway) || 0;
       const hype = Math.max(surge, S.hype || 0);
@@ -630,7 +630,7 @@ export default {
     ctx.globalCompositeOperation = 'lighter';
     for (const [lx, ly, h, tgt] of [[62, 14, 10, [[38, 14], [50, 13], [52, 30], [40, 33]]], [62, 44, 10, [[38, 34], [51, 33], [51, 46], [40, 46]]]]) {
       const src = toScreen(lx + 0.5, ly + 0.5, h + 0.6);
-      if (Math.abs(src.x - cam.x) > 700 || Math.abs(src.y - cam.y) > 600) continue;
+      if (Math.abs(src.x - cam.x) > 700 / cam.zoom || Math.abs(src.y - cam.y) > 600 / cam.zoom) continue;
       const pts = tgt.map(([x, y]) => toScreen(x, y, 0));
       for (let i = 0; i < 2; i++) {
         ctx.globalAlpha = i ? 0.035 : 0.025;

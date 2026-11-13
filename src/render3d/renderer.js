@@ -539,9 +539,9 @@ export class Renderer3D {
     const cx = VIEW_W / 2 - cam.tx, cy = VIEW_H / 2 - cam.ty;
     const gx = (cx / HALF_W + cy / HALF_H) / 2, gy = (cy / HALF_H - cx / HALF_W) / 2;
     const target = new THREE.Vector3(gx, 0, gy);
-    // zoom > 1 frames the player closer (2D overlays are only aligned at zoom 1; used for close-ups/duels later)
-    const z = this.zoom || 1;
-    if (z !== 1) target.lerp(v3(world.player.x, world.player.y, world.player.z + 0.8), 1 - 1 / z);
+    // zoom: the 2D camera's (engine/camera.js; < 1 = further out in a crowded fight). Same centre, same scale, so the 2D
+    // overlays drawn through camera.apply() stay on top of the right people.
+    const z = cam.zoom || 1;
     if (this.camera.zoom !== z) { this.camera.zoom = z; this.camera.updateProjectionMatrix(); }
     this.camera.position.copy(target).addScaledVector(VIEW_DIR, 300);
     this.camera.lookAt(target);
