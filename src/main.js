@@ -74,7 +74,7 @@ const want3d = (qp0.get('renderer') || save.data.settings.renderer) === '3d';
 async function load3d() {
   try {
     const m = await timed('3d:modules', import('./render3d/renderer.js'));
-    await timed('3d:models v2', m.loadCharacters2());
+    await timed('3d:models v2 + heroes', m.loadCharacters2());
     // the old v1 rigid models are only a fallback for when the v2 skinned models are missing
     const { CHAR2 } = await import('./render3d/characters2.js');
     if (!CHAR2.ready) await timed('3d:models v1', m.loadCharacterModels());

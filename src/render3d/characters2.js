@@ -43,7 +43,14 @@ export async function loadCharacters2() {
     const draco = new DRACOLoader();
     draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
     loader.setDRACOLoader(draco);
-    await Promise.all(models.map(async name => {
+    CHAR2.loader = loader;
+    // hero models (realistic MPFB2 characters, scripts/blender/char_mpfb.py): the title's line-up is all heroes, so
+    // they load here with the v2 models, during the loading screen (otherwise the title shows the plain v2 bodies and
+    // swaps them a second or two later)
+    const heroesP = fetch(new URL('../../assets/models/hero/index.json', import.meta.url))
+      .then(hr => (hr.ok ? hr.json() : {})).then(j => { CHAR2.heroes = j.models || {}; return Promise.all(Object.keys(CHAR2.heroes).map(loadHero)); })
+      .catch(() => { /* no heroes: the v2 models stand in */ });
+    await Promise.all([heroesP, ...models.map(async name => {
       try {
         const g = await loader.loadAsync(new URL(name + '.glb' + (v[name] ? '?v=' + v[name] : ''), base).href);
         g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = false; o.frustumCulled = false; } });
@@ -53,30 +60,29 @@ export async function loadCharacters2() {
         try { meta = JSON.parse((rig && rig.userData && rig.userData.hooligan) || '{}'); } catch (e) { /* defaults */ }
         CHAR2.meta[name] = { girth: meta.girth || 1, build: name[0] };
       } catch (e) { console.warn('[3d v2] model failed', name, e); }
-    }));
+    })]);
     CHAR2.ready = Object.keys(CHAR2.templates).length > 0;
-    CHAR2.loader = loader;
-    // hero models (realistic MPFB2 characters, scripts/blender/char_mpfb.py): only the index now, each model is
-    // fetched the first time a menu asks for it (heroTemplate), so the game's start-up download doesn't grow
-    try {
-      const hr = await fetch(new URL('../../assets/models/hero/index.json', import.meta.url));
-      if (hr.ok) CHAR2.heroes = (await hr.json()).models || {};
-    } catch (e) { /* no heroes */ }
   } catch (e) { console.warn('[3d v2] no models', e); }
 }
 
+// load one hero model (once); resolves when it's in CHAR2.templates (or failed)
+const heroP = {};
+function loadHero(id) {
+  if (heroP[id]) return heroP[id];
+  const file = CHAR2.heroes[id];
+  if (!file || !CHAR2.loader) return Promise.resolve();
+  CHAR2.heroLoading[id] = true;
+  return (heroP[id] = CHAR2.loader.loadAsync(new URL('../../assets/models/hero/' + file, import.meta.url).href).then(g => {
+    g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = false; o.frustumCulled = false; } });
+    CHAR2.templates['hero:' + id] = g.scene;
+    CHAR2.meta['hero:' + id] = { girth: 1, build: 'hero' };
+  }).catch(e => console.warn('[3d hero] model failed', id, e)));
+}
 // the hero template for a character id ('vic'), or null while it loads / if there is none (callers fall back to v2)
 export function heroTemplate(id) {
   const key = 'hero:' + id;
   if (CHAR2.templates[key]) return key;
-  const file = CHAR2.heroes[id];
-  if (!file || CHAR2.heroLoading[id] || !CHAR2.loader) return null;
-  CHAR2.heroLoading[id] = true;
-  CHAR2.loader.loadAsync(new URL('../../assets/models/hero/' + file, import.meta.url).href).then(g => {
-    g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = false; o.frustumCulled = false; } });
-    CHAR2.templates[key] = g.scene;
-    CHAR2.meta[key] = { girth: 1, build: 'hero' };
-  }).catch(e => console.warn('[3d hero] model failed', id, e));
+  loadHero(id);
   return null;
 }
 
