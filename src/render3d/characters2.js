@@ -27,7 +27,7 @@ import { CLIPS, evalClip, attackU, stateClipFor, GUARD_RIG } from './clips.js';
 export const CHAR2 = { templates: {}, meta: {}, ready: false };
 export const CHAR2_SCALE = 1.27;          // the game's chunky character scale (matches the sprites)
 const K = 0.046;                          // metres per pose-library pixel (hip offsets)
-const TORSO_OF = { harrington: 'jacket', bomber: 'jacket', track: 'jacket', leather: 'jacket', suit: 'jacket', shirt: 'jacket', parka: 'parka', tee: 'tee', polo: 'tee', vest: 'tee', hivis: 'hivis', hoodie: 'hoodie' };
+const TORSO_OF = { harrington: 'jacket', bomber: 'jacket', track: 'jacket', leather: 'jacket', suit: 'jacket', shirt: 'jacket', parka: 'parka', tee: 'tee', polo: 'tee', vest: 'tee', hivis: 'hivis', hoodie: 'hoodie', overshirt: 'jacket' };
 const BONES = ['root', 'hips', 'spine', 'chest', 'neck', 'head', 'shoulder_L', 'upperArm_L', 'forearm_L', 'hand_L', 'shoulder_R', 'upperArm_R', 'forearm_R', 'hand_R',
   'thigh_L', 'shin_L', 'foot_L', 'toe_L', 'thigh_R', 'shin_R', 'foot_R', 'toe_R'];
 const ANIMATED = ['hips', 'spine', 'chest', 'neck', 'head', 'shoulder_L', 'shoulder_R', 'upperArm_L', 'forearm_L', 'hand_L', 'upperArm_R', 'forearm_R', 'hand_R', 'thigh_L', 'shin_L', 'foot_L', 'thigh_R', 'shin_R', 'foot_R'];
@@ -67,6 +67,55 @@ export function modelFor2(look) {
 }
 
 const ROUGH = { 1: 0.62, 9: 0.6, 10: 0.7, 13: 0.18, 16: 0.7, 17: 0.4, 19: 0.15, 20: 0.5, 21: 0.55 };   // material id -> roughness
+// ---- arm badge (material ID_24, layer 'badge:arm'): black felt patch with a stitched border, a compass rose in
+// yellow and green inside a ring of text, and a black button on a yellow tab at each end. Drawn once, shared.
+let BADGE = null;
+function badgeTexture() {
+  if (BADGE) return BADGE;
+  const W = 512, H = 256, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const g = cv.getContext('2d'), Y = '#e6c623', GR = '#3f8f55', cx = W / 2, cy = H / 2;
+  g.fillStyle = '#1b1b1e'; g.fillRect(0, 0, W, H);
+  for (let i = 0; i < 6000; i++) {                       // felt
+    const v = 20 + Math.floor(Math.random() * 26); g.fillStyle = `rgb(${v},${v},${v + 2})`;
+    g.fillRect(Math.random() * W, Math.random() * H, 2, 2);
+  }
+  g.strokeStyle = '#6c6c70'; g.lineWidth = 4; g.setLineDash([7, 4]); g.strokeRect(9, 9, W - 18, H - 18); g.setLineDash([]);
+  for (const sx of [-1, 1]) {                            // button tabs + buttons
+    const bx = cx + sx * 190;
+    g.fillStyle = Y; g.fillRect(bx - 36, cy - 9, 72, 18);
+    const gr = g.createRadialGradient(bx - 8, cy - 8, 4, bx, cy, 30); gr.addColorStop(0, '#5a5a60'); gr.addColorStop(1, '#0c0c0e');
+    g.fillStyle = gr; g.beginPath(); g.arc(bx, cy, 30, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = '#2c2c30'; g.lineWidth = 3; g.beginPath(); g.arc(bx, cy, 22, 0, Math.PI * 2); g.stroke();
+    g.strokeStyle = '#08080a'; g.lineWidth = 5; g.beginPath(); g.moveTo(bx - 8, cy - 8); g.lineTo(bx + 8, cy + 8); g.moveTo(bx + 8, cy - 8); g.lineTo(bx - 8, cy + 8); g.stroke();
+  }
+  g.strokeStyle = Y; g.lineWidth = 9; g.beginPath(); g.arc(cx, cy, 108, 0, Math.PI * 2); g.stroke();   // outer ring
+  g.lineWidth = 8; g.beginPath(); g.arc(cx, cy, 52, 0, Math.PI * 2); g.stroke();                       // inner ring
+  // ring text (green), two halves; the lower half reads the right way up from outside
+  g.fillStyle = GR; g.font = 'bold 30px Arial, Helvetica, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  const ringText = (txt, a0, a1, r, flip) => {
+    const n = txt.length;
+    for (let i = 0; i < n; i++) {
+      const a = a0 + (a1 - a0) * (i + 0.5) / n;
+      g.save(); g.translate(cx + Math.cos(a) * r, cy + Math.sin(a) * r); g.rotate(a + (flip ? -Math.PI / 2 : Math.PI / 2));
+      g.fillText(txt[i], 0, 0); g.restore();
+    }
+  };
+  ringText('STONE ISLAND', -Math.PI * 0.95, -Math.PI * 0.05, 80, false);
+  ringText('STONE ISLAND', Math.PI * 0.95, Math.PI * 0.05, 80, true);
+  // compass rose: four long points, each split along its axis into a yellow and a green half
+  for (let k = 0; k < 4; k++) {
+    const a = k * Math.PI / 2 - Math.PI / 2, tip = 112, wd = 17;
+    const tx = cx + Math.cos(a) * tip, ty = cy + Math.sin(a) * tip;
+    const lx = cx + Math.cos(a - Math.PI / 2) * wd, ly = cy + Math.sin(a - Math.PI / 2) * wd;
+    const rx = cx + Math.cos(a + Math.PI / 2) * wd, ry = cy + Math.sin(a + Math.PI / 2) * wd;
+    g.fillStyle = Y; g.beginPath(); g.moveTo(cx, cy); g.lineTo(tx, ty); g.lineTo(lx, ly); g.closePath(); g.fill();
+    g.fillStyle = GR; g.beginPath(); g.moveTo(cx, cy); g.lineTo(tx, ty); g.lineTo(rx, ry); g.closePath(); g.fill();
+  }
+  BADGE = new THREE.CanvasTexture(cv);
+  BADGE.colorSpace = THREE.SRGBColorSpace; BADGE.anisotropy = 4;
+  return BADGE;
+}
+
 let RAMP = null;
 function ramp() {
   if (RAMP) return RAMP;
@@ -117,7 +166,9 @@ export class Character2 {
       if (!m) {
         const c = spec.pal[id] || [200, 0, 200];
         // physically based, soft cloth; skin a touch of sheen, eyes and shades glossy
-        m = this.mats[id] = new THREE.MeshStandardMaterial({ color: toColor(c), roughness: ROUGH[id] ?? 0.88, metalness: 0 });
+        m = this.mats[id] = id === 24
+          ? new THREE.MeshStandardMaterial({ map: badgeTexture(), roughness: 0.92, metalness: 0 })   // the arm badge
+          : new THREE.MeshStandardMaterial({ color: toColor(c), roughness: ROUGH[id] ?? 0.88, metalness: 0 });
         if (id === 13 || id === 19) m.color.multiplyScalar(0.5);
       }
       o.material = m;

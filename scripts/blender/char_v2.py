@@ -31,7 +31,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 def P(p): return p if os.path.isabs(p) else os.path.join(ROOT, p)
 
 ID = dict(skin=1, hair=2, jacket=3, trim=4, lining=5, shirt=6, pants=7, pantsTrim=8, shoes=9, sole=10,
-          scarfA=11, scarfB=12, eye=13, hat=14, hatTrim=15, glove=16, band=17, facial=18, shades=19, mouth=20, belt=21, stripe=22)
+          scarfA=11, scarfB=12, eye=13, hat=14, hatTrim=15, glove=16, band=17, facial=18, shades=19, mouth=20, belt=21, stripe=22, shoeStripe=23, badge=24, badgeMark=25)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -50,7 +50,7 @@ PREVIEW = {1: (0.85, 0.62, 0.48), 2: (0.2, 0.13, 0.08), 3: (0.07, 0.07, 0.08), 4
            6: (0.9, 0.9, 0.86), 7: (0.16, 0.16, 0.17), 8: (0.3, 0.4, 0.6), 9: (0.92, 0.92, 0.9), 10: (0.85, 0.82, 0.76),
            11: (0.78, 0.06, 0.18), 12: (0.95, 0.94, 0.9), 13: (0.05, 0.03, 0.03), 18: (0.15, 0.1, 0.06), 20: (0.45, 0.2, 0.2),
            21: (0.05, 0.05, 0.05), 22: (0.9, 0.9, 0.9), 14: (0.05, 0.05, 0.06), 15: (0.9, 0.9, 0.9), 19: (0.03, 0.03, 0.05), 17: (0.92, 0.92, 0.95),
-           16: (0.06, 0.06, 0.06)}
+           16: (0.06, 0.06, 0.06), 23: (0.95, 0.95, 0.95), 24: (0.03, 0.03, 0.035), 25: (0.75, 0.85, 0.2)}
 MATS = {}
 def mat(idn):
     if idn in MATS: return MATS[idn]
@@ -272,12 +272,16 @@ for sg in (1, -1):
     body_b.chain(J['shin_' + s], J['foot_' + s] + Vector((0, 0, 0.06)), (0.062 * g + LG, 0.066 * g + LG), (0.058 + LG, 0.06 + LG), bulge=0.08, at=0.3)
     # trainer: heel, mid, toe box, thick sole (sole region is by height, below)
     f0 = J['foot_' + s]; t0 = J['toe_' + s]
-    body_b.ell(f0 + Vector((0, 0.04, -0.012)), (0.046, 0.055, 0.05))                    # heel counter
-    body_b.ell(f0.lerp(t0, 0.45) + Vector((0, 0, -0.005)), (0.05, 0.075, 0.045))        # instep
-    body_b.ell(t0 + Vector((0, -0.025, 0.004)), (0.048, 0.065, 0.03))                   # toe box
-    for k in range(9):                                                                   # sole slab
-        q = (f0 + Vector((0, 0.1, 0))).lerp(t0 + Vector((0, -0.085, 0)), k / 8)
-        body_b.ell(Vector((q.x, q.y, 0.022)), (0.056 - 0.006 * abs(k - 4) / 4, 0.03, 0.022))
+    # a real trainer (about 26 cm, slim): rounded heel, padded ankle collar, instep, a toe box that stands up,
+    # a thin cupsole with a little toe spring
+    body_b.ell(f0 + Vector((0, 0.03, -0.02)), (0.04, 0.045, 0.045))                     # heel counter
+    body_b.ell(f0 + Vector((0, 0.018, 0.02)), (0.043, 0.043, 0.03))                     # ankle collar
+    body_b.ell(f0.lerp(t0, 0.5) + Vector((0, 0, -0.008)), (0.043, 0.062, 0.04))         # instep
+    body_b.ell(t0 + Vector((0, -0.012, 0.008)), (0.04, 0.046, 0.028))                   # toe box
+    for k in range(9):                                                                   # cupsole
+        q = (f0 + Vector((0, 0.075, 0))).lerp(t0 + Vector((0, -0.05, 0)), k / 8)
+        w = 0.044 - 0.009 * (abs(k - 4) / 4) ** 2
+        body_b.ell(Vector((q.x, q.y, 0.016 + (0.006 if k == 8 else 0.0))), (w, 0.03, 0.016))
 body = body_b.build('body', 0.0085, (0.6, 16), tris=0)   # decimated after the clothing pass
 me = body.data
 
@@ -327,8 +331,7 @@ for f in bm.faces:
     if TORSO == 'tee' and n == 'hips' and HEM - 0.04 < c.z < HEM - 0.008: mid = ID['belt']
     if n and n.startswith('shin') and t > 0.9: mid = ID['pantsTrim']
     if n and n.startswith(('foot', 'toe')) or (n and n.startswith('shin') and c.z < 0.115):
-        mid = ID['shoes'] if c.z > 0.042 else ID['sole']
-        if 0.05 < c.z < 0.08 and abs(nrm.x) > 0.7 and n.startswith('foot') and abs(c.y - (J['foot_' + n[-1]].y - 0.04)) < 0.03: mid = ID['band']   # side flash
+        mid = ID['shoes'] if c.z > 0.031 else ID['sole']
     f.material_index = S(mid)
     lift = 0.0
     if mid in (TOP, ID['trim'], ID['band']) and mid != ID['shirt']:
@@ -356,6 +359,67 @@ def on_surface(p, out, lift=0.0):
     hit = BVH.ray_cast(Vector(p) + out * 0.5, -out, 1.0)
     return (hit[0] + out * lift) if hit[0] else Vector(p)
 
+# ------------------------------------------------------------------ surface ribbons (three stripes)
+def surf(p, out, lift=0.0025, reach=0.35):
+    """Ray from outside along -out onto the body; None if it misses. Keep reach short where another limb is near."""
+    out = Vector(out).normalized(); hit = BVH.ray_cast(Vector(p) + out * reach, -out, reach * 2)
+    return (hit[0] + out * lift, out) if hit[0] else None
+def ribbon(name, pts, width, idn, bone):
+    """pts: [(point, outward)] along a line on the surface -> a flat strip `width` wide."""
+    pts = [q for q in pts if q]
+    if len(pts) < 2: return None
+    bmr = bmesh.new(); rows = []
+    for i, (p, out) in enumerate(pts):
+        d = (pts[min(i + 1, len(pts) - 1)][0] - pts[max(i - 1, 0)][0]).normalized()
+        side = d.cross(out).normalized() * width * 0.5
+        rows.append((bmr.verts.new(p - side), bmr.verts.new(p + side)))
+    for (a0, a1), (b0, b1) in zip(rows[:-1], rows[1:]): bmr.faces.new((a0, a1, b1, b0))
+    o = bm_obj(name, bmr, idn, bone)
+    for p in o.data.polygons: p.use_smooth = True
+    return o
+def three(fn, gap):
+    """Three parallel ribbons: fn(offset) -> ribbon for a centre-line offset (metres across the stripe)."""
+    return [r for r in (fn(k * gap) for k in (-1, 0, 1)) if r]
+
+# track top: three stripes from the collar over the shoulder and down the outside of each sleeve (layer 'track:stripes')
+if TORSO == 'jacket':
+    TS = []
+    for sg in (1, -1):
+        s_ = side(sg); ua, fa, hd = J['upperArm_' + s_], J['forearm_' + s_], J['hand_' + s_]
+        def stripe(off, sg=sg, s_=s_, ua=ua, fa=fa, hd=hd):
+            parts = []
+            # over the shoulder: rays straight down, from the neck out to the shoulder joint
+            sh = [surf(Vector((sg * (0.075 + (abs(ua.x) - 0.075) * k / 8), ua.y - off * sg * 0, ua.z + 0.0)) + Vector((0, off, 0)), (0, 0, 1)) for k in range(9)]
+            parts.append(ribbon('trk_sh%s%d' % (s_, round(off * 1000)), sh, 0.008, ID['stripe'], 'shoulder_' + s_))
+            # round the deltoid and down the upper arm: rays swing from straight up to straight out
+            d_ = (fa - ua).normalized(); lat = Vector((sg, 0, 0)); lat = (lat - d_ * lat.dot(d_)).normalized()
+            arc = []
+            for k in range(6):
+                a = k / 5 * math.pi / 2; o_ = (Vector((0, 0, 1)) * math.cos(a) + lat * math.sin(a)).normalized()
+                arc.append(surf(ua + Vector((0, off, 0)), o_))
+            up = [surf(ua.lerp(fa, t / 10) + Vector((0, off, 0)), lat) for t in range(1, 11)]
+            parts.append(ribbon('trk_ua%s%d' % (s_, round(off * 1000)), arc + up, 0.008, ID['stripe'], 'upperArm_' + s_))
+            d2 = (hd - fa).normalized(); lat2 = Vector((sg, 0, 0)); lat2 = (lat2 - d2 * lat2.dot(d2)).normalized()
+            lo = [surf(fa.lerp(hd, t / 10) + Vector((0, off, 0)), lat2) for t in range(0, 9)]
+            parts.append(ribbon('trk_fa%s%d' % (s_, round(off * 1000)), lo, 0.008, ID['stripe'], 'forearm_' + s_))
+            return [p_ for p_ in parts if p_]
+        for k in (-1, 0, 1): TS += stripe(k * 0.014)
+    acc('track:stripes', TS)
+# trainers: three slanted stripes on each side and a heel tab (layer 'shoes:stripes')
+SH = []
+for sg in (1, -1):
+    s_ = side(sg); f0 = J['foot_' + s_]
+    for sd in (1, -1):                                   # outer and inner side of the shoe
+        for k in range(3):
+            y0 = f0.y - 0.022 - k * 0.02
+            pts = [surf(Vector((f0.x, y0 - 0.035 * t / 6, 0.036 + 0.042 * t / 6)), (sd, 0, 0), 0.0018, 0.07) for t in range(7)]   # short rays: the other shoe is close
+            r_ = ribbon('shoeStr%s%d%d' % (s_, sd, k), pts, 0.009, ID['shoeStripe'], 'foot_' + s_)
+            if r_: SH.append(r_)
+    tab = [surf(Vector((f0.x, f0.y, 0.04 + 0.05 * t / 5)), (0, 1, 0), 0.002, 0.12) for t in range(6)]
+    r_ = ribbon('heelTab' + s_, tab, 0.026, ID['shoeStripe'], 'foot_' + s_)
+    if r_: SH.append(r_)
+acc('shoes:stripes', SH)
+
 # ------------------------------------------------------------------ head: one sculpted mesh with a face (rigid to 'head')
 HC = J['head'] + Vector((0, -0.012, 0.125))
 HS = 1.06     # a touch bigger than life so faces read at game distance
@@ -363,26 +427,32 @@ hb = Blob()
 jw = 1.12 if HEAVY else 0.9 if FEM else 1.0                                     # jaw width
 hb.ell(HC + Vector((0, 0.012, 0.02)), (0.077, 0.098, 0.1))                       # cranium
 hb.ell(HC + Vector((0, 0.03, -0.01)), (0.072, 0.08, 0.085))                      # back of the skull
-hb.ell(HC + Vector((0, -0.03, -0.055)), (0.066 * jw, 0.072, 0.065))             # face / jaw mass
-hb.ell(HC + Vector((0, -0.06, -0.095)), (0.04 * jw, 0.036, 0.03))              # chin
+if HEAVY:   # round and full, the chin soft and tucked into the double chin
+    hb.ell(HC + Vector((0, -0.028, -0.05)), (0.072 * jw, 0.075, 0.062))
+    hb.ell(HC + Vector((0, -0.058, -0.088)), (0.042 * jw, 0.034, 0.026))
+else:
+    hb.ell(HC + Vector((0, -0.03, -0.055)), (0.066 * jw, 0.072, 0.065))         # face / jaw mass
+    hb.ell(HC + Vector((0, -0.06, -0.095)), (0.04 * jw, 0.036, 0.03))          # chin
 for sg in (1, -1):
     hb.ell(HC + Vector((sg * 0.046 * jw, -0.015, -0.068)), (0.026, 0.045, 0.032))                    # jaw angle
-    hb.ell(HC + Vector((sg * 0.042, -0.055, -0.008)), (0.022, 0.02, 0.016))      # cheekbones
+    hb.ell(HC + Vector((sg * 0.038, -0.056, -0.01)), (0.017, 0.015, 0.013))       # cheekbones (subtle)
     hb.ell(HC + Vector((sg * 0.074, 0.016, -0.014)), (0.007, 0.017, 0.026), rot(0, 0, -14 * sg))    # ears
 hb.ell(HC + Vector((0, -0.072, 0.03)), (0.062, 0.02 if not FEM else 0.012, 0.015 if not FEM else 0.01))   # brow ridge
 NB = 0.8 if FEM else 1.0
-hb.chain(HC + Vector((0, -0.084, 0.018)), HC + Vector((0, -0.106 + 0.006 * (1 - NB) / 0.2, -0.03)), (0.009 * NB, 0.01 * NB), (0.013 * NB, 0.014 * NB))   # nose bridge
+NZ = -0.022 if HEAVY else -0.03                                                 # heavy: a short, rounded nose
+hb.chain(HC + Vector((0, -0.084, 0.018)), HC + Vector((0, -0.106 + 0.006 * (1 - NB) / 0.2 + (0.004 if HEAVY else 0), NZ)), (0.009 * NB, 0.01 * NB), (0.013 * NB, 0.014 * NB))   # nose bridge
 if FEM: hb.ell(HC + Vector((0, -0.098, -0.03)), (0.011, 0.01, 0.009))           # nose tip
+elif HEAVY: hb.ell(HC + Vector((0, -0.1, -0.026)), (0.015, 0.013, 0.012))
 else: hb.ell(HC + Vector((0, -0.103, -0.033)), (0.014, 0.013, 0.012))
-for sg in (1, -1): hb.ell(HC + Vector((sg * 0.014, -0.096, -0.038)), (0.011, 0.011, 0.009))   # nostril wings
+for sg in (1, -1): hb.ell(HC + Vector((sg * 0.014, -0.096, -0.038 + (0.008 if HEAVY else 0))), (0.011, 0.011, 0.009))   # nostril wings
 LP = 1.25 if FEM else 1.0
 hb.ell(HC + Vector((0, -0.09, -0.058)), (0.025, 0.012, 0.008 * LP))             # upper lip
 hb.ell(HC + Vector((0, -0.087, -0.071)), (0.023, 0.012 * LP, 0.009 * LP))       # lower lip
 if HEAVY:
     hb.ell(HC + Vector((0, -0.045, -0.115)), (0.062, 0.05, 0.035))               # double chin
-    for sg in (1, -1): hb.ell(HC + Vector((sg * 0.05, -0.05, -0.06)), (0.035, 0.04, 0.04))   # jowls
+    hb.ell(HC + Vector((0, -0.02, -0.068)), (0.078 * jw, 0.07, 0.052))          # full lower face, no separate jowls
 hb.chain(HC + Vector((0, 0.016, -0.06)), HC + Vector((0, 0.02, -0.16)), (0.05, 0.05), (0.048, 0.048))   # neck stub
-head = hb.build('head', 0.0028, (0.5, 6), tris=0)
+head = hb.build('head', 0.0028, (0.5, 12 if HEAVY else 6), tris=0)   # heavy: smoother, fuller face
 # eye sockets and the mouth line: press the surface in
 EYE = {sg: HC + Vector((sg * 0.033, -0.071, 0.01)) for sg in (1, -1)}
 for v in head.data.vertices:
@@ -399,10 +469,16 @@ for sg in (1, -1):
     PARTS.append(solid('eyeWhite%d' % sg, ID['band'], 'head', [(e, (0.0125, 0.01, 0.0095))], 0.0015, None))
     PARTS.append(solid('iris%d' % sg, ID['eye'], 'head', [(e + Vector((-sg * 0.001, -0.0085, 0.0005)), (0.006, 0.003, 0.006))], 0.0012, None))
     # upper lid (skin): gives the heavy-lidded, unimpressed look
-    PARTS.append(solid('lid%d' % sg, ID['skin'], 'head', [(e + Vector((0, -0.003, 0.006)), (0.0145, 0.0115, 0.0065), rot(-12, 0, 0))], 0.0015, (0.5, 2)))
+    lid_c = e + Vector((0, -0.002, 0.0085)) if HEAVY else e + Vector((0, -0.003, 0.006))
+    PARTS.append(solid('lid%d' % sg, ID['skin'], 'head', [(lid_c, (0.0145, 0.0115, 0.0065), rot(-20 if HEAVY else -12, 0, 0))], 0.0015, (0.5, 2)))
     # brows (hair colour): low and angled in
-    PARTS.append(solid('brow%d' % sg, ID['facial'], 'head', [(HC + Vector((sg * 0.034, -0.088, 0.03)), (0.022, 0.006, 0.0045), rot(0, 10 * sg, -6 * sg))], 0.0018, (0.5, 2)))
-PARTS.append(solid('mouthLine', ID['mouth'], 'head', [(HC + Vector((0, -0.0965, -0.065)), (0.021, 0.003, 0.0018))], 0.0012, None))
+    brow_rot = rot(0, -6 * sg, -4 * sg) if HEAVY else rot(0, 10 * sg, -6 * sg)
+    PARTS.append(solid('brow%d' % sg, ID['facial'], 'head', [(HC + Vector((sg * 0.034, -0.088, 0.033 if HEAVY else 0.03)), (0.022, 0.005, 0.004), brow_rot)], 0.0018, (0.5, 2)))
+if HEAVY:   # a lopsided grin: the mouth line turns up at the corners, more on his left
+    PARTS.append(solid('mouthLine', ID['mouth'], 'head', [(HC + Vector((0, -0.0965, -0.066)), (0.016, 0.003, 0.0019))]
+                       + [(HC + Vector((sg * 0.021, -0.092, -0.0615 + (0.002 if sg > 0 else 0))), (0.011, 0.003, 0.0019), rot(0, (-28 if sg > 0 else 20) * sg, 0)) for sg in (1, -1)], 0.0012, None))
+else:
+    PARTS.append(solid('mouthLine', ID['mouth'], 'head', [(HC + Vector((0, -0.0965, -0.065)), (0.021, 0.003, 0.0018))], 0.0012, None))
 
 # ------------------------------------------------------------------ hands: half-closed fists (rigid to the hand bones)
 def hand(sg):
@@ -482,8 +558,54 @@ if TORSO == 'hoodie':
         a = NK + Vector((sg * 0.03, -0.075 * G, -0.01)); b2 = on_surface(V(sg * 0.035, 0, 1.22), FRONT, 0.004)
         st = Blob().chain(a, b2, (0.004, 0.004), (0.0035, 0.0035), n=6)
         PARTS.append(tag(st.build('string%d' % sg, 0.0022, (0.5, 2)), ID['band'], 'chest'))
+if TORSO in ('hoodie', 'jacket'):
     acc('hood:down', [tag(Blob().ell(NK + Vector((0, 0.085, 0.02)), (0.12 * G, 0.065, 0.1))
                           .ell(NK + Vector((0, 0.07, 0.07)), (0.1 * G, 0.05, 0.05)).build('hoodDown', 0.008, (0.5, 4)), ID['jacket'], 'chest')])
+def plate(name, p, across, up, nrm, size, idn, bone):
+    """A thin box lying on the surface at p: size = (across, up, thickness)."""
+    bmp = bmesh.new(); bmesh.ops.create_cube(bmp, size=1.0)
+    M = Matrix((across, up, nrm)).transposed()
+    for v in bmp.verts: v.co = p + M @ Vector((v.co.x * size[0], v.co.y * size[1], v.co.z * size[2]))
+    o = bm_obj(name, bmp, idn, bone)
+    for q in o.data.polygons: q.use_smooth = False
+    return o
+if TORSO == 'jacket':
+    # two chest pockets with buttoned flaps (overshirt / field jacket) - layer 'pockets:chest'
+    cp = []
+    for sg in (1, -1):
+        h = surf(V(sg * 0.085 * G, 0, 1.25), FRONT, 0.003)
+        if not h: continue
+        p, nrm = h; nrm = (FRONT * 0.8 + Vector((sg * 0.2, 0, 0))).normalized(); across = Vector((0, 0, 1)).cross(nrm).normalized(); up = nrm.cross(across).normalized()
+        cp.append(plate('chestPocket%d' % sg, p, across, up, nrm, (0.075, 0.07, 0.006), ID['jacket'], 'chest'))
+        cp.append(plate('chestFlap%d' % sg, p + up * 0.032 + nrm * 0.004, across, up, nrm, (0.08, 0.026, 0.006), ID['trim'], 'chest'))
+        cp.append(solid('chestBtn%d' % sg, ID['trim'], 'chest', [(p + up * 0.024 + nrm * 0.009, (0.005, 0.005, 0.003))], 0.0015, None))
+    acc('pockets:chest', cp)
+if SLEEVED:
+    # arm badge on the left upper arm (layer 'badge:arm'): a UV-mapped patch that wraps round the sleeve. The design
+    # (felt, stitched border, compass rose, ring text, buttons) is a texture drawn at runtime (characters2.js badgeTexture)
+    ua, fa = J['upperArm_L'], J['forearm_L']; d_ = (fa - ua).normalized()
+    lat = Vector((1, 0, 0)); lat = (lat - d_ * lat.dot(d_)).normalized()
+    out_ = (lat * 1.0 + FRONT * 0.12).normalized()
+    h = surf(ua.lerp(fa, 0.3), out_, 0.004, 0.25)
+    if h:
+        p, nrm = h; up = -d_; across = up.cross(nrm).normalized(); up = nrm.cross(across).normalized()
+        BW, BH, COLS, ROWS = 0.1, 0.05, 10, 2
+        bmq = bmesh.new(); uvl = bmq.loops.layers.uv.new('UVMap'); grid = {}
+        for i in range(COLS + 1):
+            for j in range(ROWS + 1):
+                q = p + across * (i / COLS - 0.5) * BW + up * (j / ROWS - 0.5) * BH
+                t = max(0.0, min(1.0, (q - ua).dot(fa - ua) / (fa - ua).length_squared)); axis = ua.lerp(fa, t)
+                o2 = (q - axis); o2 = (o2 - d_ * o2.dot(d_)).normalized()
+                hq = surf(axis, o2, 0.0035, 0.2)
+                grid[i, j] = (bmq.verts.new(hq[0] if hq else q), (i / COLS, j / ROWS))
+        for i in range(COLS):
+            for j in range(ROWS):
+                quad = [grid[i, j], grid[i + 1, j], grid[i + 1, j + 1], grid[i, j + 1]]
+                f = bmq.faces.new([q[0] for q in quad])
+                for loop, (_, uv) in zip(f.loops, quad): loop[uvl].uv = uv
+        bd = [bm_obj('badge', bmq, ID['badge'], 'upperArm_L'),
+              plate('badgeBack', p - nrm * 0.004, across, up, nrm, (BW * 0.96, BH * 0.94, 0.004), ID['shades'], 'upperArm_L')]   # stays behind the textured face
+        acc('badge:arm', bd)
 
 # ------------------------------------------------------------------ accessories: hair, facial hair, hats, hoods, masks, bag
 def skull_shell(name, inflate, keep, idn, voxel=0.003, rough=0.0, freq=60.0):
@@ -508,10 +630,10 @@ def hairline(d, front=0.045, sides=-0.02, back=-0.07):
     if fwd > 0.03: return d.z > front - (abs(d.x) * 0.25)
     if fwd > -0.02: return d.z > sides
     return d.z > back
-def scalp(name, thick, front, sides, back, rough=0.0, freq=200.0, fade=0.025):
+def scalp(name, thick, front, sides, back, rough=0.0, freq=200.0, fade=0.025, temple=0.25):
     """Short hair: a copy of the scalp faces of the head mesh, lifted along the normals, thinning out to the hairline."""
     bmx = bmesh.new(); bmx.from_mesh(head.data); bmx.normal_update()
-    line = lambda d: front - abs(d.x) * 0.25 if -d.y > 0.03 else sides if -d.y > -0.02 else back
+    line = lambda d: front - abs(d.x) * temple if -d.y > 0.03 else sides if -d.y > -0.02 else back
     bmesh.ops.delete(bmx, geom=[f for f in bmx.faces if (f.calc_center_median() - HC).z < line(f.calc_center_median() - HC)], context='FACES')
     for v in bmx.verts:
         d = v.co - HC; k = max(0.12, min(1.0, (d.z - line(d)) / fade))
@@ -520,6 +642,7 @@ def scalp(name, thick, front, sides, back, rough=0.0, freq=200.0, fade=0.025):
     return o
 acc('hair:crop', [scalp('crop', 0.0045, 0.052, -0.004, -0.062, 0.0008, 260)])
 acc('hair:shaved', [scalp('shaved', 0.0018, 0.056, 0.0, -0.058, 0.0, 0, 0.012)])
+acc('hair:receding', [scalp('receding', 0.0016, 0.07, 0.004, -0.058, 0.0, 0, 0.012, temple=-0.45)])   # buzzed, high temples
 acc('hair:mod', [skull_shell('mod', 0.016, lambda d: hairline(d, 0.018, -0.045, -0.085), ID['hair'], rough=0.004, freq=70)])
 acc('hair:curtains', [skull_shell('curtains', 0.013, lambda d: hairline(d, 0.03, -0.04, -0.08) and not (abs(d.x) < 0.008 and -d.y > 0.05), ID['hair'], rough=0.004, freq=60)])
 acc('hair:long', [skull_shell('long', 0.014, lambda d: hairline(d, 0.035, -0.06, -0.2), ID['hair'], rough=0.004, freq=50),

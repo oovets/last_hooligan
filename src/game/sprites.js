@@ -122,7 +122,7 @@ export function handPos(spec, clip, frame, fx, fy, scale = 1) {
 export function modelReady(name) { return !!MODELS[name]; }
 
 // ------------------------------------------------------------------ look -> model + layers + palette
-const TORSO_OF = { harrington: 'jacket', bomber: 'jacket', track: 'jacket', leather: 'jacket', suit: 'jacket', shirt: 'jacket', parka: 'parka', tee: 'tee', polo: 'tee', vest: 'tee', hivis: 'hivis', hoodie: 'hoodie' };
+const TORSO_OF = { harrington: 'jacket', bomber: 'jacket', track: 'jacket', leather: 'jacket', suit: 'jacket', shirt: 'jacket', parka: 'parka', tee: 'tee', polo: 'tee', vest: 'tee', hivis: 'hivis', hoodie: 'hoodie', overshirt: 'jacket' };
 
 export function modelForLook(look) {
   const b = look.build || 1;
@@ -174,6 +174,9 @@ export function specForLook(look) {
   set(20, '#6a2626');
   set(21, '#2a1a12');
   set(22, J.style === 'track' ? (J.trim || '#f2efe6') : (J.color || '#2b3a2a'));
+  set(24, (look.badge && look.badge.base) || '#141416');
+  set(25, (look.badge && look.badge.mark) || '#c8d43a');
+  set(23, S.stripe || S.color || '#f2f2ee');   // trainer stripes + heel tab (3D, layer shoes:stripes)
   const layers = ['body'];
   // match-day kit (3D models; the 2D sprites simply don't have these layers): hood up/down, masks, a bum bag, cargo pockets
   const hood = !!look.hood, mask = look.mask || null;          // mask: 'balaclava' (eye slit) | 'snood' (nose down)
@@ -185,10 +188,14 @@ export function specForLook(look) {
   if (look.facial === 'tache' && !mask) layers.push('face:tache');
   if (look.shades) layers.push('face:shades');
   if (look.hat && !hood) layers.push('hat:' + look.hat.style);
-  if (hood) layers.push('hood:up'); else if (J.style === 'hoodie') layers.push('hood:down');
+  if (hood) layers.push('hood:up'); else if (J.style === 'hoodie' || J.hood === 'down') layers.push('hood:down');
+  if (J.pockets) layers.push('pockets:chest');
+  if (look.badge) layers.push('badge:arm');                 // black arm badge with a compass rose (3D)
   if (mask) layers.push('mask:' + mask);
   if (look.bag) layers.push('bag');
   if (Pn.style === 'cargo') layers.push('pants:cargo');
+  if (J.style === 'track') layers.push('track:stripes');      // three stripes down the sleeves (colour: jacket trim)
+  if (S.stripe) layers.push('shoes:stripes');                // three stripes + heel tab on the trainers
   const accModel = model.split('_')[0] + '_jacket';
   const key = model + '|' + layers.join(',') + '|' + pal.map(c => c ? c.join('.') : '').join(';');
   return { model, accModel, layers, pal, key };

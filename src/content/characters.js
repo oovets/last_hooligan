@@ -119,10 +119,13 @@ export const CHARACTERS = [
     grab: { range: 1.35, hold: 3.6, any: true, choke: true, tick: 0.45, tickDmg: 3, squeeze: 'vic_tighten', finisher: 'vic_chokeslam', hits: 3 },
     winLine: 'VILL DU DÖ ELLER?',
     look: {
-      skin: '#f0c098', hair: { style: 'skinhead', color: '#6a4a2a' }, facial: 'none',
-      jacket: { style: 'track', color: '#1d2742', trim: '#f4f1e8' }, shirt: '#f4f1e8',
-      pants: { style: 'jeans', color: '#7d97bf' }, shoes: { color: '#f8f8f4', sole: '#e8e4dc' },
-      scarf: null, build: 1.65, height: 1.08,
+      // terrace casual: sage Stone Island overshirt (hood down, chest pockets, compass badge on the left arm),
+      // polo, stonewash jeans, blue suede trainers with three orange stripes on a gum sole, a bum bag; shaved head
+      skin: '#f2c4a6', hair: { style: 'shaved', color: '#c9a184' }, facial: 'none',
+      jacket: { style: 'overshirt', color: '#a3ad97', trim: '#88937d', lining: '#a3ad97', hood: 'down', pockets: true }, shirt: '#f4f1e8',
+      badge: { base: '#141416', mark: '#c8d43a' },
+      pants: { style: 'jeans', color: '#7d97bf' }, shoes: { color: '#2d5bb3', sole: '#b5793a', stripe: '#f07a1a' },
+      bag: true, scarf: null, build: 1.65, height: 1.08,
     },
     unlock: null,
   },
