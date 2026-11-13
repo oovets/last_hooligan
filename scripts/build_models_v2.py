@@ -10,7 +10,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 args = sys.argv[1:]
 BLENDER = args[args.index('--blender') + 1] if '--blender' in args else '/Applications/Blender.app/Contents/MacOS/Blender'
 ONLY = args[args.index('--only') + 1].split(',') if '--only' in args else None
-MODELS = ['m_jacket', 'm_parka', 'm_tee', 'm_hivis', 'm_hoodie', 'h_jacket', 'h_tee', 'h_hivis', 'h_hoodie', 'f_jacket', 'f_tee', 'f_hoodie', 'b_tee', 'b_jacket']
+MODELS = ['m_jacket', 'm_parka', 'm_tee', 'm_hivis', 'm_hoodie', 'h_jacket', 'h_tee', 'h_hivis', 'h_hoodie', 'f_jacket', 'f_tee', 'f_hoodie', 'b_tee', 'b_jacket', 'l_jacket', 'l_bare']
 TMP = os.path.join(ROOT, 'build', 'model_v2')
 os.makedirs(TMP, exist_ok=True)
 def build(name):

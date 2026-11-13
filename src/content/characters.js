@@ -124,7 +124,7 @@ export const CHARACTERS = [
       skin: '#f3d9c8', hair: { style: 'curtains', color: '#5a3a1e' }, facial: 'none',
       jacket: { style: 'shirt', color: '#cdb58c', trim: '#2a2420', lining: '#a3202a', pattern: 'check' }, shirt: '#cdb58c',
       pants: { style: 'jeans', color: '#8aa6c8' }, shoes: { color: '#f4f4f0', sole: '#d8d0c0' },
-      scarf: null, build: 0.86, height: 1.18,
+      scarf: null, build: 0.86, height: 1.18, lanky: true,   // lanky: his own long thin v2 build (l_jacket / l_bare)
     },
     unlock: null,
   },

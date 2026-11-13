@@ -2,7 +2,9 @@
 #
 #   Blender -b --factory-startup --python scripts/blender/char_v2.py -- <job.json>
 #
-# job.json: { "build": "m"|"h"|"f"|"b" (b = muscle: V-taper, a tee becomes a vest), "torso": "jacket"|"parka"|"tee"|"hivis"|"hoodie", "out": "assets/models/v2/m_jacket.glb",
+# job.json: { "build": "m"|"h"|"f"|"b"|"l" (b = muscle: V-taper, a tee becomes a vest; l = lanky: Big Al, long and thin, a lean
+#             face), "torso": "jacket"|"parka"|"tee"|"hivis"|"hoodie"|"bare" (bare: no top at all, skin down to the belt),
+#             "out": "assets/models/v2/m_jacket.glb",
 #             "preview": "path.png" (optional: render a preview sheet), "previewAcc": ["hair:crop", ...] }
 #
 # Look: realistic proportions with a little caricature (heavier hands, jaw and shoes), modelled on what lads actually
@@ -40,9 +42,11 @@ TORSO = JOB.get('torso', 'jacket')
 FEM = BUILD == 'f'
 HEAVY = BUILD == 'h'
 MUS = BUILD == 'b'                                   # muscle build (Kenny Showtime)
-G = {'m': 1.0, 'h': 1.32, 'f': 0.9, 'b': 1.12}[BUILD]   # girth
-H = {'m': 1.0, 'h': 1.02, 'f': 0.95, 'b': 1.04}[BUILD]  # height
-SLEEVED = TORSO != 'tee'
+LANKY = BUILD == 'l'                                 # lanky build (Big Al): narrow, flat-chested, thin arms, a lean face
+BARE = TORSO == 'bare'                               # no top: pale skin from the belt up (Big Al with his shirt off)
+G = {'m': 1.0, 'h': 1.32, 'f': 0.9, 'b': 1.12, 'l': 0.86}[BUILD]   # girth
+H = {'m': 1.0, 'h': 1.02, 'f': 0.95, 'b': 1.04, 'l': 1.0}[BUILD]   # height (Al's extra height is look.height at runtime)
+SLEEVED = TORSO not in ('tee', 'bare')
 random.seed(7)
 
 # ------------------------------------------------------------------ materials (preview colours; runtime recolours by name)
@@ -228,9 +232,10 @@ for sg in (1, -1):
     body_b.ell(V(sg * 0.07, 0.05, 0.86), (0.085 * g, 0.075 * g, 0.095))
 body_b.ell(V(0, 0.0, 1.06), ((0.14 if not FEM else 0.12) * g + JK, 0.105 * g + JK, 0.13))
 body_b.ell(V(0, 0.01, 1.24), ((0.17 if not FEM else 0.15) * g + JK, 0.115 * g + JK, 0.17))
-body_b.ell(V(0, 0.045, 1.26), ((0.18 if not FEM else 0.15) * g + JK, 0.085 + JK, 0.13))           # lats / upper back
+body_b.ell(V(0, 0.045, 1.26), ((0.18 if not FEM else 0.15) * g * (0.88 if LANKY else 1) + JK, 0.085 + JK, 0.13))   # lats / upper back (lanky: no wings)
 for sg in (1, -1):
     if FEM: body_b.ell(V(sg * 0.065, -0.075 - JK, 1.23), (0.07, 0.065, 0.065))                    # bust
+    elif LANKY: body_b.ell(V(sg * 0.062, -0.05 - JK * 0.5, 1.27), (0.066, 0.026, 0.06))         # flat chest, no gym pecs
     else: body_b.ell(V(sg * 0.068, -0.045 - JK * 0.5, 1.27), (0.08 * g, 0.04 * g, 0.075))         # pecs
     body_b.ell(V(sg * 0.09, 0.02, 1.37), (0.1 * g, 0.068 + JK, 0.05 + JK * 0.5), rot(0, -16 * sg, 0))  # traps
 if HEAVY:
@@ -245,6 +250,10 @@ if MUS:   # V-taper: barrel chest, slabs of pec, big traps and lats, small waist
         body_b.ell(V(sg * 0.12, 0.02, 1.4), (0.12, 0.08 + JK, 0.07), rot(0, -20 * sg, 0))
 if TORSO == 'parka':
     body_b.ell(V(0, 0.0, 0.83), (0.2 * g, 0.15 * g, 0.12))                                         # coat skirt over the hips
+if BARE:   # bare skin: collarbones and a breastbone show on a thin man
+    for sg in (1, -1):
+        body_b.chain(V(sg * 0.022, -0.052, 1.385), V(sg * 0.15 * g, -0.025, 1.405), (0.011, 0.011), (0.009, 0.009), n=6)
+    body_b.chain(V(0, -0.062, 1.35), V(0, -0.066, 1.2), (0.012, 0.008), (0.01, 0.007), n=6)
 # neck
 nr = 0.056 * (0.9 + 0.1 * g) + (0.012 if HEAVY else 0.03 if MUS else 0) - (0.006 if FEM else 0)
 body_b.chain(V(0, 0.012, 1.36), V(0, 0.012, 1.54), (nr * 1.05, nr), (nr * 0.9, nr * 0.9))
@@ -298,8 +307,8 @@ def region(p):
         d, t = seg_dist(p, a, b)
         if d < bd: best, bd, bt = n, d, t
     return best, bt
-HEM = {'jacket': 0.95, 'hivis': 0.95, 'hoodie': 0.9, 'parka': 0.7, 'tee': 0.93}[TORSO] * H   # top's lower edge
-TOP = ID['shirt'] if TORSO == 'tee' else ID['jacket']
+HEM = {'jacket': 0.95, 'hivis': 0.95, 'hoodie': 0.9, 'parka': 0.7, 'tee': 0.93, 'bare': 0.95}[TORSO] * H   # top's lower edge (bare: the waistband)
+TOP = ID['shirt'] if TORSO == 'tee' else ID['skin'] if BARE else ID['jacket']
 bm = bmesh.new(); bm.from_mesh(me); bm.normal_update()
 slot = {}
 def S(idn):
@@ -330,13 +339,16 @@ for f in bm.faces:
         if TORSO == 'hoodie' and abs(c.x) < 0.1 * G and HEM + 0.07 < c.z < HEM + 0.19 and abs(abs(c.x) - 0.1 * G) < 0.012 + (0 if c.z > HEM + 0.17 else 0): mid = ID['trim']
         if TORSO == 'hoodie' and abs(c.x) < 0.1 * G and abs(c.z - (HEM + 0.19)) < 0.007: mid = ID['trim']             # kangaroo pocket outline
         if TORSO in ('jacket', 'hivis') and 0.06 < abs(c.x) < 0.15 * G and abs((c.z - 1.03 * H) - (abs(c.x) - 0.1) * 0.6) < 0.006: mid = ID['trim']   # slanted welt pockets
-    if TORSO == 'tee' and n == 'hips' and HEM - 0.04 < c.z < HEM - 0.008: mid = ID['belt']
+    if TORSO in ('tee', 'bare') and n == 'hips' and HEM - 0.04 < c.z < HEM - 0.008: mid = ID['belt']
+    if BARE and (n in ('hips', 'spine', 'chest', 'neck') or (n and n.startswith('thigh') and c.z > HEM - 0.05)):
+        # bare: a clean waistline by height alone (by nearest bone the skin/jeans edge zig-zags over the hips)
+        mid = ID['skin'] if c.z > HEM else ID['belt'] if c.z > HEM - 0.035 else ID['pants']
     if n and n.startswith('shin') and t > 0.9: mid = ID['pantsTrim']
     if n and n.startswith(('foot', 'toe')) or (n and n.startswith('shin') and c.z < 0.115):
         mid = ID['shoes'] if c.z > 0.031 else ID['sole']
     f.material_index = S(mid)
     lift = 0.0
-    if mid in (TOP, ID['trim'], ID['band']) and mid != ID['shirt']:
+    if mid in (TOP, ID['trim'], ID['band']) and mid not in (ID['shirt'], ID['skin']):
         lift = 0.006 if mid == ID['trim'] else 0.004
     if mid == ID['trim'] and HEM < c.z < HEM + 0.06 and TORSO != 'parka': lift = 0.012    # waistband stands proud
     if mid == ID['trim'] and n and n.startswith('forearm'): lift = 0.008
@@ -349,7 +361,7 @@ for v in bm.verts:
     n, t = region(v.co)
     if n and n.startswith(('upperArm', 'forearm')) and SLEEVED: v.co += v.normal * 0.006 * noise.noise(v.co * Vector((9, 9, 26)))
     elif n and n.startswith(('thigh', 'shin')) and v.co.z > 0.12: v.co += v.normal * 0.005 * noise.noise(v.co * Vector((8, 8, 22)) + Vector((3, 1, 0)))
-    elif n in ('spine', 'chest', 'hips') and v.co.z > HEM: v.co += v.normal * 0.004 * noise.noise(v.co * 11 + Vector((7, 0, 2)))
+    elif n in ('spine', 'chest', 'hips') and v.co.z > HEM and not BARE: v.co += v.normal * 0.004 * noise.noise(v.co * 11 + Vector((7, 0, 2)))
 bm.to_mesh(me); bm.free()
 for p in me.polygons: p.use_smooth = True
 decimate(body, 8000)
@@ -426,17 +438,21 @@ acc('shoes:stripes', SH)
 HC = J['head'] + Vector((0, -0.012, 0.125))
 HS = 1.06     # a touch bigger than life so faces read at game distance
 hb = Blob()
-jw = 1.12 if HEAVY else 0.9 if FEM else 1.0                                     # jaw width
+jw = 1.12 if HEAVY else 0.9 if FEM else 0.9 if LANKY else 1.0                   # jaw width
 hb.ell(HC + Vector((0, 0.012, 0.02)), (0.077, 0.098, 0.1))                       # cranium
 hb.ell(HC + Vector((0, 0.03, -0.01)), (0.072, 0.08, 0.085))                      # back of the skull
 if HEAVY:   # round and full, the chin soft and tucked into the double chin
     hb.ell(HC + Vector((0, -0.028, -0.05)), (0.072 * jw, 0.075, 0.062))
     hb.ell(HC + Vector((0, -0.058, -0.088)), (0.042 * jw, 0.034, 0.026))
+elif LANKY:   # long and lean: a narrow face mass, a longer chin, flat cheeks (no bulge at the jaw angles)
+    hb.ell(HC + Vector((0, -0.032, -0.058)), (0.06 * jw, 0.07, 0.07))
+    hb.ell(HC + Vector((0, -0.062, -0.102)), (0.034, 0.034, 0.03))
 else:
     hb.ell(HC + Vector((0, -0.03, -0.055)), (0.066 * jw, 0.072, 0.065))         # face / jaw mass
     hb.ell(HC + Vector((0, -0.06, -0.095)), (0.04 * jw, 0.036, 0.03))          # chin
 for sg in (1, -1):
-    hb.ell(HC + Vector((sg * 0.046 * jw, -0.015, -0.068)), (0.026, 0.045, 0.032))                    # jaw angle
+    if LANKY: hb.ell(HC + Vector((sg * 0.043 * jw, -0.008, -0.072)), (0.019, 0.04, 0.026))           # jaw angle: tucked in
+    else: hb.ell(HC + Vector((sg * 0.046 * jw, -0.015, -0.068)), (0.026, 0.045, 0.032))              # jaw angle
     hb.ell(HC + Vector((sg * 0.038, -0.056, -0.01)), (0.017, 0.015, 0.013))       # cheekbones (subtle)
     hb.ell(HC + Vector((sg * 0.074, 0.016, -0.014)), (0.007, 0.017, 0.026), rot(0, 0, -14 * sg))    # ears
 hb.ell(HC + Vector((0, -0.072, 0.03)), (0.062, 0.02 if not FEM else 0.012, 0.015 if not FEM else 0.01))   # brow ridge
@@ -464,6 +480,11 @@ for v in head.data.vertices:
     d = v.co - (HC + Vector((0, -0.092, -0.065)))
     r2 = (d.x / 0.024) ** 2 + (d.z / 0.0035) ** 2
     if d.y < 0.02 and r2 < 4: v.co.y += 0.004 * math.exp(-r2)
+    if LANKY:   # lean cheeks: press the flesh between cheekbone and jaw in (no round cheek pads either side of the mouth)
+        for sg in (1, -1):
+            d = v.co - (HC + Vector((sg * 0.044, -0.07, -0.05)))
+            r2 = (d.x / 0.022) ** 2 + (d.y / 0.03) ** 2 + (d.z / 0.024) ** 2
+            if r2 < 4: k = math.exp(-r2); v.co.x -= sg * 0.0045 * k; v.co.y += 0.0035 * k
 decimate(head, 2800)
 tag(head, ID['skin'], 'head'); PARTS.append(head)
 for sg in (1, -1):
@@ -538,6 +559,13 @@ if TORSO in ('jacket', 'hivis'):
     PARTS.append(tag(c.build('collar', 0.005, (0.5, 3)), ID['trim'], 'chest'))
 if TORSO == 'tee':
     PARTS.append(ring('neckband', NK + Vector((0, 0, 0.01)), 0.07 * G, 0.064 * G, (0.008, 0.008), ID['trim'], 'chest'))
+if BARE:
+    # nipples and a navel (mouth colour: a dusky pink on pale skin), so the bare chest reads as skin, not a pink top
+    for sg in (1, -1):
+        h = on_surface(V(sg * 0.072 * G, 0, 1.255), FRONT, -0.001)
+        if h is not None: PARTS.append(solid('nipple%d' % sg, ID['mouth'], 'chest', [(h, (0.0085, 0.0025, 0.0085))], 0.0015, (0.5, 2)))
+    h = on_surface(V(0, 0, 1.0), FRONT, -0.0015)
+    if h is not None: PARTS.append(solid('navel', ID['mouth'], 'spine', [(h, (0.0045, 0.002, 0.006))], 0.0012, (0.5, 2)))
 if TORSO == 'parka':
     # big hood lying on the back with a fur-trimmed rim
     hd = Blob()

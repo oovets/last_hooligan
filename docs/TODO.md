@@ -65,10 +65,9 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 - [ ] Bättre händer (knytnäve, fingrar) och ansikten med uttryck (skrik, ont, KO).
 - [ ] Realistiska hjältemodeller (MPFB2, `scripts/blender/char_mpfb.py`) för resten av figurerna. I dag finns bara
       `vic` i `assets/models/hero/index.json`.
-- [ ] Big Al: provspela TOP OFF (skräckfrysen, skjortan i ansiktet, att knäppa igen). I 3D är den rutiga skjortan
-      klar (även krage och muddar). Den bara överkroppen är tee-modellen i hudfärg, smalare: den blir aldrig riktigt
-      "blek och tanig" (m-modellen har bröst- och magmuskler) och fållen ligger kvar som en kant över jeansen. En egen
-      bar överkropp i `char_v2.py` skulle lösa båda.
+- [x] Big Al har en egen kroppstyp i 3D (`l`, lanky: `l_jacket`, `l_bare`): lång och smal med ett magrare ansikte,
+      och en riktig bar överkropp (blek, tanig, nyckelben, ren livrem) när skjortan åker av.
+- [ ] Big Al: provspela TOP OFF (skräckfrysen, skjortan i ansiktet, att knäppa igen).
 - [ ] Vic (hero): skorna är enfärgade i lookens blå, utan den orange randen och gummisulan från v2-modellen.
 - [ ] Riktiga 3D-vapen i handen, i dag visas föremålets ikon som en sprite.
 - [ ] Prestanda: slå ihop meshar per figur (färre draw calls inför stora firmastrider), samt halv upplösning eller

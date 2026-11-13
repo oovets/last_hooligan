@@ -27,7 +27,7 @@ import { CLIPS, evalClip, attackU, stateClipFor, GUARD_RIG } from './clips.js';
 export const CHAR2 = { templates: {}, meta: {}, ready: false, heroes: {}, heroLoading: {} };
 export const CHAR2_SCALE = 1.27;          // the game's chunky character scale (matches the sprites)
 const K = 0.046;                          // metres per pose-library pixel (hip offsets)
-const TORSO_OF = { harrington: 'jacket', bomber: 'jacket', track: 'jacket', leather: 'jacket', suit: 'jacket', shirt: 'jacket', parka: 'parka', tee: 'tee', polo: 'tee', vest: 'tee', hivis: 'hivis', hoodie: 'hoodie', overshirt: 'jacket' };
+const TORSO_OF = { harrington: 'jacket', bomber: 'jacket', track: 'jacket', leather: 'jacket', suit: 'jacket', shirt: 'jacket', parka: 'parka', tee: 'tee', polo: 'tee', vest: 'tee', hivis: 'hivis', hoodie: 'hoodie', overshirt: 'jacket', bare: 'bare' };
 const BONES = ['root', 'hips', 'spine', 'chest', 'neck', 'head', 'shoulder_L', 'upperArm_L', 'forearm_L', 'hand_L', 'shoulder_R', 'upperArm_R', 'forearm_R', 'hand_R',
   'thigh_L', 'shin_L', 'foot_L', 'toe_L', 'thigh_R', 'shin_R', 'foot_R', 'toe_R'];
 const ANIMATED = ['hips', 'spine', 'chest', 'neck', 'head', 'shoulder_L', 'shoulder_R', 'upperArm_L', 'forearm_L', 'hand_L', 'upperArm_R', 'forearm_R', 'hand_R', 'thigh_L', 'shin_L', 'foot_L', 'thigh_R', 'shin_R', 'foot_R'];
@@ -83,7 +83,7 @@ export function heroTemplate(id) {
 export function modelFor2(look, opts = {}) {
   if (opts.hero && look.hero) { const h = heroTemplate(look.hero); if (h) return h; }
   const b = look.build || 1;
-  const pre = look.female ? 'f' : look.muscle ? 'b' : b >= 1.28 ? 'h' : 'm';
+  const pre = look.female ? 'f' : look.muscle ? 'b' : look.lanky ? 'l' : b >= 1.28 ? 'h' : 'm';   // l: lanky (Big Al)
   const torso = TORSO_OF[(look.jacket && look.jacket.style) || 'harrington'] || 'jacket';
   for (const c of [`${pre}_${torso}`, `${pre}_jacket`, `m_${torso}`, 'm_jacket']) if (CHAR2.templates[c]) return c;
   return null;
@@ -314,7 +314,7 @@ export class Character2 {
     this.rootInv = this.B.root ? this.B.root.quaternion.clone().invert() : new THREE.Quaternion();
     this.handR = this.B.hand_R;
     const h = look.height || 1;
-    const bw = this.model.startsWith('hero:') ? 1 : clamp((look.build || 1) / ({ m: 1.0, h: 1.4, f: 0.95, b: 1.2 }[this.model[0]] || 1), 0.78, 1.18);   // hero models are authored to size
+    const bw = this.model.startsWith('hero:') ? 1 : clamp((look.build || 1) / ({ m: 1.0, h: 1.4, f: 0.95, b: 1.2, l: 0.86 }[this.model[0]] || 1), 0.88, 1.18);   // hero models are authored to size
     // girth widens the body side to side; depth only a little, or the feet stretch into clown shoes
     inner.scale.set(CHAR2_SCALE * h * bw, CHAR2_SCALE * h, CHAR2_SCALE * h * (1 + (bw - 1) * 0.3));
     this.group.add(inner);

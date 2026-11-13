@@ -76,10 +76,10 @@ function dropShirt(world, x, y, owner) {
 
 // ---- state changes
 export function bareLook(look) {
-  // the tee model in his own skin (collar and hem too, or a dark ring shows round his neck), and narrower: the reveal is
-  // a pale, skinny torso, not the m model's gym chest
+  // 3D: the l_bare model (char_v2.py torso 'bare': a pale, skinny torso, collarbones and all); colours = his skin in case
+  // a fallback model (2D, or no l_bare) draws a top
   const skin = look.skin || '#f2d6c4';
-  return { ...look, jacket: { style: 'tee', color: skin, trim: skin, lining: skin }, shirt: skin, scarf: null, build: Math.min(look.build || 1, 0.78) };
+  return { ...look, jacket: { style: 'bare', color: skin, trim: skin, lining: skin }, shirt: skin, scarf: null };
 }
 export function setupStrip(f) {
   f.strip = true;
