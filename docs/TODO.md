@@ -104,7 +104,9 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 - [ ] Personlighet och egna initiativ i striden: hetsporren rusar in ensam, den fege stannar bak, lookout ropar BEHIND YA, singer drar
       igång en ramsa, bästa kompisar slåss bättre sida vid sida och blir galna när den andra slås ut, liability går
       för långt (heat). Rättning: oldschool-nervbonusen staplas i dag per grabb (firm.js nerve-loopen).
-- [ ] Testerna: seeda Math.random i test_firm.mjs; walkPlayer bevisar inget när PlayerController är avstängd.
+- [x] `test_firm.mjs` seedar Math.random (standard 1994, `FIRM_SEED=n` för andra), så körningarna är repeterbara.
+- [ ] Testerna: `PIN ORDER: ...and pins him` fallerar med vissa seeds (t.ex. `FIRM_SEED=15`), alltså är pin-ordern
+      fortfarande slumpkänslig. walkPlayer bevisar inget när PlayerController är avstängd.
 - [ ] Mål i strider utöver "slå ner alla", t.ex. ta läktaren, håll puben eller hämta en skadad kompis (DESIGN-V2 §3.4).
 - [ ] Större strider (6 mot 10) när prestandan tillåter.
 - [ ] Gör relationerna synligare och påverkbara.

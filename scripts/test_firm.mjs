@@ -2,9 +2,19 @@
 // Headless test of THE FIRM (game/firm.js): spawns a level with the lads and checks that they obey every order,
 // that nerve breaks and routs work, and that enemies also go for the lads.
 //
-//   node scripts/test_firm.mjs [levelId=streets]
+//   node scripts/test_firm.mjs [levelId=streets]          (FIRM_SEED=n: another Math.random seed, default 1994)
 //
 // Exit code 1 if any check fails.
+
+// seeded Math.random (mulberry32), so a run is repeatable: FIRM_SEED=n picks another seed
+let seed = (parseInt(process.env.FIRM_SEED, 10) || 1994) >>> 0;
+Math.random = () => {
+  seed = (seed + 0x6d2b79f5) >>> 0;
+  let t = seed;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
 
 const noop = () => {};
 function fakeCtx() {
@@ -437,11 +447,15 @@ const jabAt = (w, P, e) => {
   for (const l of F.lads) l.nerve = 50;
   check(P.startAttack && (P.startAttack('al_strip', w), P.state === 'attack'), 'BIG AL: the strip starts');
   let froze = false, flung = false;
-  step(w, 0.5, () => { if (e.state === 'dizzy') froze = true; if (w.projectiles.some(pr => pr.type === 'alshirt')) flung = true; });
+  // watch the throw itself: at point-blank range the shirt can hit him in the same tick it's flung (never seen in flight)
+  const spawn0 = w.spawnProjectile;
+  w.spawnProjectile = function (f, type, ...rest) { if (f === P && type === 'alshirt') flung = true; return spawn0.call(this, f, type, ...rest); };
+  step(w, 0.5, () => { if (e.state === 'dizzy') froze = true; });
   check(P.shirtOff && P.look === P.lookOff && P.power > p0, `BIG AL: shirt off, bare look, hits harder (power ${p0.toFixed(2)} -> ${P.power.toFixed(2)})`);
   check(froze, 'BIG AL: the reveal freezes the man next to him');
   check(F.lads.some(l => l.nerve > 50), 'BIG AL: the lads get a lift (AL! AL! AL!)');
-  step(w, 1.2, () => { if (w.projectiles.some(pr => pr.type === 'alshirt')) flung = true; });
+  step(w, 1.2);
+  w.spawnProjectile = spawn0;
   const shirt = w.items.find(it => it.type === 'alshirt' && !it.removed);
   check(flung && !!shirt && P.shirtItem === shirt, 'BIG AL: the shirt is flung and lands on the floor');
   for (const f of w.fighters) if (f.team !== 'player') f.removed = true;   // (the man next to the shirt could grab Al mid-buttoning)
