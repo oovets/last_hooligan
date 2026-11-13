@@ -10,6 +10,7 @@ import { drawDoll } from '../game/doll.js';
 import { sampleAnim, attackPose } from '../game/poses.js';
 import { buildLook } from '../content/wardrobe.js';
 import { LEVELS } from '../content/levels/index.js';
+import { ALL_LEVELS, isTour, tourFor } from '../content/tour/index.js';
 import { ITEMS } from '../game/items.js';
 import { backdrop } from './backdrop.js';
 import { drawLogo, drawCrest } from './logo.js';
@@ -37,18 +38,23 @@ function beginRun(levelIndex) {
 }
 
 // ---------------------------------------------------------------- level select
+// Two pages of eight: the Nordhamn story levels, then THE FOOTBALL TOUR arenas (built ones; stubs are left out).
+// Tour arenas are always open here so anyone can jump straight in and test them (on the pub map they still need rep).
+const SELECTABLE = ALL_LEVELS.map((L, index) => ({ L, index })).filter(e => !e.L.stub);
+const PAGE = 8;
 export class LevelSelectScene {
   constructor() { this.t = 0; this.sel = Math.max(0, Math.min(LEVELS.length - 1, (save.data.unlocked || 1) - 1)); this.rep = new Repeater(); }
+  locked(i) { const e = SELECTABLE[i]; return !isTour(e.index) && e.index >= (save.data.unlocked || 1); }
   update(dt) {
     this.t += dt; backdrop.update(dt);
-    const n = LEVELS.length, cols = 4;
+    const n = SELECTABLE.length, cols = 4;
     const mv = d => { this.sel = (this.sel + d + n) % n; audio.sfx('menuMove'); };
     if (this.rep.check('menuLeft', dt)) mv(-1);
     if (this.rep.check('menuRight', dt)) mv(1);
     if (this.rep.check('menuUp', dt)) mv(-cols);
     if (this.rep.check('menuDown', dt)) mv(cols);
     if (input.pressed('confirm')) {
-      if (this.sel < (save.data.unlocked || 1)) { audio.sfx('menuSelect'); startNewRun(this.sel); }
+      if (!this.locked(this.sel)) { audio.sfx('menuSelect'); startNewRun(SELECTABLE[this.sel].index); }
       else audio.sfx('locked');
     }
     if (input.pressed('back')) { audio.sfx('menuBack'); app.go(app.scenes.menu()); }
@@ -56,17 +62,19 @@ export class LevelSelectScene {
   draw(ctx) {
     backdrop.draw(ctx, { dim: 0.62 });
     const d = save.data;
-    heading(ctx, 'LEVEL SELECT', VIEW_W / 2, 8, { scale: 3 });
+    const page = Math.floor(this.sel / PAGE), pages = Math.ceil(SELECTABLE.length / PAGE);
+    heading(ctx, page ? 'THE FOOTBALL TOUR' : 'LEVEL SELECT', VIEW_W / 2, 8, { scale: 3 });
+    if (pages > 1) drawText(ctx, page ? '< NORDHAMN' : 'THE FOOTBALL TOUR >', page ? 20 : VIEW_W - 20, 34, { color: C.dim, align: page ? 'left' : 'right' });
     const cw = 146, ch = 112, gap = 8, x0 = Math.round((VIEW_W - (cw * 4 + gap * 3)) / 2);
-    LEVELS.forEach((L, i) => {
-      const col = i % 4, row = Math.floor(i / 4);
+    SELECTABLE.slice(page * PAGE, page * PAGE + PAGE).forEach(({ L, index }, k) => {
+      const i = page * PAGE + k, col = k % 4, row = Math.floor(k / 4);
       const x = x0 + col * (cw + gap), y = 44 + row * (ch + 10);
-      const sel = i === this.sel, locked = i >= (d.unlocked || 1);
+      const sel = i === this.sel, locked = this.locked(i), tour = isTour(index);
       const lift = sel ? -2 : 0;
       frame(ctx, x, y + lift, cw, ch, { fill: locked ? 'rgba(10,6,16,0.94)' : sel ? 'rgba(40,10,20,0.95)' : 'rgba(14,9,22,0.92)', accent: sel ? C.gold : locked ? '#3a2e44' : C.red, edge: sel ? '#c8a030' : undefined });
       // number tab
       ctx.fillStyle = locked ? '#3a2e44' : C.red; rrect(ctx, x + 4, y + 4 + lift, 18, 13, 3); ctx.fill();
-      drawText(ctx, String(L.num || i + 1), x + 13, y + 7 + lift, { color: '#fff', align: 'center' });
+      drawText(ctx, tour ? 'T' + (index - LEVELS.length + 1) : String(L.num || index + 1), x + 13, y + 7 + lift, { color: '#fff', align: 'center' });
       drawText(ctx, L.name.length > 19 ? L.name.slice(0, 18) + '.' : L.name, x + 27, y + 7 + lift, { color: locked ? '#5a4a6a' : sel ? '#fff' : '#e0d8e8' });
       // map thumbnail
       const th = locked ? null : levelThumb(L);
@@ -85,15 +93,15 @@ export class LevelSelectScene {
       if (sel) { ctx.save(); ctx.globalAlpha = 0.65 + Math.sin(this.t * 5) * 0.35; ctx.shadowColor = 'rgba(255,210,58,0.9)'; ctx.shadowBlur = 10 * devScale(ctx); ctx.strokeStyle = C.gold; ctx.lineWidth = 1.2; rrect(ctx, x - 2.5, y - 2.5 + lift, cw + 5, ch + 5, 7); ctx.stroke(); ctx.restore(); }
     });
     // detail strip
-    const L = LEVELS[this.sel], locked = this.sel >= (d.unlocked || 1);
+    const E = SELECTABLE[this.sel], L = E.L, locked = this.locked(this.sel), T = tourFor(L);
     frame(ctx, 16, 294, VIEW_W - 32, 40, { fill: 'rgba(14,9,22,0.94)' });
     if (locked) {
-      drawText(ctx, 'FINISH LEVEL ' + this.sel + ' TO UNLOCK THIS ONE.', VIEW_W / 2, 302, { color: '#ff7a7a', align: 'center' });
+      drawText(ctx, 'FINISH LEVEL ' + E.index + ' TO UNLOCK THIS ONE.', VIEW_W / 2, 302, { color: '#ff7a7a', align: 'center' });
       drawText(ctx, 'NO SKIPPING THE QUEUE. THIS IS NORDHAMN.', VIEW_W / 2, 315, { color: C.dim, align: 'center' });
     } else {
-      drawText(ctx, `LEVEL ${L.num || this.sel + 1}: ${L.name}`, 26, 301, { color: C.gold });
+      drawText(ctx, T ? `AWAY DAY: ${L.name} (${T.club})` : `LEVEL ${L.num || E.index + 1}: ${L.name}`, 26, 301, { color: C.gold });
       if (L.subtitle) drawText(ctx, L.subtitle, VIEW_W - 26, 301, { color: '#ff8aa0', align: 'right' });
-      const line = (L.intro || []).slice(0, 2).join(' ');
+      const line = T ? T.blurb : (L.intro || []).slice(0, 2).join(' ');
       wrapText(line, VIEW_W - 60).slice(0, 2).forEach((l, i) => drawText(ctx, l, 26, 313 + i * 10, { color: '#c0b8d0' }));
     }
     hintBar(ctx, [['menuLeft', 'CHOOSE'], ['confirm', 'PLAY'], ['back', 'BACK']], VIEW_H - 14);

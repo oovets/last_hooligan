@@ -1,7 +1,7 @@
 # THE LAST HOOLIGAN — att göra
 
 Det här är backloggen över det som återstår. Planen och bakgrunden finns i [`DESIGN-V2.md`](DESIGN-V2.md).
-Senast uppdaterad 2026-11-13 (avstämd mot koden).
+Senast uppdaterad 2026-11-13 (avstämd mot koden, andra genomgången).
 
 ## Läget just nu
 
@@ -22,13 +22,16 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 | Overhaul: procedurell rörelse (fightstance, steg, acceleration) | klar, ej provspelad |
 | Fullskaliga fordon, nya menyer i full upplösning | klar |
 | Fas E: THE TERRACES | pausad (motorstöd för trappsteg finns) |
-| Fas F: Football Tour-kartan och arenorna | kartan, registret och fyra arenor klara; The Den är en stubbe |
+| Fas F: Football Tour-kartan och arenorna | kartan, registret och fyra arenor klara och valbara i LEVEL SELECT; The Den är en stubbe |
+| Bana 1: tvåfilig gata med mittlinje och trafik åt båda håll, högre stad i 3D (`TOWN_SCALE`), regnet avstängt | klar |
+| Menyljus för realistiska figurer (miljöljus, perspektiv i karaktärsvalet), hjältemodeller laddas vid behov | klar |
 
 ## Först: provspela och städa
 
 - [ ] **Provspela på riktigt.** Ingen har spelat fas A–D, klippen eller den nya rörelsen live, allt är verifierat med
       tester och renderade bilder. Störst risk: hur det känns att styra firman mitt i en strid (kommandoläget).
-      Provspelning utifrån: `python3 scripts/serve.py 8642 --public --root <checkout>`.
+      Provspelning utifrån: `python3 scripts/serve.py 8642 --public --root <checkout>`. Tour-arenorna nås direkt via
+      LEVEL SELECT, sida 2 (THE FOOTBALL TOUR), utan att gå via puben och utan ryktesgräns.
 - [x] Merga grenarna till `main`.
 - [x] 3D är standardläget (äldre sparfiler flyttas över en gång, `?renderer=2d` ger det klassiska läget).
 - [ ] 2D-läget: sprite-bygget stannade halvvägs (bland annat `m_jacket` saknas och `assets/sprites/index.json` skrevs
@@ -147,13 +150,18 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
       visas som SOON på kartan.
 - [x] Stamford Bridge, Anfield, Old Trafford och Ibrox är byggda (tema, bana, boss och musik i varje paket, `1d20d1c`)
       och klarar `check.mjs --sim`.
-- [ ] The Den är fortfarande en stubbe (bygget avbröts mitt i banan).
+- [ ] The Den är fortfarande en stubbe (bygget avbröts mitt i banan). Den syns som SOON på kartan och saknas i LEVEL
+      SELECT tills den är byggd.
+- [x] Arenorna är valbara direkt i LEVEL SELECT (sida 2, alltid öppna för provspelning; på pubkartan gäller ryktet).
+- [ ] Efter en tourbana startad från LEVEL SELECT: kontrollera flödet tillbaka (puben eller menyn) och att rykte och
+      dubbla tourpoäng bokförs rätt.
 - [ ] Provspela de fyra arenorna, och klipp för deras bossattacker (se Grafik).
 - [ ] Europa: Tyskland, Italien, Spanien och Sverige.
 
 ## Visionen i övrigt
 
-- [ ] Dynamisk tid och dynamiskt väder (skymning till natt, dimma, vattenpölar).
+- [ ] Dynamisk tid och dynamiskt väder (skymning till natt, dimma, vattenpölar). Regn är avstängt överallt sedan
+      2026-11-13 (ägarens beslut); snö finns kvar.
 - [ ] NPC:er som inte slåss: supportrar, fotgängare, personal och trafik.
 - [ ] Dynamisk musik, ett komplett soundtrack och fler egna ramsor.
 - [ ] Arenaspecifika menyer och slutsekvenser. (Bästa poäng per bana finns redan: `save.best`, visas på banvalet.)
