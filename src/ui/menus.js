@@ -15,7 +15,7 @@ import './firmsetup.js';
 import { ITEMS } from '../game/items.js';
 import { backdrop } from './backdrop.js';
 import { drawLogo, drawCrest } from './logo.js';
-import { levelThumb, drawFit } from './minimap.js';
+import { drawLevelPreview } from './minimap.js';
 import { optionItems, drawBindings, drawControlCard } from './options.js';
 import { drawComboList } from '../game/play.js';
 import { drawHallOfFame } from './attract.js';
@@ -82,10 +82,8 @@ export class LevelSelectScene {
       drawText(ctx, tour ? 'T' + (index - LEVELS.length + 1) : String(L.num || index + 1), x + 13, y + 7 + lift, { color: '#fff', align: 'center' });
       drawText(ctx, L.name.length > 19 ? L.name.slice(0, 18) + '.' : L.name, x + 27, y + 7 + lift, { color: locked ? '#5a4a6a' : sel ? '#fff' : '#e0d8e8' });
       // map thumbnail
-      const th = locked ? null : levelThumb(L);
       ctx.fillStyle = '#06040c'; rrect(ctx, x + 4, y + 21 + lift, cw - 8, 54, 3); ctx.fill();
-      if (th) drawFit(ctx, th, x + 6, y + 22 + lift, cw - 12, 52, sel ? 1 : 0.75);
-      else { lockIcon(ctx, x + cw / 2 - 9, y + 36 + lift, 3); }
+      if (locked || !drawLevelPreview(ctx, L, x + 6, y + 22 + lift, cw - 12, 52, sel ? 1 : 0.75)) lockIcon(ctx, x + cw / 2 - 9, y + 36 + lift, 3);
       if (!locked) {
         const sc = (d.scarves[L.id] || []).length;
         for (let k = 0; k < 5; k++) scarfIcon(ctx, x + 6 + k * 12, y + 80 + lift, k < sc);

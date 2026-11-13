@@ -194,3 +194,78 @@ export class Minimap {
     ctx.imageSmoothingEnabled = prev;
   }
 }
+
+// ---------------------------------------------------------------- level preview (intro card / level select)
+// A clean isometric picture of the level, drawn at the screen's real resolution (not the 1px-per-row minimap blown
+// up): floor tiles as diamonds, walls as raised blocks with a lit top and two shaded sides, painter-sorted.
+const previewCache = new Map();
+const PREVIEW_FLOOR = { water: '#2a5a9a', grass: '#2f6a38', road: '#34304a', rail: '#4a3e54', wood: '#5a3e34', terrace: '#46405a', base: '#3e3a54' };
+function previewFloor(id) {
+  const s = String(id).toLowerCase();
+  if (s.includes('water')) return PREVIEW_FLOOR.water;
+  if (s.includes('grass') || s.includes('pitch')) return PREVIEW_FLOOR.grass;
+  if (s.includes('road') || s.includes('asphalt') || s.includes('zebra')) return PREVIEW_FLOOR.road;
+  if (s.includes('rail') || s.includes('platform')) return PREVIEW_FLOOR.rail;
+  if (s.includes('wood') || s.includes('carpet')) return PREVIEW_FLOOR.wood;
+  if (s.includes('terrace')) return PREVIEW_FLOOR.terrace;
+  return PREVIEW_FLOOR.base;
+}
+function previewWall(w) {
+  const s = String(w.style).toLowerCase();
+  if (s.includes('hedge') || s.includes('tree')) return ['#4f8a4a', '#36643a', '#284c2c'];
+  if (w.h <= 1.5) return ['#8a7aa4', '#5e5276', '#463c5a'];
+  if (w.h <= 3) return ['#b4a6cc', '#7c6e98', '#5a4e74'];
+  return ['#dcd2ec', '#9a8cb6', '#6e6290'];
+}
+export function levelPreview(level, w, h, S = 2) {
+  const key = level.id + '|' + w + 'x' + h + '@' + S;
+  if (previewCache.has(key)) return previewCache.get(key);
+  let map;
+  try { map = new TileMap(level); } catch (e) { return null; }
+  const W = map.w, H = map.h, cw = Math.round(w * S), chh = Math.round(h * S);
+  const c = makeCanvas(cw, chh), g = c.getContext('2d');
+  const LIFT = 1.6;                                              // tallest wall, in tile heights (x hh*2 px)
+  // fit the part of the map that has floor (u = x - y across, v = x + y down, over the tiles' corners)
+  let u0 = 1e9, u1 = -1e9, v0 = 1e9, v1 = -1e9;
+  for (let ty = 0; ty < H; ty++) for (let tx = 0; tx < W; tx++) {
+    if (!map.floor[ty * W + tx]) continue;
+    u0 = Math.min(u0, tx - ty - 1); u1 = Math.max(u1, tx - ty + 1); v0 = Math.min(v0, tx + ty); v1 = Math.max(v1, tx + ty + 2);
+  }
+  if (u0 > u1) return null;
+  const hw = Math.min(cw / (u1 - u0), chh / ((v1 - v0) / 2 + LIFT)) * 0.94, hh = hw / 2;
+  const ox = cw / 2 - (u0 + u1) / 2 * hw, oy = chh / 2 - (v0 + v1) / 2 * hh + LIFT * hh;
+  const P = (x, y) => [ox + (x - y) * hw, oy + (x + y) * hh];   // tile corner (x, y) -> px
+  const quad = (pts, col) => { g.fillStyle = col; g.strokeStyle = col; g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]); g.closePath(); g.fill(); g.stroke(); };
+  g.lineWidth = 0.6; g.lineJoin = 'round';
+  const walls = [];
+  for (let ty = 0; ty < H; ty++) for (let tx = 0; tx < W; tx++) {
+    const i = ty * W + tx, f = map.floor[i];
+    if (!f) continue;
+    const wl = map.wall[i];
+    if (wl && !wl.fake) walls.push([tx, ty, wl]);
+    quad([P(tx, ty), P(tx + 1, ty), P(tx + 1, ty + 1), P(tx, ty + 1)], previewFloor(f));
+  }
+  walls.sort((a, b) => (a[0] + a[1]) - (b[0] + b[1]));
+  for (const [tx, ty, wl] of walls) {
+    const [top, left, right] = previewWall(wl);
+    const z = Math.min(LIFT, 0.35 + wl.h * 0.3) * hh * 2;
+    const up = p => [p[0], p[1] - z];
+    const a = P(tx, ty), b = P(tx + 1, ty), cc = P(tx + 1, ty + 1), d = P(tx, ty + 1);
+    quad([d, cc, up(cc), up(d)], left);                          // front-left face
+    quad([cc, b, up(b), up(cc)], right);                         // front-right face
+    quad([up(a), up(b), up(cc), up(d)], top);
+  }
+  previewCache.set(key, c);
+  return c;
+}
+// draw the preview into a box (logical px); S = the canvas's device scale
+export function drawLevelPreview(ctx, level, x, y, w, h, alpha = 1) {
+  const S = (ctx.getTransform ? ctx.getTransform().a : 2) || 2;
+  const c = levelPreview(level, w, h, Math.max(1, Math.round(S * 100) / 100));
+  if (!c) return false;
+  const prev = ctx.imageSmoothingEnabled;
+  ctx.imageSmoothingEnabled = true; ctx.globalAlpha *= alpha;
+  ctx.drawImage(c, x, y, w, h);
+  ctx.globalAlpha /= alpha || 1; ctx.imageSmoothingEnabled = prev;
+  return true;
+}

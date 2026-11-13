@@ -7,8 +7,8 @@
 //   derby_dez       DAPPER DEZ        BOSS (level.boss): Portside's top boy. Counter stance, designer dash, calls his lads
 //   derby_bjorn     BIG BJÖRN         TWIN BOSS (boss-strength minion): Vargby's capo. Flare barrage, stampede, ground pound
 //
-// Tag-team: only one twin is "on point" at a time; the other hangs back (Björn lobs flares, Dez heckles).
-// They swap ("TAG!") every ~10s or when the point man takes a beating. When one falls the other rages.
+// One at a time: each top boy wants to be the man who did you, so only one is "on point"; the other hangs back
+// sulking (Björn lobs flares, Dez heckles). They shove each other out of the way ("MY TURN!") every ~10s or when the point man takes a beating. When one falls the other rages.
 // The level (l7_derby.js) keeps the exit shut until BOTH are down.
 
 import { registerEnemy, casualLook, RIVAL, AWAY, AWAY_KIT } from '../enemies.js';
@@ -201,8 +201,8 @@ function tagTeam(world, dt) {
     T.tagT = 9 + Math.random() * 4;
     T.pointHp = np.hp;
     np.data.entry = true;
-    popup(world, pt, 'TAG!', '#ffe14a');
-    world.toast(np === a ? 'DEZ TAGS IN!' : 'BJÖRN TAGS IN!');
+    popup(world, pt, 'MY TURN!', '#ffe14a');
+    world.toast(np === a ? 'DEZ SHOVES BJÖRN OUT OF THE WAY!' : 'BJÖRN SHOVES DEZ OUT OF THE WAY!');
     world.sfx('whooshBig', np);
   }
   return T;
@@ -230,7 +230,7 @@ function enrage(f, world, who) {
   f.power *= 1.25; f.speed *= 1.2; f.runSpeed *= 1.15; f.superArmor += 4;
   f.controller.ai.aggression = Math.min(0.95, f.controller.ai.aggression + 0.25);
   f.controller.ai.reaction *= 0.75;
-  world.message(who === 'dez' ? 'DEZ HAS LOST IT!' : 'BJÖRN GOES BERSERK!', who === 'dez' ? 'NOBODY TOUCHES BJÖRN EXCEPT DEZ' : 'NOBODY TOUCHES DEZ EXCEPT BJÖRN', 2.2, '#ff3a3a');
+  world.message(who === 'dez' ? 'DEZ HAS LOST IT!' : 'BJÖRN GOES BERSERK!', who === 'dez' ? 'THAT WAS HIS RUCK, NOT BJÖRN\'S' : 'THAT WAS HIS RUCK, NOT DEZ\'S', 2.2, '#ff3a3a');
   world.sfx('bossRoar', f);
   world.camera.shake(6, 0.4);
 }
@@ -305,7 +305,7 @@ registerEnemy('derby_dez', {
       return true;
     }
 
-    // --- tag team: hang back and heckle
+    // --- waiting his turn: hang back and heckle
     const onPoint = T.solo || T.point === 'dez';
     if (!onPoint) {
       ai.heckle = (ai.heckle ?? 2) - dt;

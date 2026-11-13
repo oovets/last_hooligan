@@ -530,7 +530,7 @@ export default {
     },
     {
       id: 'yard', area: { x: 17, y: 6, w: 3, h: 5 }, lockArea: { x: 17, y: 1, w: 30, h: 20 },
-      msg: 'THE CONTAINER YARD', sub: 'PORTSIDE AND VARGBY. TOGETHER. DISGUSTING.',
+      msg: 'THE CONTAINER YARD', sub: 'PORTSIDE ON ONE SIDE, VARGBY ON THE OTHER. YOU IN THE MIDDLE.',
       waves: [
         { enemies: [{ type: 'industrial_docker', x: 24.5, y: 8.5, from: { x: 26.5, y: 1.5 } }, { type: 'industrial_dockLad', x: 22.5, y: 15.5, from: { x: 28.5, y: 22.5 } }, { type: 'industrial_dockLad', x: 21.5, y: 10.8, from: { x: 34, y: 8.5 } }] },
         { nextAt: 1, enemies: [{ type: 'industrial_steeltoe', x: 25.5, y: 7.5, from: { x: 47.5, y: 8 } }, { type: 'industrial_steeltoe', x: 24.5, y: 16.5, from: { x: 47.5, y: 17 } }, { type: 'bottler', x: 27.5, y: 10.8, from: { x: 36, y: 1.5 }, delay: 1 }] },

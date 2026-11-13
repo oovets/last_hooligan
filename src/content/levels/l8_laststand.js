@@ -91,10 +91,10 @@ export default {
   name: 'THE LAST STAND',
   subtitle: 'SATURDAY. 22:40. FLOODLIGHTS ON.',
   intro: [
-    'ONE NIGHT LEFT. ONE FIRM LEFT: ALL OF THEM.',
-    'PORTSIDE, VARGBY AND EVERY MOB YOU BATTERED',
-    'HAVE CLUBBED TOGETHER OUTSIDE THE ARENA.',
-    'THEIR BOSS CALLS HIMSELF THE GENERAL. HE IRONS HIS JEANS.',
+    'ONE NIGHT LEFT. EVERY MOB YOU BATTERED IS OUT:',
+    'PORTSIDE, VARGBY, THE LOT. NONE OF THEM ON SPEAKING TERMS,',
+    'ALL OF THEM WANTING TO BE THE ONE WHO DOES YOU.',
+    'AND THE GENERAL: NOBODY KNOWS WHOSE SIDE HE\'S ON. HE IRONS HIS JEANS.',
   ],
   music: 'laststand',
   crowd: 0.35,
@@ -262,7 +262,7 @@ export default {
     { type: 'crate', x: 39, y: 40 }, { type: 'crate', x: 40, y: 40 }, { type: 'barrel', x: 40, y: 41 },
     { type: 'barrier', x: 20, y: 45 }, { type: 'barrier', x: 21, y: 45 },
     { type: 'sign', x: 0, y: 30, side: 'right', len: 4, z: 1.6, height: 0.8, text: 'ANCHORS', color: '#ffffff', bg: '#c8102e', depthBias: 3.5 },
-    { type: 'graffiti', x: 0, y: 36, side: 'right', z: 1.1, text: 'ALLIANCE', color: '#3ab8ff' },
+    { type: 'graffiti', x: 0, y: 36, side: 'right', z: 1.1, text: 'LAST ORDERS', color: '#3ab8ff' },
     { type: 'graffiti', x: 0, y: 43, side: 'right', z: 1.3, text: 'NHA', color: '#e83a3a' },
     { type: 'graffiti', x: 9, y: 26, side: 'left', z: 1.2, text: 'PSC', color: '#3ab8ff' },
     // ---- police compound
@@ -360,7 +360,7 @@ export default {
         { enemies: [{ type: 'rival', x: 12.5, y: 36.5, from: { x: 22, y: 20 } }, { type: 'rival', x: 16.5, y: 42.5, from: { x: 27, y: 20 } }, { type: 'awayfan', x: 10.5, y: 41.5, from: { x: 3.5, y: 50 } }, { type: 'rival', x: 20.5, y: 30.5, from: { x: 30, y: 20 } }] },
         { msg: 'THE REUNION!', enemies: [{ type: 'steward', x: 14.5, y: 32.5, from: { x: 45, y: 36 } }, { type: 'ganger', x: 24.5, y: 40.5, from: { x: 45, y: 36.5 } }, { type: 'bottler', x: 28.5, y: 30.5, from: { x: 27, y: 20 } }, { type: 'ganger', x: 8.5, y: 43.5, from: { x: 3.5, y: 50 } }] },
         { nextAt: 1, enemies: [{ type: 'bruiser', x: 18.5, y: 38.5, from: { x: 27, y: 20 } }, { type: 'bruiser', x: 26.5, y: 42.5, from: { x: 45, y: 36 } }, { type: 'laststand_flareman', x: 30.5, y: 35.5, from: { x: 45, y: 36.5 } }, { type: 'laststand_ultra', x: 8.5, y: 36.5, from: { x: 3.5, y: 50 } }] },
-        { msg: 'ALLIANCE TOP BOYS!', enemies: [{ type: 'laststand_ultra', x: 22.5, y: 34.5, from: { x: 23, y: 20 } }, { type: 'laststand_ultra', x: 29.5, y: 41.5, from: { x: 45, y: 36 } }, { type: 'firm', x: 14.5, y: 40.5, from: { x: 3.5, y: 50 } }, { type: 'firm', x: 25.5, y: 31.5, from: { x: 32, y: 20 } }] },
+        { msg: 'EVERY TOP BOY IN TOWN!', enemies: [{ type: 'laststand_ultra', x: 22.5, y: 34.5, from: { x: 23, y: 20 } }, { type: 'laststand_ultra', x: 29.5, y: 41.5, from: { x: 45, y: 36 } }, { type: 'firm', x: 14.5, y: 40.5, from: { x: 3.5, y: 50 } }, { type: 'firm', x: 25.5, y: 31.5, from: { x: 32, y: 20 } }] },
       ],
     },
     {
@@ -382,7 +382,7 @@ export default {
     },
   ],
   boss: {
-    type: 'laststand_general', x: 27.5, y: 7.5, from: { x: 16.5, y: 7.6 }, title: 'THE GENERAL', intro: 'TOP BOY OF THE ALLIANCE',
+    type: 'laststand_general', x: 27.5, y: 7.5, from: { x: 16.5, y: 7.6 }, title: 'THE GENERAL', intro: 'NOBODY\'S SIDE BUT HIS OWN',
     area: { x: 19, y: 1, w: 18, h: 11 }, lockArea: { x: 19, y: 1, w: 18, h: 15 },
     minions: [{ type: 'awayfan', x: 33.5, y: 6.5, from: { x: 36.5, y: 18 } }, { type: 'rival', x: 22.5, y: 11.5, from: { x: 20, y: 18 } }],
   },

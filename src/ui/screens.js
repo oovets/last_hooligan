@@ -15,7 +15,7 @@ import { drawDoll } from '../game/doll.js';
 import { sampleAnim } from '../game/poses.js';
 import { drawLogo, drawCrest, drawChrome } from './logo.js';
 import { backdrop } from './backdrop.js';
-import { levelThumb, drawFit } from './minimap.js';
+import { drawLevelPreview } from './minimap.js';
 import { drawCreditsRoll, creditsHeight, NameEntryScene } from './menus.js';
 import { frame, hintBar, heading, stripes, scanlines, blink, typed, typedCount, fmtTime, fmtScore, scarfIcon, badgeIcon, secretIcon, coinIcon, starIcon, vignette, C, ladFigure } from './widgets.js';
 
@@ -55,12 +55,11 @@ class LevelIntroScene {
     stripes(ctx, t, '#c8102e', '#f4f1e8', 0.12, 30);
     vignette(ctx, 0.7);
     // map preview on the right, card on the left
-    const th = levelThumb(L);
-    if (th) {
+    {
       const k = Math.min(1, t * 2);
       frame(ctx, 380, 40, 240, 150, { fill: 'rgba(6,4,12,0.92)', title: 'THE PATCH' });
       ctx.globalAlpha = k;
-      drawFit(ctx, th, 388, 50, 224, 132, 1);
+      drawLevelPreview(ctx, L, 388, 52, 224, 128);
       ctx.globalAlpha = 1;
       // scanning sweep
       const sy = 50 + ((t * 60) % 132);

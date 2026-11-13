@@ -1,6 +1,6 @@
-// THE LAST STAND: the rival alliance's elites and THE GENERAL (final boss).
+// THE LAST STAND: THE GENERAL's elites and THE GENERAL himself (final boss; nobody's side but his own).
 //
-// Enemies:  laststand_ultra      ALLIANCE ULTRA   fast flanker, rushes in with a running clothesline (laststand_lariat)
+// Enemies:  laststand_ultra      GENERAL'S ULTRA  fast flanker, rushes in with a running clothesline (laststand_lariat)
 //           laststand_flareman   FLARE MERCHANT   kites at range, lobs lit flares that leave burning patches on the ground
 //           laststand_lieutenant LIEUTENANT       suited, blocks a lot and counter-attacks out of his guard
 // Boss:     laststand_general    THE GENERAL      three phases:
@@ -16,7 +16,7 @@ import { normalizeLook } from '../../game/doll.js';
 import { toScreen } from '../../engine/iso.js';
 import { ellipse, thick } from '../../engine/gfx.js';
 
-export const ALLIANCE = { a: '#1f4fb4', b: '#f0c020' };   // Portside blue + Vargby yellow, together at last
+export const ALLIANCE = { a: '#1f4fb4', b: '#f0c020' };   // the General's crew: blue and yellow, no club's colours
 
 // ================================================================== attacks & poses
 registerAttackPose('laststand_lariat', {
@@ -173,7 +173,7 @@ export function ensureFlareSystem(world) {
 
 // ================================================================== elites
 registerEnemy('laststand_ultra', {
-  name: 'ALLIANCE ULTRA', hp: 58, speed: 3.1, runSpeed: 5.8, power: 1.1, guard: 38, score: 280,
+  name: 'GENERAL\'S ULTRA', hp: 58, speed: 3.1, runSpeed: 5.8, power: 1.1, guard: 38, score: 280,
   look: rng => {
     const L = casualLook(rng, { a: ALLIANCE.a, b: ALLIANCE.b, scarf: { a: ALLIANCE.a, b: ALLIANCE.b }, hair: ['skinhead', 'buzz', 'crop'] });
     return {
@@ -187,7 +187,7 @@ registerEnemy('laststand_ultra', {
   ai: {
     aggression: 0.75, reaction: 0.24, attacks: [['jab', 2], ['cross', 2], ['hook', 2], ['kick', 2], ['uppercut', 1]], comboLen: [2, 4],
     blockChance: 0.18, dodgeChance: 0.12, runChance: 0.6, rushChance: 0.45, rushAttack: 'laststand_lariat', flank: 0.6, keepDist: 2.0, taunt: 0.12,
-    shouts: { aggro: ['ALLIANCE!', 'ONE LAST RUCK!', 'HE\'S ON HIS OWN!'], taunt: ['NO MATES?', 'COME ON THEN, HERO!'], rush: ['CLOTHESLINE!', 'HAVE THAT!'], hurt: ['ME TEETH!', 'OOF!'] },
+    shouts: { aggro: ['FOR THE GENERAL!', 'ONE LAST RUCK!', 'HE\'S ON HIS OWN!'], taunt: ['NO MATES?', 'COME ON THEN, HERO!'], rush: ['CLOTHESLINE!', 'HAVE THAT!'], hurt: ['ME TEETH!', 'OOF!'] },
   },
   drops: [['coin', 0.6], ['cash5', 0.25], ['pint', 0.1]],
 });
