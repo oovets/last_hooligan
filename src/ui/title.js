@@ -104,7 +104,7 @@ class TitleScene {
     // the poster: red paper, the mob charging in from below, the title slammed on, the line in a black box
     drawPosterBg(ctx, this.t);
     const ch = Math.min(1, Math.max(0, this.intro / 1.1));
-    drawFirm(ctx, this.t, 1 - Math.pow(1 - ch, 3));
+    drawFirm(ctx, this.t, ch);
     drawPosterTitle(ctx, VIEW_W / 2, 36, this.t, { intro: this.intro });
     ctx.restore();
     const ti = this.intro - LOGO_INTRO_LEN;
@@ -118,27 +118,33 @@ class TitleScene {
   }
 }
 
-// the whole firm charging at you, as the real 3D lads (the drawn mob is only a fallback without the 3D renderer)
-const CHARGE = [
-  { id: 'stig', x: 258, feet: 212, h: 114, run: 6.2 }, { id: 'oldboy', x: 392, feet: 210, h: 118, run: 5.6 },
-  { id: 'mo', x: 138, feet: 228, h: 144, run: 5.2 }, { id: 'vic', x: 508, feet: 228, h: 144, run: 5.0 },
-  { id: 'kenny', x: 212, feet: 246, h: 164, run: 6.0 }, { id: 'bigal', x: 432, feet: 248, h: 178, run: 5.8 },
-  { id: 'hooligan', x: 320, feet: 264, h: 184, run: 6.4 },
-];
-function drawFirm(ctx, t, charge) {
+// the firm, lined up under the logo: the real 3D lads standing still, a soft shadow round them, legs fading into the
+// dark (the drawn poster mob is only a fallback without the 3D renderer)
+const LINEUP = ['oldboy', 'mo', 'kenny', 'hooligan', 'bigal', 'vic', 'stig'];
+function drawFirm(ctx, t, k) {
   const stage = r3d.menu;
-  if (!(stage && stage.ready)) { drawMob(ctx, t, { charge }); return; }
-  const rise = (1 - charge) * 160;
-  // a dark smear of street under them
-  const g = ctx.createLinearGradient(0, 200, 0, 300);
-  g.addColorStop(0, 'rgba(10,4,5,0)'); g.addColorStop(0.7, 'rgba(10,4,5,0.55)'); g.addColorStop(1, 'rgba(10,4,5,0)');
-  ctx.fillStyle = g; ctx.fillRect(0, 180 + rise, VIEW_W, 100);
-  const actors = CHARGE.map((c, i) => {
-    const ch = CHARACTERS.find(x => x.id === c.id);
+  if (!(stage && stage.ready)) { drawMob(ctx, t, { charge: k }); return; }
+  const n = LINEUP.length, gap = 74, x0 = VIEW_W / 2 - gap * (n - 1) / 2, mid = (n - 1) / 2;
+  const actors = LINEUP.map((id, i) => {
+    const ch = CHARACTERS.find(x => x.id === id);
     const look = normalizeLook((ch && ch.look) || buildLook(save.data.outfit));
-    return { look, x: c.x, feet: c.feet + rise, h: c.h, run: c.run, phase: i * 0.37, yaw: (c.x - 320) * -0.0012 };
+    const d = Math.abs(i - mid);
+    const x = x0 + i * gap;
+    return { look, x, feet: 266 - d * 4, h: 150 * (look.height || 1) * (1 - d * 0.035), anim: 'idle', phase: i * 0.9, yaw: (VIEW_W / 2 - x) * 0.0016 };
   });
-  if (!stage.draw(ctx, 'titlefirm', actors, { x: 0, y: 40, w: VIEW_W, h: 236 }, t, { light: 'studio' })) drawMob(ctx, t, { charge });
+  ctx.save();
+  ctx.globalAlpha = k;
+  ctx.shadowColor = 'rgba(0,0,0,0.65)'; ctx.shadowBlur = 16 * devScale(ctx); ctx.shadowOffsetY = 5 * devScale(ctx);
+  const ok = stage.draw(ctx, 'titlefirm', actors, { x: 0, y: 70, w: VIEW_W, h: 206 }, t, { light: 'studio' });
+  ctx.restore();
+  if (!ok) { drawMob(ctx, t, { charge: k }); return; }
+  // legs fade into the dark street
+  const g = ctx.createLinearGradient(0, 214, 0, 276);
+  g.addColorStop(0, 'rgba(12,4,6,0)'); g.addColorStop(0.65, 'rgba(12,4,6,0.78)'); g.addColorStop(1, 'rgba(12,4,6,0.92)');
+  ctx.fillStyle = g; ctx.fillRect(0, 214, VIEW_W, 62);
+  const g2 = ctx.createLinearGradient(0, 276, 0, 300);
+  g2.addColorStop(0, 'rgba(12,4,6,0.92)'); g2.addColorStop(1, 'rgba(12,4,6,0)');
+  ctx.fillStyle = g2; ctx.fillRect(0, 276, VIEW_W, 24);
 }
 
 // ---------------------------------------------------------------- main menu
