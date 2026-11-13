@@ -16,6 +16,7 @@ import { ITEMS } from '../game/items.js';
 import { backdrop } from './backdrop.js';
 import { drawLogo } from './logo.js';
 import { drawLevelPreview } from './minimap.js';
+import { drawLevelShot } from './levelshot.js';
 import { optionItems, drawBindings, drawControlCard } from './options.js';
 import { drawComboList } from '../game/play.js';
 import { drawHallOfFame } from './attract.js';
@@ -82,18 +83,24 @@ export class LevelSelectScene {
       ctx.fillStyle = locked ? '#3a3a40' : C.red; rrect(ctx, x + 4, y + 4 + lift, 18, 13, 3); ctx.fill();
       drawText(ctx, tour ? 'T' + (index - LEVELS.length + 1) : String(L.num || index + 1), x + 13, y + 7 + lift, { color: locked ? '#fff' : C.black, align: 'center' });
       drawText(ctx, L.name.length > 19 ? L.name.slice(0, 18) + '.' : L.name, x + 27, y + 7 + lift, { color: locked ? '#5a4a6a' : sel ? '#fff' : '#e0d8e8' });
-      // map thumbnail
-      ctx.fillStyle = '#06040c'; rrect(ctx, x + 4, y + 21 + lift, cw - 8, 54, 3); ctx.fill();
-      if (locked || !drawLevelPreview(ctx, L, x + 6, y + 22 + lift, cw - 12, 52, sel ? 1 : 0.75)) lockIcon(ctx, x + cw / 2 - 9, y + 36 + lift, 3);
+      // the picture: a 3D shot of the level itself (ui/levelshot.js), the map preview until it loads
+      const px = x + 3, py = y + 20 + lift, pw = cw - 6, ph = 62;
+      ctx.fillStyle = '#06040c'; rrect(ctx, px, py, pw, ph, 3); ctx.fill();
       if (!locked) {
-        const sc = (d.scarves[L.id] || []).length;
-        for (let k = 0; k < 5; k++) scarfIcon(ctx, x + 6 + k * 12, y + 80 + lift, k < sc);
-        badgeIcon(ctx, x + 68, y + 79 + lift, !!d.badges[L.id]);
+        ctx.save(); rrect(ctx, px, py, pw, ph, 3); ctx.clip();
+        const ok = drawLevelShot(ctx, L, px, py, pw, ph, { alpha: sel ? 1 : 0.8, zoom: sel ? 1.06 + Math.sin(this.t * 0.6) * 0.04 : 1 });
+        ctx.restore();
+        if (!ok) drawLevelPreview(ctx, L, px + 2, py + 2, pw - 4, ph - 4, sel ? 1 : 0.75);
+      } else lockIcon(ctx, x + cw / 2 - 9, py + 18, 3);
+      if (!locked) {
+        const sc = (d.scarves[L.id] || []).length, ry = y + 87 + lift;
+        for (let k = 0; k < 5; k++) scarfIcon(ctx, x + 6 + k * 12, ry, k < sc);
+        badgeIcon(ctx, x + 68, ry - 1, !!d.badges[L.id]);
         const sec = (d.secrets[L.id] || []).length;
-        secretIcon(ctx, x + 82, y + 79 + lift, sec > 0);
-        drawText(ctx, String(sec), x + 92, y + 80 + lift, { color: sec ? '#7affe0' : '#5a4a6a' });
-        drawText(ctx, 'BEST ' + (d.best[L.id] ? fmtScore(d.best[L.id], 7) : '-------'), x + 6, y + 95 + lift, { color: d.best[L.id] ? C.gold : '#5a4a6a' });
-      } else drawText(ctx, 'LOCKED', x + cw / 2, y + 88 + lift, { color: '#6a5a7a', align: 'center' });
+        secretIcon(ctx, x + 82, ry - 1, sec > 0);
+        drawText(ctx, String(sec), x + 92, ry, { color: sec ? '#7affe0' : '#5a4a6a' });
+        drawText(ctx, 'BEST ' + (d.best[L.id] ? fmtScore(d.best[L.id], 7) : '-------'), x + 6, y + 100 + lift, { color: d.best[L.id] ? C.gold : '#5a4a6a' });
+      } else drawText(ctx, 'LOCKED', x + cw / 2, y + 92 + lift, { color: '#6a5a7a', align: 'center' });
       if (sel) { ctx.save(); ctx.globalAlpha = 0.65 + Math.sin(this.t * 5) * 0.35; ctx.shadowColor = 'rgba(255,210,58,0.9)'; ctx.shadowBlur = 10 * devScale(ctx); ctx.strokeStyle = C.gold; ctx.lineWidth = 1.2; rrect(ctx, x - 2.5, y - 2.5 + lift, cw + 5, ch + 5, 7); ctx.stroke(); ctx.restore(); }
     });
     // detail strip
