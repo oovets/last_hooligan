@@ -24,15 +24,16 @@
   canvas.hd{image-rendering:auto}
   #loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;
     font:600 15px/1.4 "Barlow Condensed","Arial Narrow",sans-serif;letter-spacing:4px;color:#f4f1e8;
-    background:radial-gradient(ellipse at 50% 40%,#221c08 0%,#0a0a08 55%,#050505 100%);pointer-events:none}
-  #loading b{font:400 44px/1 Anton,Impact,sans-serif;letter-spacing:2px;color:#f2c811;text-shadow:0 0 24px rgba(242,200,17,.45)}
+    background:radial-gradient(ellipse at 50% 42%,#221c08 0%,#0e0d0a 45%,#040404 100%);pointer-events:none}
   #loading i{font-style:normal;color:#8e8b82;animation:blink 1.4s ease-in-out infinite}
   @keyframes blink{50%{opacity:.25}}
 </style>
 </head>
 <body>
 <div id="stage"><canvas id="gl"></canvas><canvas id="game" tabindex="0"></canvas></div>
-<div id="loading"><b>THE LAST HOOLIGAN</b><i>LOADING...</i></div>
+<!-- just the loading screen's background until the game draws its one loading screen (src/ui/loadscreen.js) on top;
+     words only if the modules never arrive -->
+<div id="loading"><i></i></div>
 <noscript><p style="color:#fff;font-family:monospace">THE LAST HOOLIGAN needs JavaScript (and a local web server).</p></noscript>
 <!-- Three.js for the 3D renderer (?renderer=3d). Only loaded when 3D is enabled. Exact version, no build step. -->
 <script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }</script>

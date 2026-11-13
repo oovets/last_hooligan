@@ -65,6 +65,7 @@ import { loadModels, EXTRAS } from './game/sprites.js';
 import { loadFonts, setFrameHD } from './engine/font.js';
 import { drawLoading } from './ui/loadscreen.js';
 import { r3d } from './render3d/index.js';
+import { backdrop } from './ui/backdrop.js';
 
 // ---- asset preload (Blender-rendered environment + character atlases); the game falls back to procedural art
 let loadState = { done: 0, total: 1, ready: false };
@@ -88,7 +89,7 @@ const timed = (name, p) => p.then(v => { console.info(`[load] ${name} ${Math.rou
 // fonts and the 3D characters are in. A level / the pub waits only for ITS sprites (envNeed: they jump the queue).
 const envP = timed('env', loadEnv());
 async function preload() {
-  const tasks = [timed('fonts', loadFonts())];
+  const tasks = [timed('fonts', loadFonts()), timed('bg', backdrop.photoReady())];   // the title's Råsunda photo
   if (want3d) tasks.push(timed('3d', load3d()));
   try {
     const r = await fetch('assets/sprites/index.json');
@@ -153,7 +154,7 @@ function start() {
   if (started) return; started = true;
   const ov = document.getElementById('loading'); if (ov) ov.remove();
 if (qp.has('play')) { game.reset(); app.go(app.scenes.play(parseInt(qp.get('play'), 10) || 0), { fade: false }); }
-else app.go(app.scenes.boot ? app.scenes.boot() : app.scenes.title(), { fade: false });
+else app.go(app.scenes.title(), { fade: false });   // one loading screen, then straight to the title (no studio ident)
 }
 app.go(loading, { fade: false });
 

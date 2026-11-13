@@ -1,4 +1,4 @@
-// Boot splash (tape-loader style), title screen (logo slam-in, stadium backdrop, attract mode on idle)
+// Title screen (logo slam-in, Råsunda photo backdrop, attract mode on idle)
 // and the main menu. Other menu screens live in menus.js / wardrobe_ui.js / attract.js.
 import { VIEW_W, VIEW_H } from '../engine/constants.js';
 import { input } from '../engine/input.js';
@@ -25,53 +25,6 @@ import { r3d } from '../render3d/index.js';
 import { makeRng } from '../engine/rng.js';
 
 const TAG = 'WHAT ELSE ARE YOU GONNA DO ON A SATURDAY?';
-
-// ---------------------------------------------------------------- boot splash
-class BootScene {
-  constructor() { this.t = 0; }
-  enter() {
-    hideLoader();
-    backdrop.build();
-  }
-  update(dt) {
-    this.t += dt;
-    if ((this.t > 0.3 && input.anyPressed()) || this.t > 3.6) app.go(app.scenes.title(), { fade: true });
-  }
-  draw(ctx) {
-    const t = this.t, S = devScale(ctx);
-    // studio ident: the crest rises out of the dark under a spotlight, then the name types on
-    const bg = ctx.createRadialGradient(VIEW_W / 2, VIEW_H * 0.42, 10, VIEW_W / 2, VIEW_H * 0.5, VIEW_W * 0.7);
-    bg.addColorStop(0, '#1e1a08'); bg.addColorStop(0.5, '#0c0b08'); bg.addColorStop(1, '#030303');
-    ctx.fillStyle = bg; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-    const k = Math.min(1, Math.max(0, (t - 0.2) / 0.8)), e = 1 - Math.pow(1 - k, 3);
-    // spotlight cone
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = e;
-    const cone = ctx.createLinearGradient(0, 0, 0, 260);
-    cone.addColorStop(0, 'rgba(255,240,220,0.16)'); cone.addColorStop(1, 'rgba(255,240,220,0)');
-    ctx.fillStyle = cone; ctx.beginPath(); ctx.moveTo(VIEW_W / 2 - 14, 0); ctx.lineTo(VIEW_W / 2 + 14, 0); ctx.lineTo(VIEW_W / 2 + 110, 260); ctx.lineTo(VIEW_W / 2 - 110, 260); ctx.closePath(); ctx.fill();
-    ctx.restore();
-    ctx.globalAlpha = e;
-    drawCrest(ctx, VIEW_W / 2 - 37.5, 58 + (1 - e) * 20, 5);
-    ctx.globalAlpha = 1;
-    if (t > 0.9) {
-      const a = Math.min(1, (t - 0.9) * 2.5);
-      ctx.globalAlpha = a;
-      drawText(ctx, 'STEVOO STUDIOS', VIEW_W / 2, 158, { color: '#ffffff', scale: 3, align: 'center' });
-      drawText(ctx, 'PRESENTS', VIEW_W / 2, 188, { color: '#f2c811', align: 'center' });
-      ctx.globalAlpha = 1;
-    }
-    // progress line
-    const f = Math.min(1, t / 2.6);
-    const w = 180, x = VIEW_W / 2 - w / 2, y = 292;
-    ctx.fillStyle = 'rgba(255,255,255,0.08)'; rrect(ctx, x, y, w, 2, 1); ctx.fill();
-    ctx.save(); ctx.shadowColor = f < 1 ? 'rgba(242,200,17,0.9)' : 'rgba(122,255,154,0.9)'; ctx.shadowBlur = 8 * S;
-    ctx.fillStyle = f < 1 ? '#f2c811' : '#7aff9a'; rrect(ctx, x, y, Math.max(2, w * f), 2, 1); ctx.fill(); ctx.restore();
-    drawText(ctx, f < 1 ? 'LOADING  ' + Math.floor(f * 100) + '%' : 'KICK OFF!', VIEW_W / 2, y + 10, { color: '#b8aec8', align: 'center' });
-    ctx.globalAlpha = 0.5 + Math.sin(t * 4) * 0.3;
-    drawText(ctx, 'PRESS ANY KEY', VIEW_W / 2, y + 26, { color: '#8a7a9a', align: 'center' });
-    ctx.globalAlpha = 1;
-  }
-}
 
 // ---------------------------------------------------------------- title
 class TitleScene {
@@ -102,8 +55,9 @@ class TitleScene {
   draw(ctx) {
     const sh = this.shake > 0 ? Math.round((Math.random() * 2 - 1) * this.shake * 14) : 0;
     ctx.save(); ctx.translate(sh, sh ? Math.round((Math.random() * 2 - 1) * this.shake * 8) : 0);
-    // the poster: red paper, the mob charging in from below, the title slammed on, the line in a black box
-    drawPosterBg(ctx, this.t);
+    // the photo of Råsunda's North Stand (flares, smoke, floodlights), the masked mob and the lads in front of it, the
+    // title slammed on, the line in a black box
+    backdrop.draw(ctx, {});
     const ch = Math.min(1, Math.max(0, this.intro / 1.1));
     drawFirm(ctx, this.t, ch);
     drawPosterTitle(ctx, VIEW_W / 2, 36, this.t, { intro: this.intro });
@@ -293,7 +247,6 @@ class MainMenuScene {
   }
 }
 
-app.scenes.boot = () => new BootScene();
 app.scenes.title = opts => new TitleScene(opts);
 app.scenes.menu = () => new MainMenuScene();
 app.scenes.wardrobe = back => new WardrobeScene(back);

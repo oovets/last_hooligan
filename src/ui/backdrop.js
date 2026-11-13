@@ -516,6 +516,14 @@ export class Backdrop {
     return im && im.complete && im.naturalWidth ? im : null;
   }
 
+  // resolves when the photo has loaded (or failed): the title waits for it during the loading screen (main.js)
+  photoReady() {
+    this.photo();
+    const im = this._photo;
+    if (!im || im.complete) return Promise.resolve();
+    return new Promise(r => { im.addEventListener('load', r, { once: true }); im.addEventListener('error', r, { once: true }); });
+  }
+
   draw(ctx, opts = {}) {
     if (opts === false || opts === true) opts = { lads: opts };
     const im = this.photo();
@@ -528,12 +536,12 @@ export class Backdrop {
       const x = (VIEW_W - w) / 2 + Math.sin(t * 0.031) * (w - VIEW_W) * 0.35, y = (VIEW_H - h) / 2 + Math.cos(t * 0.027) * (h - VIEW_H) * 0.25;
       ctx.save(); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(im, x, y, w, h);
-      // grade: darker top and bottom, a touch of the red flare light breathing
+      // grade: darker top and bottom (neutral black), a touch of warm flare light breathing
       const g = ctx.createLinearGradient(0, 0, 0, VIEW_H);
-      g.addColorStop(0, 'rgba(6,3,12,0.62)'); g.addColorStop(0.35, 'rgba(6,3,12,0.18)'); g.addColorStop(0.7, 'rgba(6,3,12,0.25)'); g.addColorStop(1, 'rgba(6,3,12,0.8)');
+      g.addColorStop(0, 'rgba(5,5,5,0.62)'); g.addColorStop(0.35, 'rgba(5,5,5,0.18)'); g.addColorStop(0.7, 'rgba(5,5,5,0.25)'); g.addColorStop(1, 'rgba(5,5,5,0.8)');
       ctx.fillStyle = g; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
       ctx.globalCompositeOperation = 'lighter';
-      ctx.fillStyle = `rgba(120,20,24,${0.05 + Math.sin(t * 7) * 0.02 + Math.sin(t * 2.3) * 0.02})`; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      ctx.fillStyle = `rgba(110,72,10,${0.05 + Math.sin(t * 7) * 0.02 + Math.sin(t * 2.3) * 0.02})`; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
       ctx.restore();
       // vignette
       const v = ctx.createRadialGradient(VIEW_W / 2, VIEW_H / 2, VIEW_H * 0.35, VIEW_W / 2, VIEW_H / 2, VIEW_W * 0.62);
