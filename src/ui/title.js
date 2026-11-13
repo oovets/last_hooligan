@@ -14,7 +14,7 @@ import { ALL_LEVELS } from '../content/tour/index.js';
 import { buildLook, progressTotals } from '../content/wardrobe.js';
 import { Backdrop, backdrop } from './backdrop.js';
 import { drawLogo, drawCrest, LOGO_LAND_TIMES, LOGO_INTRO_LEN } from './logo.js';
-import { drawPosterBg, drawMob, drawPosterTitle, drawTagline, drawPressQuote } from './poster.js';
+import { drawPosterBg, drawMob, drawPosterTitle, drawTagline } from './poster.js';
 import { attractCycle } from './attract.js';
 import { startNewRun, LevelSelectScene, OptionsScene, HowToPlayScene, CreditsScene } from './menus.js';
 import { WardrobeScene } from './wardrobe_ui.js';
@@ -103,7 +103,6 @@ class TitleScene {
     drawPosterBg(ctx, this.t);
     const ch = Math.min(1, Math.max(0, this.intro / 1.1));
     drawMob(ctx, this.t, { charge: 1 - Math.pow(1 - ch, 3) });
-    if (this.intro > 0.4) drawPressQuote(ctx, this.t);
     drawPosterTitle(ctx, VIEW_W / 2, 36, this.t, { intro: this.intro });
     ctx.restore();
     const ti = this.intro - LOGO_INTRO_LEN;
@@ -111,9 +110,6 @@ class TitleScene {
     if (ti > 0.6) {
       const on = Math.floor(this.t * 2.2) % 2 === 0;
       if (on) drawTagline(ctx, VIEW_W / 2, 296, 'PRESS START', { size: 15 });
-      const top = (save.data.hiscores || [])[0] || { name: '---', score: 0 };
-      const hs = Math.max(top.score, save.data.highScore || 0);
-      drawText(ctx, 'HI-SCORE ' + fmtScore(hs) + '  ' + (hs > top.score ? 'YOU' : top.name), VIEW_W / 2, 326, { color: '#f6f2ec', align: 'center', outline: '#000' });
     }
     drawText(ctx, '(C) 1994 STEVOO STUDIOS', 8, VIEW_H - 10, { color: '#f6d0c8', outline: '#000' });
     drawText(ctx, 'V1.0', VIEW_W - 8, VIEW_H - 10, { color: '#f6d0c8', outline: '#000', align: 'right' });

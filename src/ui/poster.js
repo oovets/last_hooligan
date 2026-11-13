@@ -51,49 +51,52 @@ export function drawPosterBg(ctx, t = 0, opts = {}) {
   if (opts.dim) { ctx.fillStyle = `rgba(8,2,3,${opts.dim})`; ctx.fillRect(0, 0, VIEW_W, VIEW_H); }
 }
 
-// one charging man: black silhouette, h = height in px, feet at (x, fy), phase = run cycle
+// one man charging AT you (front view): head down, shoulders hunched, fists pumping, a knee coming up.
+// h = height in px, feet at (x, fy), phase = his own run cycle (nobody is in step), seed = his build and kit
 function man(ctx, x, fy, h, phase, seed) {
-  const s = Math.sin(phase), c = Math.cos(phase);
-  const lean = 0.06 + rnd(seed) * 0.08;
-  const hipY = fy - h * 0.47, shY = fy - h * 0.8, headY = fy - h * 0.9;
-  const hx = x + lean * h * 0.5, sx = x + lean * h;
+  const s = Math.sin(phase);
+  const W = h * (0.15 + rnd(seed) * 0.07);                 // shoulder half-width: some big lads, some whippets
+  const lean = h * (0.03 + rnd(seed + 1) * 0.04);           // leaning in, head forward and low
+  const sway = s * h * 0.025;
+  const hipY = fy - h * 0.46, shY = fy - h * 0.76, headY = fy - h * 0.84 + lean;
+  const cx = x + sway;
   ctx.fillStyle = INK; ctx.strokeStyle = INK; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  // legs: one striding, one kicking back
-  const leg = (dir) => {
-    const kx = hx + dir * s * h * 0.17, ky = hipY + h * 0.24 - Math.max(0, dir * c) * h * 0.06;
-    const fx = hx + dir * s * h * 0.26 - (dir * s < 0 ? h * 0.06 : 0), fyy = fy - Math.max(0, -dir * s) * h * 0.1;
-    ctx.lineWidth = h * 0.11; ctx.beginPath(); ctx.moveTo(hx, hipY); ctx.lineTo(kx, ky); ctx.lineTo(fx, fyy); ctx.stroke();
-    return [fx, fyy];
-  };
-  const f1 = leg(1), f2 = leg(-1);
-  // torso (a jacket, a bit wider at the shoulders)
+  // legs (front view): one planted, the other knee driving up and forward (foreshortened)
+  const up = s > 0 ? 1 : -1, lift = Math.abs(s);
+  const legW = h * 0.1;
+  ctx.lineWidth = legW;
+  // planted leg
+  const px = cx - up * h * 0.07;
+  ctx.beginPath(); ctx.moveTo(px, hipY); ctx.lineTo(px - up * h * 0.03, fy - h * 0.22); ctx.lineTo(px - up * h * 0.02, fy); ctx.stroke();
+  // driving leg: knee up towards the camera, shin hanging under it
+  const kx = cx + up * h * 0.08, ky = hipY + h * (0.22 - lift * 0.12), fx2 = kx + up * h * 0.02, fy2 = fy - lift * h * 0.14;
+  ctx.lineWidth = legW * (1 + lift * 0.25);
+  ctx.beginPath(); ctx.moveTo(cx + up * h * 0.06, hipY); ctx.lineTo(kx, ky); ctx.lineTo(fx2, fy2); ctx.stroke();
+  // torso: a jacket, broad and hunched
   ctx.beginPath();
-  ctx.moveTo(sx - h * 0.15, shY); ctx.lineTo(sx + h * 0.15, shY);
-  ctx.lineTo(hx + h * 0.1, hipY + h * 0.03); ctx.lineTo(hx - h * 0.1, hipY + h * 0.03); ctx.closePath(); ctx.fill();
-  // arms: pumping, or one fist up / both up
-  const pose = rnd(seed + 3);
+  ctx.moveTo(cx - W, shY + h * 0.04); ctx.quadraticCurveTo(cx, shY - h * 0.05, cx + W, shY + h * 0.04);
+  ctx.lineTo(cx + W * 0.62, hipY + h * 0.04); ctx.lineTo(cx - W * 0.62, hipY + h * 0.04); ctx.closePath(); ctx.fill();
+  // arms: pumping in opposition, bent, fists clenched; some swing a bottle or point the way
+  const kit = rnd(seed + 5);
   ctx.lineWidth = h * 0.085;
-  const arm = (side, up) => {
-    const ax = sx + side * h * 0.13;
-    const ex = ax + side * h * 0.1 + (up ? 0 : -side * s * h * 0.08), ey = up ? shY - h * 0.14 : shY + h * 0.16;
-    const hx2 = up ? ax + side * h * 0.05 : ex + side * h * 0.02 + s * side * h * 0.1, hy2 = up ? shY - h * 0.32 : ey + h * 0.1;
-    ctx.beginPath(); ctx.moveTo(ax, shY + h * 0.02); ctx.lineTo(ex, ey); ctx.lineTo(hx2, hy2); ctx.stroke();
-    ctx.beginPath(); ctx.arc(hx2, hy2, h * 0.05, 0, Math.PI * 2); ctx.fill();   // fist
-  };
-  arm(-1, pose > 0.72); arm(1, pose > 0.45 && pose < 0.72);
-  // head (shaved, a bit forward)
-  ctx.beginPath(); ctx.ellipse(sx + h * 0.02, headY, h * 0.075, h * 0.085, 0, 0, Math.PI * 2); ctx.fill();
-  // the light catching them: white trainers, some white shirts / a face
-  ctx.fillStyle = '#f4f0ea';
-  for (const [fx, fyy] of [f1, f2]) { ctx.beginPath(); ctx.ellipse(fx + h * 0.03, fyy - h * 0.015, h * 0.055, h * 0.025, 0, 0, Math.PI * 2); ctx.fill(); }
-  const shirt = rnd(seed + 7);
-  if (shirt > 0.74) {
-    // light catching one side of the jacket / a white polo under it
-    ctx.globalAlpha = 0.8;
-    ctx.beginPath(); ctx.moveTo(sx + h * 0.02, shY + h * 0.03); ctx.lineTo(sx + h * 0.13, shY + h * 0.02); ctx.lineTo(hx + h * 0.08, hipY - h * 0.03); ctx.lineTo(hx + h * 0.03, hipY - h * 0.03); ctx.closePath(); ctx.fill();
-    ctx.globalAlpha = 1;
+  for (const side of [-1, 1]) {
+    const fwd = side === up ? 1 : 0;                         // the arm opposite the lifted knee comes forward
+    const ax = cx + side * W * 0.92, ay = shY + h * 0.06;
+    const ex = ax + side * h * 0.07, ey = ay + h * (fwd ? 0.1 : 0.17);
+    const hx = fwd ? cx + side * h * 0.08 : ex + side * h * 0.01, hy = fwd ? ay + h * 0.02 : ey + h * 0.12;
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ex, ey); ctx.lineTo(hx, hy); ctx.stroke();
+    ctx.beginPath(); ctx.arc(hx, hy, h * (fwd ? 0.058 : 0.05), 0, Math.PI * 2); ctx.fill();
+    if (fwd && kit > 0.86) { ctx.lineWidth = h * 0.05; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + side * h * 0.05, hy - h * 0.2); ctx.stroke(); ctx.lineWidth = h * 0.085; }   // bottle
   }
-  if (shirt < 0.3) { ctx.globalAlpha = 0.75; ctx.beginPath(); ctx.ellipse(sx + h * 0.045, headY + h * 0.01, h * 0.03, h * 0.05, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
+  // head down, a short neck buried in the collar
+  ctx.beginPath(); ctx.ellipse(cx, headY, h * 0.07, h * 0.08, 0, 0, Math.PI * 2); ctx.fill();
+  // the light catching them: trainers, an open collar / white polo, a bit of face
+  ctx.fillStyle = '#f4f0ea';
+  ctx.beginPath(); ctx.ellipse(px - up * h * 0.02, fy - h * 0.012, h * 0.05, h * 0.022, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(fx2, fy2 - h * 0.01, h * 0.045 * (1 + lift * 0.3), h * 0.024 * (1 + lift * 0.5), 0, 0, Math.PI * 2); ctx.fill();
+  const shirt = rnd(seed + 7);
+  if (shirt > 0.8) { ctx.globalAlpha = 0.8; ctx.beginPath(); ctx.moveTo(cx - h * 0.025, shY + h * 0.02); ctx.lineTo(cx + h * 0.025, shY + h * 0.02); ctx.lineTo(cx, shY + h * 0.08); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1; }
+  if (shirt < 0.35) { ctx.globalAlpha = 0.7; ctx.beginPath(); ctx.ellipse(cx + h * 0.025, headY + h * 0.02, h * 0.035, h * 0.045, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; }
 }
 
 // ink splatter (fixed per seed)
@@ -106,32 +109,35 @@ function splat(ctx, x, y, r, seed) {
   }
 }
 
-const ROWS = [
-  { n: 15, h: 52, fy: 196, spread: 1.0, speed: 6.5 },
-  { n: 13, h: 66, fy: 212, spread: 1.0, speed: 7.0 },
-  { n: 10, h: 84, fy: 232, spread: 1.05, speed: 7.6 },
-];
+// the firm: one dense, ragged clump in depth (z 0 = far, 1 = right on top of you), everybody on his own stride
+const MOB = Array.from({ length: 34 }, (_, i) => {
+  const z = Math.pow(rnd(i * 7.3 + 1), 0.9);
+  const spread = 0.6 + z * 0.65;                            // the front of the charge fans out wider
+  return { z, x: VIEW_W / 2 + (rnd(i * 3.1 + 2) - 0.5) * VIEW_W * spread, seed: i * 17 + 3, speed: 8 + rnd(i * 5.7) * 3, off: rnd(i * 9.9) * 6.28 };
+}).sort((a, b) => a.z - b.z);
 export function drawMob(ctx, t = 0, opts = {}) {
   const charge = opts.charge === undefined ? 1 : opts.charge;
-  const rise = (1 - charge) * 140;
+  const rise = (1 - charge) * 150;
   ctx.save(); ctx.translate(0, rise);
-  // the dark mass behind them and the ground smear
-  ctx.fillStyle = 'rgba(11,7,8,0.9)';
-  ctx.beginPath(); ctx.moveTo(-10, 170); for (let x = 0; x <= VIEW_W + 10; x += 16) ctx.lineTo(x, 166 + Math.sin(x * 0.07 + 1) * 5 + rnd(x) * 6); ctx.lineTo(VIEW_W + 10, 200); ctx.lineTo(-10, 200); ctx.fill();
-  ctx.fillStyle = INK; ctx.fillRect(-10, 226, VIEW_W + 20, 10);
-  for (let i = 0; i < 26; i++) splat(ctx, rnd(i * 9.1) * VIEW_W, 234 + rnd(i * 4.3) * 10, 1.2 + rnd(i * 2.2) * 2.4, i * 13);
-  ROWS.forEach((row, ri) => {
-    for (let i = 0; i < row.n; i++) {
-      const seed = ri * 100 + i;
-      const x = (i + 0.5) / row.n * VIEW_W * row.spread - (row.spread - 1) * VIEW_W / 2 + (rnd(seed) - 0.5) * 22;
-      const h = row.h * (0.9 + rnd(seed + 1) * 0.2);
-      const ph = t * row.speed + rnd(seed + 2) * 6.28;
-      const bob = Math.abs(Math.sin(ph)) * h * 0.04;
-      man(ctx, x, row.fy - bob, h, ph, seed);
-    }
-  });
-  // spray across the crowd
-  for (let i = 0; i < 14; i++) splat(ctx, rnd(i * 3.7 + 50) * VIEW_W, 150 + rnd(i * 6.1 + 50) * 30, 0.8 + rnd(i) * 1.6, i * 31 + 7);
+  // the mass behind them: more of them, coming over the brow
+  ctx.fillStyle = INK;
+  ctx.beginPath(); ctx.moveTo(-10, 196);
+  for (let x = -10; x <= VIEW_W + 10; x += 7) ctx.lineTo(x, 168 - Math.abs(Math.sin(x * 0.11 + 0.7)) * 8 - rnd(Math.floor(x / 7)) * 7 + Math.abs(x - VIEW_W / 2) * 0.03);
+  ctx.lineTo(VIEW_W + 10, 200); ctx.lineTo(-10, 200); ctx.fill();
+  for (let i = 0; i < 40; i++) {   // heads poking up out of the mass
+    const hx = rnd(i * 2.3 + 90) * VIEW_W, hy = 160 + rnd(i * 4.4 + 90) * 10;
+    ctx.beginPath(); ctx.ellipse(hx, hy, 3.2, 3.8, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  // the street under them, splattered
+  ctx.fillRect(-10, 238, VIEW_W + 20, 7);
+  for (let i = 0; i < 30; i++) splat(ctx, rnd(i * 9.1) * VIEW_W, 242 + rnd(i * 4.3) * 10, 1 + rnd(i * 2.2) * 2.6, i * 13);
+  for (const m of MOB) {
+    const h = (40 + m.z * 96) * (0.88 + rnd(m.seed + 11) * 0.24), fy = 184 + m.z * 60;
+    const ph = t * m.speed + m.off;
+    man(ctx, m.x, fy - Math.abs(Math.sin(ph)) * h * 0.035, h, ph, m.seed);
+  }
+  // spray kicked up across them
+  for (let i = 0; i < 12; i++) splat(ctx, rnd(i * 3.7 + 50) * VIEW_W, 140 + rnd(i * 6.1 + 50) * 40, 0.7 + rnd(i) * 1.4, i * 31 + 7);
   ctx.restore();
 }
 
