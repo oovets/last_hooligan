@@ -16,7 +16,7 @@ import { casualLook } from '../content/enemies.js';
 import { save } from '../save.js';
 import { r3d } from '../render3d/index.js';
 
-const RED = '#c8102e', WHITE = '#f4f1e8';
+const RED = '#141416', WHITE = '#f2c811';   // the home terrace in the game's black and yellow (names historic)
 const HORIZON = 128;                     // top of the far stand roof
 const STAND_TOP = 136, STAND_BOT = 198, BOARDS = 199, PITCH_TOP = 211, PITCH_BOT = 296;
 const TOWERS = [[64, 1], [VIEW_W - 64, -1]];
@@ -540,7 +540,7 @@ export class Backdrop {
       v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.55)');
       ctx.fillStyle = v; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
       if (opts.lads) this.drawLads(ctx, t);
-      if (opts.dim) { ctx.fillStyle = `rgba(4,2,10,${opts.dim})`; ctx.fillRect(0, 0, VIEW_W, VIEW_H); }
+      if (opts.dim) { ctx.fillStyle = `rgba(6,6,8,${opts.dim})`; ctx.fillRect(0, 0, VIEW_W, VIEW_H); }
       return;
     }
     const S = devScale(ctx), C = this.cache(S), t = this.t;
@@ -561,7 +561,7 @@ export class Backdrop {
     const wave = (t * 110) % (VIEW_W + 240) - 120;
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     const wg = ctx.createLinearGradient(wave - 40, 0, wave + 40, 0);
-    wg.addColorStop(0, 'rgba(255,60,80,0)'); wg.addColorStop(0.5, 'rgba(255,90,100,0.16)'); wg.addColorStop(1, 'rgba(255,60,80,0)');
+    wg.addColorStop(0, 'rgba(255,214,60,0)'); wg.addColorStop(0.5, 'rgba(255,90,100,0.16)'); wg.addColorStop(1, 'rgba(255,214,60,0)');
     ctx.fillStyle = wg; ctx.fillRect(wave - 40, STAND_TOP, 80, STAND_BOT - STAND_TOP);
     for (const f of this.flashes) { ctx.globalAlpha = 1 - f.life / 0.12; ctx.drawImage(C.sparkGlow.c, f.x - 4, f.y - 4, 8, 8); }
     ctx.restore();
@@ -633,7 +633,7 @@ export class Backdrop {
     ctx.fillStyle = tg; ctx.fillRect(0, 270, VIEW_W, VIEW_H - 270);
     if (opts.lads) this.drawLads(ctx, t);
     if (opts.dim) {
-      ctx.fillStyle = `rgba(4,2,10,${opts.dim})`; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      ctx.fillStyle = `rgba(6,6,8,${opts.dim})`; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
     }
   }
 
@@ -680,7 +680,7 @@ export class Backdrop {
     }
     // anchor emblem
     const cx = f.x + 1 + f.w / 2, cy = f.y + f.h / 2 + off(f.w / 2);
-    ctx.strokeStyle = '#120c14'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+    ctx.strokeStyle = '#121214'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(cx, cy - 7); ctx.lineTo(cx, cy + 6); ctx.moveTo(cx - 3.5, cy - 4); ctx.lineTo(cx + 3.5, cy - 4);
     ctx.moveTo(cx - 6, cy + 2); ctx.quadraticCurveTo(cx - 5, cy + 7, cx, cy + 6.5); ctx.quadraticCurveTo(cx + 5, cy + 7, cx + 6, cy + 2); ctx.stroke();
     ctx.beginPath(); ctx.arc(cx, cy - 8.2, 1.4, 0, Math.PI * 2); ctx.stroke();

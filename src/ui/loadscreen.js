@@ -15,7 +15,7 @@ export function drawLoading(ctx, t, k) {
   const s = S(ctx);
   // background: deep night with a red under-glow
   const bg = ctx.createRadialGradient(VIEW_W / 2, VIEW_H * 0.62, 10, VIEW_W / 2, VIEW_H * 0.55, VIEW_W * 0.75);
-  bg.addColorStop(0, '#2c0c1e'); bg.addColorStop(0.45, '#120818'); bg.addColorStop(1, '#040308');
+  bg.addColorStop(0, '#221c08'); bg.addColorStop(0.45, '#0e0d0a'); bg.addColorStop(1, '#040404');
   ctx.fillStyle = bg; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
   // two slow floodlight beams
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -35,13 +35,13 @@ export function drawLoading(ctx, t, k) {
   let px = sizeForCap(FONT.ui, 700, 7);
   ctx.font = `700 ${px.toFixed(2)}px ${FONT.ui}`;
   if ('letterSpacing' in ctx) ctx.letterSpacing = '3px';
-  ctx.fillStyle = '#cfc6dc'; ctx.fillText('THE LAST', VIEW_W / 2 + 1.5, cy - 30);
+  ctx.fillStyle = '#d8d4c8'; ctx.fillText('THE LAST', VIEW_W / 2 + 1.5, cy - 30);
   px = sizeForCap(FONT.display, 400, 30);
   ctx.font = `400 ${px.toFixed(2)}px ${FONT.display}`;
   if ('letterSpacing' in ctx) ctx.letterSpacing = '1px';
   const g = ctx.createLinearGradient(0, cy - 30, 0, cy);
-  g.addColorStop(0, '#ffd0c4'); g.addColorStop(0.48, '#ff4a3a'); g.addColorStop(0.5, '#7a0618'); g.addColorStop(0.56, '#e81c34'); g.addColorStop(1, '#8a0418');
-  ctx.shadowColor = 'rgba(232,28,52,0.55)'; ctx.shadowBlur = 24 * s;
+  g.addColorStop(0, '#fff6c8'); g.addColorStop(0.48, '#ffd84a'); g.addColorStop(0.5, '#4a3800'); g.addColorStop(0.56, '#f2c811'); g.addColorStop(1, '#a07800');
+  ctx.shadowColor = 'rgba(242,200,17,0.45)'; ctx.shadowBlur = 24 * s;
   ctx.fillStyle = g; ctx.fillText('HOOLIGAN', VIEW_W / 2, cy);
   ctx.restore();
   // progress bar
@@ -51,9 +51,9 @@ export function drawLoading(ctx, t, k) {
   ctx.save();
   rr(ctx, x, y, w, h, h / 2); ctx.fillStyle = 'rgba(255,255,255,0.08)'; ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 0.5; ctx.stroke();
-  ctx.shadowColor = 'rgba(255,40,70,0.9)'; ctx.shadowBlur = 12 * s;
+  ctx.shadowColor = 'rgba(242,200,17,0.8)'; ctx.shadowBlur = 12 * s;
   const bg2 = ctx.createLinearGradient(x, 0, x + w, 0);
-  bg2.addColorStop(0, '#8a0820'); bg2.addColorStop(1, '#ff3a50');
+  bg2.addColorStop(0, '#8a6a00'); bg2.addColorStop(1, '#f2c811');
   rr(ctx, x, y, Math.max(h, w * f), h, h / 2); ctx.fillStyle = bg2; ctx.fill();
   ctx.shadowColor = 'transparent';
   // travelling highlight
@@ -66,7 +66,7 @@ export function drawLoading(ctx, t, k) {
   const cpx = sizeForCap(FONT.ui, 600, 6);
   ctx.font = `600 ${cpx.toFixed(2)}px ${FONT.ui}`;
   if ('letterSpacing' in ctx) ctx.letterSpacing = '2.5px';
-  ctx.fillStyle = `rgba(220,210,232,${0.55 + Math.sin(t * 3) * 0.25})`;
+  ctx.fillStyle = `rgba(226,222,210,${0.55 + Math.sin(t * 3) * 0.25})`;
   ctx.fillText('LOADING  ' + Math.round(k * 100) + '%', VIEW_W / 2, y + 20);
   ctx.restore();
 }

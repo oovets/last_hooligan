@@ -14,19 +14,19 @@ function floorColor(id) {
   const s = String(id).toLowerCase();
   if (s.includes('water')) return '#1c3e72';
   if (s.includes('grass') || s.includes('pitch')) return '#1f4a28';
-  if (s.includes('road') || s.includes('asphalt') || s.includes('zebra')) return '#262236';
-  if (s.includes('rail') || s.includes('platform')) return '#3a3040';
+  if (s.includes('road') || s.includes('asphalt') || s.includes('zebra')) return '#262628';
+  if (s.includes('rail') || s.includes('platform')) return '#36342f';
   if (s.includes('wood') || s.includes('carpet')) return '#3e2a26';
-  if (s.includes('terrace')) return '#34303e';
-  return '#302c40';
+  if (s.includes('terrace')) return '#34332f';
+  return '#2e2e30';
 }
 function wallColor(w) {
   const s = String(w.style).toLowerCase();
   if (w.fake) return null; // secret walls look like floor on the map... until found
   if (s.includes('hedge') || s.includes('tree')) return w.h > 1.5 ? '#3a6a3a' : '#2e5a30';
-  if (w.h <= 1.5) return '#6a5a7e';
-  if (w.h <= 3) return '#9a8ab0';
-  return '#c8bcd8';
+  if (w.h <= 1.5) return '#6a675f';
+  if (w.h <= 3) return '#9a968c';
+  return '#c8c4b8';
 }
 
 export function mapImage(map, key) {
@@ -56,7 +56,7 @@ export function mapImage(map, key) {
     const mx = (tx - ty) * SC + H * SC, my = tx + ty + 2;
     const lift = w.h >= 2.5 ? 1 : 0;
     g.fillStyle = col; g.fillRect(mx, my - lift, SC * 2, 1);
-    if (lift) { g.fillStyle = '#4a3e5a'; g.fillRect(mx, my, SC * 2, 1); }
+    if (lift) { g.fillStyle = '#4a4842'; g.fillRect(mx, my, SC * 2, 1); }
   }
   const out = { canvas: c, W, H, ox: H * SC + SC, oy: 1 };
   if (key) baseCache.set(key, out);
@@ -199,7 +199,7 @@ export class Minimap {
 // A clean isometric picture of the level, drawn at the screen's real resolution (not the 1px-per-row minimap blown
 // up): floor tiles as diamonds, walls as raised blocks with a lit top and two shaded sides, painter-sorted.
 const previewCache = new Map();
-const PREVIEW_FLOOR = { water: '#2a5a9a', grass: '#2f6a38', road: '#34304a', rail: '#4a3e54', wood: '#5a3e34', terrace: '#46405a', base: '#3e3a54' };
+const PREVIEW_FLOOR = { water: '#2a5a9a', grass: '#2f6a38', road: '#2e2e32', rail: '#3e3c38', wood: '#5a3e34', terrace: '#44423c', base: '#3a3a3e' };   // neutral greys (black and yellow UI)
 function previewFloor(id) {
   const s = String(id).toLowerCase();
   if (s.includes('water')) return PREVIEW_FLOOR.water;
@@ -213,9 +213,9 @@ function previewFloor(id) {
 function previewWall(w) {
   const s = String(w.style).toLowerCase();
   if (s.includes('hedge') || s.includes('tree')) return ['#4f8a4a', '#36643a', '#284c2c'];
-  if (w.h <= 1.5) return ['#8a7aa4', '#5e5276', '#463c5a'];
-  if (w.h <= 3) return ['#b4a6cc', '#7c6e98', '#5a4e74'];
-  return ['#dcd2ec', '#9a8cb6', '#6e6290'];
+  if (w.h <= 1.5) return ['#9a968c', '#6a675f', '#4e4c46'];
+  if (w.h <= 3) return ['#c4c0b4', '#8a867a', '#64615a'];
+  return ['#f2c811', '#a88a0c', '#76600a'];   // the tallest walls in yellow
 }
 export function levelPreview(level, w, h, S = 2) {
   const key = level.id + '|' + w + 'x' + h + '@' + S;

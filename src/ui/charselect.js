@@ -138,8 +138,8 @@ export class CharSelectScene {
     cone.addColorStop(0, 'rgba(255,240,215,0.16)'); cone.addColorStop(1, 'rgba(255,240,215,0.02)');
     ctx.fillStyle = cone; ctx.beginPath(); ctx.moveTo(129, 40); ctx.lineTo(149, 40); ctx.lineTo(205, 262); ctx.lineTo(73, 262); ctx.closePath(); ctx.fill();
     ctx.restore();
-    ctx.save(); ctx.shadowColor = 'rgba(255,40,70,0.9)'; ctx.shadowBlur = 8 * devScale(ctx);
-    ctx.strokeStyle = 'rgba(255,74,94,0.9)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(139, 262, 50, 8, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    ctx.save(); ctx.shadowColor = 'rgba(242,200,17,0.9)'; ctx.shadowBlur = 8 * devScale(ctx);
+    ctx.strokeStyle = 'rgba(255,214,60,0.9)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(139, 262, 50, 8, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
     const di = Math.floor(this.t / 2.2) % 3;
     const facing = [DIRS[0], DIRS[1], DIRS[7]][di];
     const pickBounce = this.picked >= 0 ? Math.sin(Math.min(1, this.pickT * 3) * Math.PI) * 8 : 0;
@@ -149,7 +149,7 @@ export class CharSelectScene {
 
     // ---- info panel
     const px = 278, pw = VIEW_W - px - 14;
-    frame(ctx, px, 38, pw, 252, { title: unlocked ? 'PLAYER PROFILE' : 'LOCKED', titleBg: unlocked ? C.red : '#3a2e44' });
+    frame(ctx, px, 38, pw, 252, { title: unlocked ? 'PLAYER PROFILE' : 'LOCKED', titleBg: unlocked ? C.red : '#3a3a40' });
     drawText(ctx, c.name, px + 10, 52, { color: unlocked ? C.gold : C.off, scale: 2, outline: '#000' });
     drawText(ctx, c.tagline, px + 10, 72, { color: C.text });
     const st = c.stats || {};
@@ -168,7 +168,7 @@ export class CharSelectScene {
     const stage = r3d.menu, busts = [];
     CHARACTERS.forEach((ch, i) => {
       const x = x0 + i * (cw + 6), sel = i === this.sel;
-      frame(ctx, x, y0, cw, 36, { accent: sel ? C.gold : null, fill: sel ? 'rgba(80,10,24,0.95)' : 'rgba(14,9,22,0.9)', rivets: false, edge: sel ? '#ffd23a' : undefined });
+      frame(ctx, x, y0, cw, 36, { accent: sel ? C.gold : null, fill: sel ? 'rgba(74,62,6,0.95)' : 'rgba(12,12,14,0.9)', rivets: false, edge: sel ? '#ffd23a' : undefined });
       busts.push({ look: this.looks[i], x: x + cw / 2, feet: y0 + 4 + 118 * (this.looks[i].height || 1), h: 118 * (this.looks[i].height || 1), anim: 'idle', phase: i * 0.7, yaw: sel ? 0.25 + Math.sin(this.t * 2) * 0.2 : 0.35, dark: !isCharacterUnlocked(ch, save.data) });
     });
     let drew3d = false;
@@ -186,7 +186,7 @@ export class CharSelectScene {
         return;
       }
       const x = x0 + i * (cw + 6), sel = i === this.sel, ok = isCharacterUnlocked(ch, save.data);
-      frame(ctx, x, y0, cw, 36, { accent: sel ? C.gold : null, fill: sel ? 'rgba(80,10,24,0.95)' : 'rgba(14,9,22,0.9)', rivets: false });
+      frame(ctx, x, y0, cw, 36, { accent: sel ? C.gold : null, fill: sel ? 'rgba(74,62,6,0.95)' : 'rgba(12,12,14,0.9)', rivets: false });
       if (ok) drawPortrait(ctx, this.looks[i], x + 4, y0 + 3, 32, { face: sel ? 'shout' : 'angry' });
       else { ctx.fillStyle = '#141018'; ctx.fillRect(x + 4, y0 + 3, 32, 30); lockIcon(ctx, x + 16, y0 + 12, 1); }
       if (sel && blink(this.t, 3)) { ctx.fillStyle = C.gold; ctx.fillRect(x - 2, y0 - 4, cw + 4, 2); }

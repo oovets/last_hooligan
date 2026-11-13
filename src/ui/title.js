@@ -41,7 +41,7 @@ class BootScene {
     const t = this.t, S = devScale(ctx);
     // studio ident: the crest rises out of the dark under a spotlight, then the name types on
     const bg = ctx.createRadialGradient(VIEW_W / 2, VIEW_H * 0.42, 10, VIEW_W / 2, VIEW_H * 0.5, VIEW_W * 0.7);
-    bg.addColorStop(0, '#24101e'); bg.addColorStop(0.5, '#0c0712'); bg.addColorStop(1, '#030206');
+    bg.addColorStop(0, '#1e1a08'); bg.addColorStop(0.5, '#0c0b08'); bg.addColorStop(1, '#030303');
     ctx.fillStyle = bg; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
     const k = Math.min(1, Math.max(0, (t - 0.2) / 0.8)), e = 1 - Math.pow(1 - k, 3);
     // spotlight cone
@@ -57,15 +57,15 @@ class BootScene {
       const a = Math.min(1, (t - 0.9) * 2.5);
       ctx.globalAlpha = a;
       drawText(ctx, 'STEVOO STUDIOS', VIEW_W / 2, 158, { color: '#ffffff', scale: 3, align: 'center' });
-      drawText(ctx, 'PRESENTS', VIEW_W / 2, 188, { color: '#ff5a6e', align: 'center' });
+      drawText(ctx, 'PRESENTS', VIEW_W / 2, 188, { color: '#f2c811', align: 'center' });
       ctx.globalAlpha = 1;
     }
     // progress line
     const f = Math.min(1, t / 2.6);
     const w = 180, x = VIEW_W / 2 - w / 2, y = 292;
     ctx.fillStyle = 'rgba(255,255,255,0.08)'; rrect(ctx, x, y, w, 2, 1); ctx.fill();
-    ctx.save(); ctx.shadowColor = f < 1 ? 'rgba(255,40,70,0.9)' : 'rgba(122,255,154,0.9)'; ctx.shadowBlur = 8 * S;
-    ctx.fillStyle = f < 1 ? '#ff3a50' : '#7aff9a'; rrect(ctx, x, y, Math.max(2, w * f), 2, 1); ctx.fill(); ctx.restore();
+    ctx.save(); ctx.shadowColor = f < 1 ? 'rgba(242,200,17,0.9)' : 'rgba(122,255,154,0.9)'; ctx.shadowBlur = 8 * S;
+    ctx.fillStyle = f < 1 ? '#f2c811' : '#7aff9a'; rrect(ctx, x, y, Math.max(2, w * f), 2, 1); ctx.fill(); ctx.restore();
     drawText(ctx, f < 1 ? 'LOADING  ' + Math.floor(f * 100) + '%' : 'KICK OFF!', VIEW_W / 2, y + 10, { color: '#b8aec8', align: 'center' });
     ctx.globalAlpha = 0.5 + Math.sin(t * 4) * 0.3;
     drawText(ctx, 'PRESS ANY KEY', VIEW_W / 2, y + 26, { color: '#8a7a9a', align: 'center' });
@@ -234,12 +234,12 @@ class MainMenuScene {
     drawPosterTitle(ctx, VIEW_W / 2, 8, this.t, { small: true });
     // menu panel
     const mx = 46, my = 92, mw = 250;
-    frame(ctx, mx, my, mw, 150, { title: 'MAIN MENU', fill: 'rgba(14,9,22,0.9)' });
+    frame(ctx, mx, my, mw, 150, { title: 'MAIN MENU', fill: 'rgba(12,12,14,0.9)' });
     this.menu.draw(ctx, mx + 20, my + 14, { w: mw - 40, rowH: 19 });
     // player card
     const d = save.data;
     const cx = 344, cy = 92, cw = 250, ch = 196;
-    frame(ctx, cx, cy, cw, ch, { title: 'YOUR LAD', fill: 'rgba(14,9,22,0.9)', titleBg: '#1f4fb4' });
+    frame(ctx, cx, cy, cw, ch, { title: 'YOUR LAD', fill: 'rgba(12,12,14,0.9)', titleBg: '#141416', titleColor: '#f2c811' });   // black tab, yellow letters
     this.drawLad(ctx, cx + 4, cy + 4, 122, ch - 8);
     const T = progressTotals(d), tt = d.totals || {};
     const sx = cx + 134, rx = cx + cw - 12;
@@ -276,12 +276,12 @@ class MainMenuScene {
     cone.addColorStop(0, 'rgba(255,240,215,0.20)'); cone.addColorStop(1, 'rgba(255,240,215,0.03)');
     ctx.fillStyle = cone; ctx.beginPath(); ctx.moveTo(mx - 10, y); ctx.lineTo(mx + 10, y); ctx.lineTo(mx + 46, fy); ctx.lineTo(mx - 46, fy); ctx.closePath(); ctx.fill();
     ctx.globalCompositeOperation = 'source-over';
-    // plinth: glowing club-red ring
+    // plinth: glowing yellow ring
     const pg = ctx.createRadialGradient(mx, fy, 2, mx, fy, 44);
-    pg.addColorStop(0, 'rgba(255,60,80,0.55)'); pg.addColorStop(0.6, 'rgba(200,16,46,0.25)'); pg.addColorStop(1, 'rgba(200,16,46,0)');
+    pg.addColorStop(0, 'rgba(255,214,60,0.55)'); pg.addColorStop(0.6, 'rgba(242,200,17,0.25)'); pg.addColorStop(1, 'rgba(242,200,17,0)');
     ctx.fillStyle = pg; ctx.beginPath(); ctx.ellipse(mx, fy, 46, 10, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.shadowColor = 'rgba(255,40,70,0.9)'; ctx.shadowBlur = 8 * S;
-    ctx.strokeStyle = '#ff4a5e'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(mx, fy, 36, 7, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.shadowColor = 'rgba(242,200,17,0.9)'; ctx.shadowBlur = 8 * S;
+    ctx.strokeStyle = '#ffd84a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(mx, fy, 36, 7, 0, 0, Math.PI * 2); ctx.stroke();
     ctx.shadowBlur = 0;
     ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.beginPath(); ctx.ellipse(mx, fy, 18, 3.5, 0, 0, Math.PI * 2); ctx.fill();
     const look = this.look || (this.look = buildLook(save.data.outfit));

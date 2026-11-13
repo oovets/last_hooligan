@@ -137,10 +137,10 @@ export class HUD {
     const cx = VIEW_W / 2;
     const sc = fmtScore(this.scoreShown);
     const rising = game.score - this.scoreShown > 1;
-    drawText(ctx, '1UP', cx - 68, 7, { color: Math.floor(world.time * 2) % 2 ? '#ff4a5a' : '#a01020', outline: '#000' });
+    drawText(ctx, '1UP', cx - 68, 7, { color: Math.floor(world.time * 2) % 2 ? '#f2c811' : '#8a6a00', outline: '#000' });
     drawText(ctx, sc, cx + 4, 6, { color: rising ? '#ffffff' : GOLD, scale: 2, align: 'center', outline: '#000' });
     const hi = Math.max(save.topScore ? save.topScore() : (save.data.highScore || 0), game.score);
-    drawText(ctx, 'HI ' + fmtScore(hi), cx + 4, 23, { color: '#ff8aa0', align: 'center', outline: '#000' });
+    drawText(ctx, 'HI ' + fmtScore(hi), cx + 4, 23, { color: '#e8d48a', align: 'center', outline: '#000' });
     // cash
     const cs = '£' + Math.round(this.cashShown);
     const cw = measureText(cs) + 10;
@@ -181,7 +181,7 @@ export class HUD {
     ctx.fillStyle = '#000'; ctx.fillRect(x + w - 27, y + 3, 24, 24);
     ctx.fillStyle = '#101a3a'; ctx.fillRect(x + w - 26, y + 4, 22, 22);
     drawPortrait(ctx, e.look, x + w - 26, y + 4, 22, { face: e.hp <= 0 ? 'ko' : 'angry' });
-    drawText(ctx, e.name || 'BLOKE', x + w - 31, y + 5, { color: '#ffb0b0', align: 'right', shadow: '#000' });
+    drawText(ctx, e.name || 'BLOKE', x + w - 31, y + 5, { color: '#f2c811', align: 'right', shadow: '#000' });
     bar(ctx, x + 6, y + 16, w - 40, 7, ef, '#ff3a6a', '#ffb0c8', this.enemyGhost, 8);
     if (e.hp <= 0) drawText(ctx, 'K.O.', x + 8, y + 5, { color: GOLD, shadow: '#000' });
     ctx.globalAlpha = 1;
@@ -209,9 +209,9 @@ export class HUD {
     if (word) {
       const wy = y + (s + pop) * 7 + 3;
       const ww = measureText(word) + 8;
-      ctx.fillStyle = 'rgba(200,16,46,0.85)'; ctx.fillRect(x - ww + 2, wy - 2, ww, 11);
-      ctx.fillStyle = '#ffffff'; ctx.fillRect(x - ww + 2, wy - 2, ww, 1);
-      drawText(ctx, word, x - 2, wy, { color: '#ffffff', align: 'right' });
+      ctx.fillStyle = 'rgba(242,200,17,0.85)'; ctx.fillRect(x - ww + 2, wy - 2, ww, 11);
+      ctx.fillStyle = '#141416'; ctx.fillRect(x - ww + 2, wy - 2, ww, 1);
+      drawText(ctx, word, x - 2, wy, { color: '#141416', align: 'right' });   // black on the yellow label
     }
     // combo timer pip
     if (world.combo.count >= 2) { const tw = 40 * Math.max(0, Math.min(1, world.combo.t / 1.5)); ctx.fillStyle = '#000'; ctx.fillRect(x - 41, y - 6, 42, 3); ctx.fillStyle = GOLD; ctx.fillRect(x - 40, y - 5, Math.round(tw), 1); }
@@ -258,7 +258,7 @@ export class HUD {
       if (p.weapon.def.icon) p.weapon.def.icon(ctx, wx + 12, wy + 20, world.time);
       const max = (p.weapon.def.weapon && p.weapon.def.weapon.durability) || p.weapon.durability || 1;
       const n = Math.min(10, max), cur = Math.ceil(p.weapon.durability / max * n);
-      for (let i = 0; i < n; i++) { ctx.fillStyle = i < cur ? (cur <= 2 ? '#ff4a3a' : GOLD) : '#3a2e44'; ctx.fillRect(wx + 1 + i * Math.floor(22 / n), wy + 25, Math.max(1, Math.floor(22 / n) - 1), 2); }
+      for (let i = 0; i < n; i++) { ctx.fillStyle = i < cur ? (cur <= 2 ? '#ff4a3a' : GOLD) : '#3a3a40'; ctx.fillRect(wx + 1 + i * Math.floor(22 / n), wy + 25, Math.max(1, Math.floor(22 / n) - 1), 2); }
     } else {
       // fist icon
       ctx.fillStyle = '#e2a97a'; ctx.fillRect(wx + 7, wy + 9, 10, 8); ctx.fillStyle = '#b07850';
@@ -283,7 +283,7 @@ export class HUD {
     scarfIcon(ctx, cx, y + 5, true);
     drawText(ctx, `${ns}/${tot}`, cx + 12, y + 5, { color: ns >= tot && tot ? GOLD : '#fff' });
     badgeIcon(ctx, cx + 40, y + 4, !!world.record.badge);
-    keyIcon(ctx, cx, y + 18, 1, game.keys.size ? '#e8c040' : '#3a2e44');
+    keyIcon(ctx, cx, y + 18, 1, game.keys.size ? '#e8c040' : '#3a3a40');
     drawText(ctx, 'X' + game.keys.size, cx + 12, y + 18, { color: game.keys.size ? '#e8c040' : '#5a4a6a' });
     const secretsFound = (world.secrets || []).filter(s => s.found).length, secretsTot = (world.secrets || []).length;
     if (secretsTot) drawText(ctx, `?${secretsFound}/${secretsTot}`, cx + 38, y + 18, { color: secretsFound >= secretsTot ? '#7affe0' : '#8a7a9a' });
@@ -294,7 +294,7 @@ export class HUD {
     const mm = this.getMinimap(world);
     if (!mm) return;
     const w = 116, h = 66, x = VIEW_W - w - 6, y = VIEW_H - h - 6;
-    frame(ctx, x, y, w, h, { fill: 'rgba(6,4,12,0.82)' });
+    frame(ctx, x, y, w, h, { fill: 'rgba(8,8,10,0.82)' });
     mm.draw(ctx, x + 2, y + 2, w - 4, h - 4, { zoom: 2 });
     // compass hint: N-ish (world -y) arrow is up-right on screen
     drawText(ctx, 'MAP', x + 4, y + 3, { color: '#6a5a7a' });
@@ -380,16 +380,16 @@ export class HUD {
     ctx.fillStyle = '#ece6d4'; ctx.fillRect(x, y, w, h);
     for (let i = 0; i < 120; i++) { const gx = (i * 73) % w, gy = (i * 37) % h; ctx.fillStyle = 'rgba(60,50,40,0.15)'; ctx.fillRect(x + gx, y + gy, 1, 1); }
     // masthead
-    ctx.fillStyle = '#c8102e'; ctx.fillRect(x, y, w, 26);
-    ctx.fillStyle = '#120c14'; ctx.fillRect(x, y + 26, w, 2);
-    drawText(ctx, 'ANCHORS AWEIGH!', x + 8, y + 4, { color: '#f4f1e8', scale: 2 });
-    drawText(ctx, 'ISSUE ' + (((r.title || '').length * 7) % 40 + 3) + '  -  20P', x + w - 8, y + 4, { color: '#ffd0d0', align: 'right' });
-    drawText(ctx, 'THE UNOFFICIAL NORDHAMN FANZINE', x + w - 8, y + 15, { color: '#ffd0d0', align: 'right' });
+    ctx.fillStyle = '#141416'; ctx.fillRect(x, y, w, 26);   // black masthead
+    ctx.fillStyle = '#121214'; ctx.fillRect(x, y + 26, w, 2);
+    drawText(ctx, 'ANCHORS ARMY!', x + 8, y + 4, { color: '#f2c811', scale: 2 });   // (-> BLACK ARMY!: content/rivals.js)
+    drawText(ctx, 'ISSUE ' + (((r.title || '').length * 7) % 40 + 3) + '  -  20P', x + w - 8, y + 4, { color: '#f2c811', align: 'right' });
+    drawText(ctx, 'THE UNOFFICIAL NORDHAMN FANZINE', x + w - 8, y + 15, { color: '#f2c811', align: 'right' });
     // staples
     ctx.fillStyle = '#9a98a0'; ctx.fillRect(x + 2, y + 40, 1, 8); ctx.fillRect(x + 2, y + h - 20, 1, 8);
-    drawText(ctx, r.title || 'FANZINE', x + 16, y + 36, { color: '#c8102e' });
-    ctx.fillStyle = '#c8102e'; ctx.fillRect(x + 16, y + 45, measureText(r.title || 'FANZINE'), 1);
+    drawText(ctx, r.title || 'FANZINE', x + 16, y + 36, { color: '#141416' });
+    ctx.fillStyle = '#141416'; ctx.fillRect(x + 16, y + 45, measureText(r.title || 'FANZINE'), 1);
     lines.forEach((l, i) => { if (52 + i * 11 < h - 18) drawText(ctx, l, x + 16, y + 52 + i * 11, { color: '#1a1416' }); });
-    if (Math.floor((r.t || 0) * 2) % 2 === 0) drawText(ctx, 'PRESS ' + keyName('use') + ' TO CLOSE', x + w / 2, y + h - 13, { color: '#c8102e', align: 'center' });
+    if (Math.floor((r.t || 0) * 2) % 2 === 0) drawText(ctx, 'PRESS ' + keyName('use') + ' TO CLOSE', x + w / 2, y + h - 13, { color: '#141416', align: 'center' });
   }
 }

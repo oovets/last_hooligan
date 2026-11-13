@@ -117,8 +117,8 @@ export class WardrobeScene {
       const pg = ctx.createLinearGradient(0, py - 8, 0, py + 12);
       pg.addColorStop(0, '#3a2a46'); pg.addColorStop(1, '#0a0610');
       ctx.fillStyle = pg; ctx.beginPath(); ctx.ellipse(px, py + 3, 62, 11, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.save(); ctx.shadowColor = 'rgba(255,40,70,0.9)'; ctx.shadowBlur = 10 * devScale(ctx);
-      ctx.strokeStyle = '#ff4a5e'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(px, py, 58, 9, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+      ctx.save(); ctx.shadowColor = 'rgba(242,200,17,0.9)'; ctx.shadowBlur = 10 * devScale(ctx);
+      ctx.strokeStyle = '#ffd84a'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(px, py, 58, 9, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
       ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.ellipse(px, py, 24, 4, 0, 0, Math.PI * 2); ctx.fill();
     }
     const preview = this.opt.sets ? { ...d.outfit, ...this.opt.sets } : { ...d.outfit, [this.cat]: this.opt.id };
@@ -135,15 +135,15 @@ export class WardrobeScene {
     const tabW = pw / this.cats.length;
     this.cats.forEach((c, i) => {
       const x = Math.round(px + i * tabW), sel = i === this.ci;
-      ctx.save(); if (sel) { ctx.shadowColor = 'rgba(232,24,56,0.7)'; ctx.shadowBlur = 8 * devScale(ctx); }
-      ctx.fillStyle = sel ? C.red : 'rgba(30,20,44,0.9)'; rrect(ctx, x, 43, Math.ceil(tabW) - 2, 14, 3.5); ctx.fill(); ctx.restore();
+      ctx.save(); if (sel) { ctx.shadowColor = 'rgba(242,200,17,0.7)'; ctx.shadowBlur = 8 * devScale(ctx); }
+      ctx.fillStyle = sel ? C.red : 'rgba(34,34,38,0.9)'; rrect(ctx, x, 43, Math.ceil(tabW) - 2, 14, 3.5); ctx.fill(); ctx.restore();
       const short = TABS[c] || (CATEGORY_NAMES[c] || c.toUpperCase()).slice(0, 5);
-      drawText(ctx, short, x + tabW / 2 - 1, 47, { color: sel ? '#fff' : '#8a7a9a', align: 'center' });
+      drawText(ctx, short, x + tabW / 2 - 1, 47, { color: sel ? '#141416' : '#8e8b82', align: 'center' });
       if (this.list(c).some(o => this.isNew(c, o))) { ctx.fillStyle = C.gold; ctx.fillRect(x + Math.ceil(tabW) - 5, 45, 2, 2); }
     });
     // ---- item list
     const ly = 62, lh = 196;
-    frame(ctx, px, ly, pw, lh, { fill: 'rgba(12,8,22,0.92)' });
+    frame(ctx, px, ly, pw, lh, { fill: 'rgba(12,12,14,0.92)' });
     drawText(ctx, '< ' + (CATEGORY_NAMES[this.cat] || this.cat).toUpperCase() + ' >', px + pw / 2, ly + 6, { color: C.gold, align: 'center', outline: '#000' });
     const L = this.list(this.cat), rows = 10, rowH = 17;
     const sel = this.sel[this.cat];
@@ -155,11 +155,11 @@ export class WardrobeScene {
       const y = ly + 20 + r * rowH;
       const isSel = i === sel;
       const unl = isUnlocked(o, d), owned = isOwned(this.cat, o, d), wearing = this.wearing(this.cat, o);
-      if (isSel) { const g = ctx.createLinearGradient(px + 4, 0, px + pw - 4, 0); g.addColorStop(0, `rgba(226,26,58,${0.85 + Math.sin(this.t * 5) * 0.1})`); g.addColorStop(1, 'rgba(160,10,36,0.25)'); ctx.save(); ctx.shadowColor = 'rgba(232,24,56,0.5)'; ctx.shadowBlur = 10 * devScale(ctx); ctx.fillStyle = g; rrect(ctx, px + 4, y - 4, pw - 8, rowH - 1, 3); ctx.fill(); ctx.restore(); }
+      if (isSel) { const g = ctx.createLinearGradient(px + 4, 0, px + pw - 4, 0); g.addColorStop(0, `rgba(242,200,17,${0.85 + Math.sin(this.t * 5) * 0.1})`); g.addColorStop(1, 'rgba(150,118,0,0.25)'); ctx.save(); ctx.shadowColor = 'rgba(242,200,17,0.5)'; ctx.shadowBlur = 10 * devScale(ctx); ctx.fillStyle = g; rrect(ctx, px + 4, y - 4, pw - 8, rowH - 1, 3); ctx.fill(); ctx.restore(); }
       // colour swatch
       const sw2 = o.sets ? (o.sets.jacket ? findOption('jacket', o.sets.jacket).color : null) : o.color || o.a || (o.hat && o.hat.color) || o.gloves || null;
       if (sw2) { ctx.fillStyle = '#000'; ctx.fillRect(px + 9, y - 1, 9, 9); ctx.fillStyle = sw2; ctx.fillRect(px + 10, y, 7, 7); if (o.b) { ctx.fillStyle = o.b; ctx.fillRect(px + 14, y, 3, 7); } }
-      drawText(ctx, o.name, px + 24, y, { color: !unl.ok ? '#6a5a7a' : isSel ? '#fff' : '#d0c8e0' });
+      drawText(ctx, o.name, px + 24, y, { color: !unl.ok ? '#6a6a6e' : isSel ? '#141416' : '#d8d4c8' });
       const rx = px + pw - 10;
       if (!unl.ok) { lockIcon(ctx, rx - 6, y - 1); }
       else if (wearing) { starIcon(ctx, rx - 9, y - 1); }
@@ -172,7 +172,7 @@ export class WardrobeScene {
     // ---- detail
     const o = this.opt, unl = isUnlocked(o, d), owned = isOwned(this.cat, o, d);
     const dy = ly + lh + 8;
-    frame(ctx, px, dy, pw, 46, { fill: 'rgba(12,8,22,0.92)' });
+    frame(ctx, px, dy, pw, 46, { fill: 'rgba(12,12,14,0.92)' });
     drawText(ctx, o.name, px + 8, dy + 6, { color: C.gold });
     const status = !unl.ok ? 'LOCKED - ' + unl.reason : owned ? (this.wearing(this.cat, o) ? 'WEARING' : 'OWNED - PRESS TO WEAR') : `£${this.price(this.cat, o)} - PRESS TWICE TO BUY`;
     drawText(ctx, status, px + pw - 8, dy + 6, { color: !unl.ok ? '#ff7a7a' : owned ? C.cash : '#ffffff', align: 'right' });

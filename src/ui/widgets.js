@@ -10,11 +10,20 @@ import { drawDoll } from '../game/doll.js';
 import { sampleAnim } from '../game/poses.js';
 import { r3d } from '../render3d/index.js';
 
+// The game's colours are BLACK AND YELLOW (svartgult: black first, yellow the accent). C.red is the accent colour (the
+// name is historic: it was the old club red) and is yellow now; panels are neutral black, not purple.
 export const C = {
-  ink: '#0b0710', frame: '#120c14', bevelHi: '#a898bc', bevelLo: '#2a1e36', panel: 'rgba(14,9,22,0.88)',
-  gold: '#ffd23a', red: '#c8102e', cream: '#f4f1e8', cash: '#7aff9a', dim: '#8a7a9a', off: '#5a4a6a',
-  text: '#e8e0f0', blue: '#1f4fb4', yellow: '#f0c020', hp: '#3af0e0', pink: '#ff3aa0', bad: '#ff4a4a',
+  ink: '#0a0a0b', frame: '#111113', bevelHi: '#b8a860', bevelLo: '#2a2a2e', panel: 'rgba(12,12,14,0.9)',
+  gold: '#ffd23a', red: '#f2c811', cream: '#f4f1e8', cash: '#7aff9a', dim: '#8e8b82', off: '#5a5a5e',
+  text: '#ecebe6', blue: '#1f4fb4', yellow: '#f0c020', hp: '#3af0e0', pink: '#ff3aa0', bad: '#ff4a4a',
+  black: '#141416',
 };
+// text colour that reads on a filled background (black on the yellow accent, white on dark)
+export function onFill(bg) {
+  if (!bg || bg[0] !== '#' || bg.length !== 7) return '#ffffff';
+  const n = parseInt(bg.slice(1), 16), l = (0.299 * (n >> 16 & 255) + 0.587 * (n >> 8 & 255) + 0.114 * (n & 255)) / 255;
+  return l > 0.55 ? '#141416' : '#ffffff';
+}
 
 // ---------------------------------------------------------------- vector helpers
 // device px per logical px of the current transform (shadowBlur and hairlines are in device px)
@@ -74,7 +83,7 @@ export function frame(ctx, x, y, w, h, opts = {}) {
     ctx.shadowColor = 'transparent';
     ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 0.5; ctx.stroke();
     ctx.restore();
-    drawText(ctx, opts.title, tx + 7, y - 3.5, { color: opts.titleColor || '#ffffff' });
+    drawText(ctx, opts.title, tx + 7, y - 3.5, { color: opts.titleColor || onFill(base) });
   }
 }
 // lighten (k>0) / darken (k<0) a #hex colour
@@ -138,12 +147,12 @@ function glow(ctx, col, b) { ctx.shadowColor = col; ctx.shadowBlur = b * devScal
 function vScarf(ctx, x, y, got, s) {
   const w = 9 * s, h = 5 * s;
   ctx.save();
-  rrect(ctx, x, y, w, h, 1 * s); ctx.fillStyle = got ? '#c8102e' : '#3a2e44'; ctx.fill(); ctx.clip();
-  ctx.fillStyle = got ? '#f4f1e8' : '#4a3e54';
+  rrect(ctx, x, y, w, h, 1 * s); ctx.fillStyle = got ? '#f2c811' : '#3a3a40'; ctx.fill(); ctx.clip();
+  ctx.fillStyle = got ? '#f4f1e8' : '#4a4a50';
   for (let i = 1; i < 4; i += 2) ctx.fillRect(x + i * w / 4 - w / 16, y, w / 8 + w / 16, h);
   ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.fillRect(x, y, w, h * 0.3);
   ctx.restore();
-  ctx.strokeStyle = got ? '#e8d8c8' : '#3a2e44'; ctx.lineWidth = 0.5 * s;
+  ctx.strokeStyle = got ? '#e8d8c8' : '#3a3a40'; ctx.lineWidth = 0.5 * s;
   ctx.beginPath(); for (let i = 0; i < 4; i++) { const fx = x + (1.2 + i * 2.2) * s; ctx.moveTo(fx, y + h); ctx.lineTo(fx, y + h + 1.2 * s); } ctx.stroke();
 }
 function vBadge(ctx, x, y, got, s) {
@@ -151,10 +160,10 @@ function vBadge(ctx, x, y, got, s) {
   ctx.save();
   if (got) glow(ctx, 'rgba(255,200,60,0.6)', 4);
   const g = ctx.createLinearGradient(0, cy - R, 0, cy + R);
-  g.addColorStop(0, got ? '#fff2a8' : '#5a4e64'); g.addColorStop(1, got ? '#b08018' : '#3a2e44');
+  g.addColorStop(0, got ? '#fff2a8' : '#5a4e64'); g.addColorStop(1, got ? '#b08018' : '#3a3a40');
   ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
   ctx.shadowColor = 'transparent';
-  ctx.beginPath(); ctx.arc(cx, cy, R * 0.68, 0, Math.PI * 2); ctx.fillStyle = got ? '#c8102e' : '#3a2e44'; ctx.fill();
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.68, 0, Math.PI * 2); ctx.fillStyle = got ? '#f2c811' : '#3a3a40'; ctx.fill();
   ctx.beginPath(); ctx.arc(cx, cy, R * 0.3, 0, Math.PI * 2); ctx.fillStyle = got ? '#fff4c0' : '#5a4e64'; ctx.fill();
   ctx.restore();
 }
@@ -176,14 +185,14 @@ function starPath(ctx, cx, cy, R, r) {
 function vStar(ctx, x, y, got, s) {
   ctx.save(); if (got) glow(ctx, 'rgba(255,210,60,0.7)', 5);
   const g = ctx.createLinearGradient(0, y, 0, y + 8 * s);
-  g.addColorStop(0, got ? '#fff6b8' : '#4a3e54'); g.addColorStop(1, got ? '#f0a810' : '#2a2034');
+  g.addColorStop(0, got ? '#fff6b8' : '#4a4a50'); g.addColorStop(1, got ? '#f0a810' : '#2a2034');
   starPath(ctx, x + 4.5 * s, y + 4.3 * s, 4.6 * s, 2 * s); ctx.fillStyle = g; ctx.fill();
   ctx.restore();
 }
 function vSecret(ctx, x, y, got, s) {
   ctx.save(); if (got) glow(ctx, 'rgba(122,255,224,0.7)', 4);
   ctx.font = `800 ${(9.5 * s).toFixed(2)}px ${FONT.ui}`; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = got ? '#7affe0' : '#3a2e44'; ctx.fillText('?', x + 4 * s, y + 8 * s);
+  ctx.fillStyle = got ? '#7affe0' : '#3a3a40'; ctx.fillText('?', x + 4 * s, y + 8 * s);
   ctx.restore();
 }
 function vLock(ctx, x, y, s) {
@@ -205,27 +214,27 @@ function vTick(ctx, x, y, s) {
 const SCARF = ['kkkkkkkkk', 'kawabawak', 'kawabawak', 'kawabawak', 'kkkkkkkkk', '.f.f.f.f.'];
 export function scarfIcon(ctx, x, y, got = true, s = 1) {
   if (isFrameHD()) return vScarf(ctx, x, y, got, s);
-  const pal = got ? { k: '#120c14', a: '#c8102e', w: '#f4f1e8', b: '#c8102e', f: '#e8d8c8' } : { k: '#120c14', a: '#3a2e44', w: '#4a3e54', b: '#3a2e44', f: '#3a2e44' };
+  const pal = got ? { k: '#121214', a: '#f2c811', w: '#141416', b: '#f2c811', f: '#e8d8c8' } : { k: '#121214', a: '#3a3a40', w: '#4a4a50', b: '#3a3a40', f: '#3a3a40' };   // a black-and-yellow scarf
   sprite(ctx, SCARF, pal, x, y, s, 'scarf');
 }
 const BADGE = ['..kkkk..', '.kggggk.', 'kgrrrrgk', 'kgrwwrgk', 'kgrwwrgk', 'kgrrrrgk', '.kggggk.', '..kkkk..'];
 export function badgeIcon(ctx, x, y, got = true, s = 1) {
   if (isFrameHD()) return vBadge(ctx, x, y, got, s);
-  const pal = got ? { k: '#120c14', g: '#d4af37', r: '#c8102e', w: '#fff4c0' } : { k: '#120c14', g: '#4a3e54', r: '#3a2e44', w: '#5a4e64' };
+  const pal = got ? { k: '#121214', g: '#d4af37', r: '#141416', w: '#fff4c0' } : { k: '#121214', g: '#4a4a50', r: '#3a3a40', w: '#5a5a60' };
   sprite(ctx, BADGE, pal, x, y, s, 'badge');
 }
 const LOCK = ['.kkkk.', 'k.kk.k', 'k.kk.k', 'kkkkkk', 'kyyyyk', 'kyykyk', 'kyyyyk', 'kkkkkk'];
-export function lockIcon(ctx, x, y, s = 1) { if (isFrameHD()) return vLock(ctx, x, y, s); sprite(ctx, LOCK, { k: '#120c14', y: '#c8a030' }, x, y, s, 'lock'); }
+export function lockIcon(ctx, x, y, s = 1) { if (isFrameHD()) return vLock(ctx, x, y, s); sprite(ctx, LOCK, { k: '#121214', y: '#c8a030' }, x, y, s, 'lock'); }
 const KEY = ['.kkk.....', 'kyyyk....', 'ky.ykkkkk', 'kyyyyyyyk', '.kkk.kyk.', '.....k.k.'];
-export function keyIcon(ctx, x, y, s = 1, col = '#e8c040') { sprite(ctx, KEY, { k: '#120c14', y: col }, x, y, s, 'key'); }
+export function keyIcon(ctx, x, y, s = 1, col = '#e8c040') { sprite(ctx, KEY, { k: '#121214', y: col }, x, y, s, 'key'); }
 const STAR = ['....k....', '...kyk...', 'kkkkyykkk', 'kyyyyyyyk', '.kyyyyyk.', '.kyykyyk.', 'kyk...kyk', 'kk.....kk'];
-export function starIcon(ctx, x, y, got = true, s = 1) { if (isFrameHD()) return vStar(ctx, x, y, got, s); sprite(ctx, STAR, { k: '#120c14', y: got ? '#ffd23a' : '#3a2e44' }, x, y, s, 'star'); }
+export function starIcon(ctx, x, y, got = true, s = 1) { if (isFrameHD()) return vStar(ctx, x, y, got, s); sprite(ctx, STAR, { k: '#121214', y: got ? '#ffd23a' : '#3a3a40' }, x, y, s, 'star'); }
 const SECRET = ['..kkkk..', '.kyyyyk.', 'kyk..kyk', '....kyk.', '...kyk..', '...kyk..', '........', '...kyk..'];
-export function secretIcon(ctx, x, y, got = true, s = 1) { if (isFrameHD()) return vSecret(ctx, x, y, got, s); sprite(ctx, SECRET, { k: '#120c14', y: got ? '#7affe0' : '#3a2e44' }, x, y, s, 'secret'); }
+export function secretIcon(ctx, x, y, got = true, s = 1) { if (isFrameHD()) return vSecret(ctx, x, y, got, s); sprite(ctx, SECRET, { k: '#121214', y: got ? '#7affe0' : '#3a3a40' }, x, y, s, 'secret'); }
 const COIN = ['.kkkk.', 'kyyyyk', 'kywyyk', 'kyyyyk', 'kyyyyk', '.kkkk.'];
-export function coinIcon(ctx, x, y, s = 1) { if (isFrameHD()) return vCoin(ctx, x, y, s); sprite(ctx, COIN, { k: '#120c14', y: '#e8c040', w: '#fff8d0' }, x, y, s, 'coin'); }
+export function coinIcon(ctx, x, y, s = 1) { if (isFrameHD()) return vCoin(ctx, x, y, s); sprite(ctx, COIN, { k: '#121214', y: '#e8c040', w: '#fff8d0' }, x, y, s, 'coin'); }
 const TICK = ['......k', '.....kg', 'k...kg.', 'gk.kg..', '.gkg...', '..g....'];
-export function tickIcon(ctx, x, y, s = 1) { if (isFrameHD()) return vTick(ctx, x, y, s); sprite(ctx, TICK, { k: '#120c14', g: '#7aff9a' }, x, y, s, 'tick'); }
+export function tickIcon(ctx, x, y, s = 1) { if (isFrameHD()) return vTick(ctx, x, y, s); sprite(ctx, TICK, { k: '#121214', g: '#7aff9a' }, x, y, s, 'tick'); }
 
 // Selection chevron pointing right (dir 1) or left (dir -1), with a soft glow.
 export function pointer(ctx, x, y, col = C.gold, dir = 1) {
@@ -268,7 +277,7 @@ export function hintBar(ctx, items, y = VIEW_H - 14, opts = {}) {
   let x = opts.align === 'left' ? (opts.x || 8) : opts.align === 'right' ? (opts.x || VIEW_W - 8) - total : Math.round(VIEW_W / 2 - total / 2);
   if (opts.bg !== false) {
     const g = ctx.createLinearGradient(x - 12, 0, x + total + 12, 0);
-    g.addColorStop(0, 'rgba(6,4,12,0)'); g.addColorStop(0.12, 'rgba(6,4,12,0.72)'); g.addColorStop(0.88, 'rgba(6,4,12,0.72)'); g.addColorStop(1, 'rgba(6,4,12,0)');
+    g.addColorStop(0, 'rgba(8,8,10,0)'); g.addColorStop(0.12, 'rgba(8,8,10,0.72)'); g.addColorStop(0.88, 'rgba(8,8,10,0.72)'); g.addColorStop(1, 'rgba(8,8,10,0)');
     ctx.fillStyle = g; rrect(ctx, x - 18, y - 5.5, total + 36, 17, 8.5); ctx.fill();
   }
   for (const p of parts) {
@@ -356,10 +365,10 @@ export class MenuList {
         const pulse = 0.85 + Math.sin(this.t * 5) * 0.15;
         const top = yy - 4, hh = rowH - 1 + (scale - 1) * 6;
         ctx.save();
-        ctx.shadowColor = `rgba(232,24,56,${0.55 * pulse})`; ctx.shadowBlur = 12 * devScale(ctx);
+        ctx.shadowColor = `rgba(242,200,17,${0.55 * pulse})`; ctx.shadowBlur = 12 * devScale(ctx);
         const g = ctx.createLinearGradient(x, 0, x + w, 0);
-        if (center) { g.addColorStop(0, 'rgba(160,10,36,0.25)'); g.addColorStop(0.5, `rgba(226,26,58,${0.92 * pulse})`); g.addColorStop(1, 'rgba(160,10,36,0.25)'); }
-        else { g.addColorStop(0, `rgba(226,26,58,${0.92 * pulse})`); g.addColorStop(0.7, 'rgba(180,14,42,0.55)'); g.addColorStop(1, 'rgba(160,10,36,0.18)'); }
+        if (center) { g.addColorStop(0, 'rgba(150,118,0,0.25)'); g.addColorStop(0.5, `rgba(242,200,17,${0.92 * pulse})`); g.addColorStop(1, 'rgba(150,118,0,0.25)'); }
+        else { g.addColorStop(0, `rgba(242,200,17,${0.92 * pulse})`); g.addColorStop(0.7, 'rgba(176,140,0,0.55)'); g.addColorStop(1, 'rgba(150,118,0,0.18)'); }
         rrect(ctx, x, top, w, hh, 3); ctx.fillStyle = g; ctx.fill();
         ctx.shadowColor = 'transparent';
         const hl = ctx.createLinearGradient(0, top, 0, top + hh);
@@ -372,7 +381,7 @@ export class MenuList {
         pointer(ctx, x - 5 + bob, my, C.gold, 1);
         pointer(ctx, x + w + 5 - bob, my, C.gold, -1);
       }
-      const col = dis ? C.off : sel ? '#ffffff' : (it.color || '#c0b8d0');
+      const col = dis ? C.off : sel ? C.black : (it.color || '#c8c4b8');   // black on the yellow bar
       const hasVal = it.value || it.slider;
       if (hasVal) {
         drawText(ctx, label, x + 8, yy, { color: col, scale, outline: '#000' });
@@ -445,8 +454,8 @@ export function fmtTime(s) { const m = Math.floor(s / 60), r = Math.floor(s % 60
 export function fmtScore(n, pad = 8) { return String(Math.max(0, Math.floor(n))).padStart(pad, '0'); }
 export function fmtCash(n) { return '£' + Math.max(0, Math.floor(n)); }
 
-// Diagonal club-colour stripes background (level cards, tallies).
-export function stripes(ctx, t, a = '#c8102e', b = '#f4f1e8', alpha = 0.14, speed = 30) {
+// Diagonal stripes background in the game's black and yellow (level cards, tallies).
+export function stripes(ctx, t, a = '#141416', b = '#f2c811', alpha = 0.14, speed = 30) {
   ctx.save();
   ctx.globalAlpha = alpha;
   for (let i = -10; i < 30; i++) {
@@ -457,17 +466,17 @@ export function stripes(ctx, t, a = '#c8102e', b = '#f4f1e8', alpha = 0.14, spee
   ctx.restore();
 }
 
-// Big title text with a club-red underline bar.
+// Big title text with a yellow underline bar (a black notch in the middle).
 export function heading(ctx, text, x, y, opts = {}) {
   const scale = opts.scale || 3;
   if (!isFrameHD()) {
     const w = measureText(text, scale);
     const x0 = opts.align === 'left' ? x : x - w / 2;
-    drawText(ctx, text, x0 + scale, y + scale, { color: '#3a0008', scale });
+    drawText(ctx, text, x0 + scale, y + scale, { color: '#0a0a0a', scale });
     drawText(ctx, text, x0, y, { color: opts.color || C.gold, scale, outline: '#000' });
     ctx.fillStyle = '#000'; ctx.fillRect(Math.round(x0) - 1, y + 7 * scale + 3, w + 2, 4);
     ctx.fillStyle = C.red; ctx.fillRect(Math.round(x0), y + 7 * scale + 4, w, 2);
-    ctx.fillStyle = C.cream; ctx.fillRect(Math.round(x0 + w * 0.35), y + 7 * scale + 4, Math.round(w * 0.3), 2);
+    ctx.fillStyle = C.black; ctx.fillRect(Math.round(x0 + w * 0.35), y + 7 * scale + 4, Math.round(w * 0.3), 2);
     return;
   }
   const S = devScale(ctx);
@@ -485,14 +494,14 @@ export function heading(ctx, text, x, y, opts = {}) {
   else { g.addColorStop(0, '#ffffff'); g.addColorStop(1, col); }
   ctx.textBaseline = 'alphabetic';
   ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 10 * S; ctx.shadowOffsetY = 2 * S;
-  ctx.fillStyle = '#2a0610'; ctx.fillText(text, x0 + 0.6, base + 1.4);
+  ctx.fillStyle = '#0a0a0a'; ctx.fillText(text, x0 + 0.6, base + 1.4);
   ctx.shadowColor = 'rgba(255,190,60,0.35)'; ctx.shadowBlur = 14 * S; ctx.shadowOffsetY = 0;
   ctx.fillStyle = g; ctx.fillText(text, x0, base);
   ctx.restore();
-  // underline: club red with a cream centre, fading at the ends
+  // underline: yellow with a black centre, fading at the ends
   const uy = base + 4, ug = ctx.createLinearGradient(x0 - 10, 0, x0 + w + 10, 0);
-  ug.addColorStop(0, 'rgba(200,16,46,0)'); ug.addColorStop(0.15, C.red); ug.addColorStop(0.38, C.red); ug.addColorStop(0.4, C.cream); ug.addColorStop(0.6, C.cream); ug.addColorStop(0.62, C.red); ug.addColorStop(0.85, C.red); ug.addColorStop(1, 'rgba(200,16,46,0)');
-  ctx.save(); ctx.shadowColor = 'rgba(232,24,56,0.7)'; ctx.shadowBlur = 8 * S;
+  ug.addColorStop(0, 'rgba(242,200,17,0)'); ug.addColorStop(0.15, C.red); ug.addColorStop(0.38, C.red); ug.addColorStop(0.4, C.black); ug.addColorStop(0.6, C.black); ug.addColorStop(0.62, C.red); ug.addColorStop(0.85, C.red); ug.addColorStop(1, 'rgba(242,200,17,0)');
+  ctx.save(); ctx.shadowColor = 'rgba(242,200,17,0.5)'; ctx.shadowBlur = 8 * S;
   ctx.fillStyle = ug; rrect(ctx, x0 - 10, uy, w + 20, 2, 1); ctx.fill(); ctx.restore();
 }
 

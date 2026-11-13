@@ -1,5 +1,5 @@
-// The title screen as a film poster: blood-red paper with folds and grain, a black mob charging at you across the
-// middle (white trainers and shirts catching the light), ink splatter, the title slammed on in white, and the line
+// The title screen as a film poster in the game's black and yellow: black paper (a warm yellow glow at its heart) with folds and grain, a black mob charging at you across the
+// middle (white trainers and shirts catching the light), ink splatter, the title slammed on in yellow, and the line
 // in a black box. Drawn in logical 640x360 units (the UI canvas scales it to full resolution).
 //
 //   drawPosterBg(ctx, t, { dim })                 paper + folds + grain (+ darken for menus)
@@ -8,7 +8,7 @@
 //   drawTagline(ctx, cx, y, text)
 import { VIEW_W, VIEW_H } from '../engine/constants.js';
 
-const RED = '#c8141a', RED_D = '#7e080c', INK = '#0b0708';
+const RED = '#16140c', RED_D = '#050505', INK = '#050505', YEL = '#f2c811';   // (RED/RED_D: the paper, black now)
 let GRAIN = null;
 function grain(ctx) {
   if (GRAIN) return GRAIN;
@@ -28,9 +28,9 @@ function grain(ctx) {
 const rnd = s => { const x = Math.sin(s * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
 
 export function drawPosterBg(ctx, t = 0, opts = {}) {
-  // the red paper, hotter in the middle
+  // the black paper, a warm yellow glow behind the lads
   const g = ctx.createRadialGradient(VIEW_W * 0.5, VIEW_H * 0.42, 20, VIEW_W * 0.5, VIEW_H * 0.5, VIEW_W * 0.75);
-  g.addColorStop(0, '#e01c22'); g.addColorStop(0.55, RED); g.addColorStop(1, RED_D);
+  g.addColorStop(0, '#4a3c0a'); g.addColorStop(0.5, RED); g.addColorStop(1, RED_D);
   ctx.fillStyle = g; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
   // folds and creases: big light and dark facets, a couple of hard crease lines
   const facet = (pts, col) => { ctx.fillStyle = col; ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.closePath(); ctx.fill(); };
@@ -48,7 +48,7 @@ export function drawPosterBg(ctx, t = 0, opts = {}) {
   const v = ctx.createRadialGradient(VIEW_W / 2, VIEW_H / 2, VIEW_H * 0.35, VIEW_W / 2, VIEW_H / 2, VIEW_W * 0.7);
   v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.45)');
   ctx.fillStyle = v; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-  if (opts.dim) { ctx.fillStyle = `rgba(8,2,3,${opts.dim})`; ctx.fillRect(0, 0, VIEW_W, VIEW_H); }
+  if (opts.dim) { ctx.fillStyle = `rgba(4,4,4,${opts.dim})`; ctx.fillRect(0, 0, VIEW_W, VIEW_H); }
 }
 
 // one man charging AT you (front view): head down, shoulders hunched, fists pumping, a knee coming up.
@@ -155,14 +155,14 @@ export function drawPosterTitle(ctx, cx, y, t = 0, opts = {}) {
   ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   ctx.font = `400 ${top}px Anton, Impact, sans-serif`;
   ctx.fillStyle = INK; ctx.fillText('T H E   L A S T', cx + 2, y + 2);
-  ctx.fillStyle = '#f6f2ec'; ctx.fillText('T H E   L A S T', cx, y);
+  ctx.fillStyle = YEL; ctx.fillText('T H E   L A S T', cx, y);
   ctx.font = `400 ${big}px Anton, Impact, sans-serif`;
   const by = y + top + (small ? 0 : 2);
   ctx.fillStyle = INK; ctx.fillText('HOOLIGAN', cx + (small ? 2 : 4), by + (small ? 2 : 4));
-  ctx.fillStyle = '#f6f2ec'; ctx.fillText('HOOLIGAN', cx, by);
+  ctx.fillStyle = YEL; ctx.fillText('HOOLIGAN', cx, by);
   // worn print: knock a few specks out of the letters
   if (!small) {
-    ctx.fillStyle = 'rgba(200,20,26,0.9)';
+    ctx.fillStyle = 'rgba(20,18,10,0.9)';
     for (let i = 0; i < 70; i++) ctx.fillRect(cx - 150 + rnd(i * 1.7) * 300, by + 6 + rnd(i * 2.9) * (big - 10), 0.9 + rnd(i * 4.1) * 1.4, 0.9);
   }
   ctx.restore();
@@ -177,7 +177,8 @@ export function drawTagline(ctx, cx, y, text, opts = {}) {
   ctx.fillStyle = INK; ctx.beginPath();
   if (ctx.roundRect) ctx.roundRect(cx - w / 2, y, w, h, 3); else ctx.rect(cx - w / 2, y, w, h);
   ctx.fill();
-  ctx.fillStyle = '#f6f2ec'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.strokeStyle = 'rgba(242,200,17,0.7)'; ctx.lineWidth = 0.8; ctx.stroke();   // a yellow edge: the box is black on black paper
+  ctx.fillStyle = YEL; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText(text, cx, y + h / 2 + 0.5);
   ctx.restore();
   return y + h;

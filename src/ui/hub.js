@@ -175,7 +175,7 @@ export class HubScene {
     if (this.msg) {
       const a = Math.min(1, (2.6 - this.msg.t) * 3);
       ctx.globalAlpha = a;
-      frame(ctx, VIEW_W / 2 - 160, VIEW_H - 64, 320, 20, { fill: 'rgba(10,6,16,0.95)', accent: C.gold, rivets: false });
+      frame(ctx, VIEW_W / 2 - 160, VIEW_H - 64, 320, 20, { fill: 'rgba(10,10,12,0.95)', accent: C.gold, rivets: false });
       drawText(ctx, this.msg.text, VIEW_W / 2, VIEW_H - 58, { color: '#ffffff', align: 'center' });
       ctx.globalAlpha = 1;
     }
@@ -214,7 +214,7 @@ export class HubScene {
 
   drawTop(ctx) {
     const F = this.F;
-    frame(ctx, 6, 6, 250, 40, { accent: C.red, fill: 'rgba(10,6,16,0.9)' });
+    frame(ctx, 6, 6, 250, 40, { accent: C.red, fill: 'rgba(10,10,12,0.9)' });
     const club = clubById(F.club);
     ctx.fillStyle = club.a; ctx.fillRect(6, 6, 250, 2); ctx.fillStyle = club.b; ctx.fillRect(6, 8, 250, 1);   // club colours
     drawClubCrest(ctx, club, 258, 8, 26, 34);
@@ -234,7 +234,7 @@ export class HubScene {
   drawGoal(ctx) {
     const pulse = 0.75 + Math.sin(this.t * 3) * 0.25;
     const w = 300, x = VIEW_W - w - 8, y = 8;
-    frame(ctx, x, y, w, 30, { fill: 'rgba(10,6,16,0.9)', accent: C.gold, rivets: false });
+    frame(ctx, x, y, w, 30, { fill: 'rgba(10,10,12,0.9)', accent: C.gold, rivets: false });
     ctx.globalAlpha = pulse;
     drawText(ctx, 'NEXT: PICK YOUR TRIP AT THE MAP (M)', x + w / 2, y + 6, { color: C.gold, align: 'center' });
     ctx.globalAlpha = 1;
@@ -268,8 +268,8 @@ function pickLine(l, lines) {
 const PX = 20, PY = 50, PW = VIEW_W - 40, PH = VIEW_H - 76;
 
 function panelFrame(ctx, title, accent = C.red) {
-  ctx.fillStyle = 'rgba(4,2,10,0.55)'; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-  frame(ctx, PX, PY, PW, PH, { title, fill: 'rgba(12,8,22,0.96)', accent });
+  ctx.fillStyle = 'rgba(6,6,8,0.55)'; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+  frame(ctx, PX, PY, PW, PH, { title, fill: 'rgba(12,12,14,0.96)', accent });
 }
 
 function stat(ctx, x, y, name, v, col = C.gold) {
@@ -365,7 +365,7 @@ class EventPanel extends BasePanel {
   }
   draw(ctx) {
     if (!this.card) return;
-    ctx.fillStyle = 'rgba(4,2,10,0.6)'; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    ctx.fillStyle = 'rgba(6,6,8,0.6)'; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
     const w = 360, h = 170, x = (VIEW_W - w) / 2, y = 80;
     frame(ctx, x, y, w, h, { title: this.card.title, fill: 'rgba(30,22,10,0.97)', accent: C.gold });
     wrapText(this.card.text, w - 30).forEach((l, i) => drawText(ctx, l, x + 15, y + 16 + i * 11, { color: '#f4ecd8' }));
@@ -453,7 +453,7 @@ class MapPanel extends BasePanel {
   proj(lon, lat, M) { return { x: M.x + (lon - M.lon0) * M.kx, y: M.y + (M.lat1 - lat) * M.ky }; }
   draw(ctx) {
     const t = this.t, F = this.F;
-    ctx.fillStyle = 'rgba(4,2,10,0.6)'; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    ctx.fillStyle = 'rgba(6,6,8,0.6)'; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
     // the programme page
     const X = 8, Y = 8, W = VIEW_W - 16, H = VIEW_H - 30;
     ctx.fillStyle = PAPER; ctx.fillRect(X, Y, W, H);
@@ -544,7 +544,7 @@ class MapPanel extends BasePanel {
       wrapText(st.ok ? tr.blurb : st.why, TW - 18).slice(0, 6).forEach(l => line(l, st.ok ? INK : '#8a3020', 9));
     } else if (selRow.kind === 'home') {
       const L = selRow.L;
-      ctx.fillStyle = '#c8102e'; ctx.fillRect(TX + 6, ty, TW - 12, 8); ctx.fillStyle = '#f4f1e8'; ctx.fillRect(TX + 6, ty + 8, TW - 12, 3); ty += 16;
+      ctx.fillStyle = '#141416'; ctx.fillRect(TX + 6, ty, TW - 12, 8); ctx.fillStyle = '#f2c811'; ctx.fillRect(TX + 6, ty + 8, TW - 12, 3); ty += 16;
       line('HOME FIXTURE', '#6a5a40');
       line(L.name, TOUR_RED, 11);
       line(L.subtitle || '', '#5a4a36', 13);
@@ -705,9 +705,9 @@ class ConfirmPanel extends BasePanel {
   }
   update(dt) { super.update(dt); this.menu.update(dt); }
   draw(ctx) {
-    ctx.fillStyle = 'rgba(4,2,10,0.55)'; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    ctx.fillStyle = 'rgba(6,6,8,0.55)'; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
     const w = 300, h = 110, x = (VIEW_W - w) / 2, y = 110;
-    frame(ctx, x, y, w, h, { title: this.title, fill: 'rgba(12,8,22,0.97)', accent: C.gold });
+    frame(ctx, x, y, w, h, { title: this.title, fill: 'rgba(12,12,14,0.97)', accent: C.gold });
     this.lines.forEach((l, i) => drawText(ctx, l, VIEW_W / 2, y + 16 + i * 11, { color: '#e0d8e8', align: 'center' }));
     this.menu.draw(ctx, VIEW_W / 2 - 60, y + 58, { w: 120, rowH: 18 });
   }
@@ -725,8 +725,8 @@ class PubMenu extends BasePanel {
   }
   update(dt) { super.update(dt); this.menu.update(dt); }
   draw(ctx) {
-    ctx.fillStyle = 'rgba(4,2,10,0.55)'; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-    frame(ctx, VIEW_W / 2 - 110, 110, 220, 86, { title: 'THE ANCHOR', fill: 'rgba(12,8,22,0.97)', accent: C.red });
+    ctx.fillStyle = 'rgba(6,6,8,0.55)'; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+    frame(ctx, VIEW_W / 2 - 110, 110, 220, 86, { title: 'THE ANCHOR', fill: 'rgba(12,12,14,0.97)', accent: C.red });
     this.menu.draw(ctx, VIEW_W / 2 - 90, 128, { w: 180, rowH: 18 });
   }
 }

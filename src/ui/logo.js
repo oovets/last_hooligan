@@ -16,9 +16,10 @@ const BIG = 'HOOLIGAN', TOP = 'THE LAST';
 const cache = new Map();
 const devScale = ctx => (ctx.getTransform ? ctx.getTransform().a : 2) || 2;
 
+// 'blood' is the game's yellow chrome now (black and yellow throughout; the name stays for the callers)
 const BLOOD = {
-  fill: [[0, '#ffffff'], [0.16, '#ffe0d6'], [0.42, '#ff7058'], [0.47, '#ff5a44'], [0.485, '#4a000c'], [0.53, '#5a0410'], [0.56, '#ff2a1a'], [0.8, '#c8102e'], [0.93, '#7a0418'], [1, '#e8404a']],
-  ext: ['#8a0c1e', '#2a0108'], hi: 'rgba(255,255,255,0.85)', lo: 'rgba(40,0,8,0.55)', outline: '#0a0206', glow: 'rgba(255,40,50,0.45)', depth: 0.11,
+  fill: [[0, '#ffffff'], [0.16, '#fff6c8'], [0.42, '#ffd84a'], [0.47, '#f2c811'], [0.485, '#2a2000'], [0.53, '#3a2c00'], [0.56, '#ffd21a'], [0.8, '#e0a80c'], [0.93, '#7a5600'], [1, '#f2c811']],
+  ext: ['#7a5a00', '#1a1200'], hi: 'rgba(255,255,255,0.85)', lo: 'rgba(30,20,0,0.55)', outline: '#0a0a06', glow: 'rgba(242,200,17,0.4)', depth: 0.11,
 };
 const STEEL = {
   fill: [[0, '#ffffff'], [0.38, '#cfd8f0'], [0.49, '#8890b8'], [0.5, '#262a48'], [0.6, '#e4eaff'], [1, '#7880a8']],
@@ -113,7 +114,7 @@ function drawScarf(ctx, x0, y0, w, h, t, alpha = 1) {
   ctx.globalAlpha = alpha;
   // shadow under the ribbon
   ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 8 * devScale(ctx); ctx.shadowOffsetY = 2 * devScale(ctx);
-  ctx.fillStyle = '#120c14';
+  ctx.fillStyle = '#121214';
   ctx.beginPath();
   for (let i = 0; i <= N; i++) { const x = i / N * w; ctx.lineTo(x0 + x, y0 + wave(x)); }
   for (let i = N; i >= 0; i--) { const x = i / N * w; ctx.lineTo(x0 + x, y0 + h + wave(x)); }
@@ -123,7 +124,7 @@ function drawScarf(ctx, x0, y0, w, h, t, alpha = 1) {
   for (let i = 0; i < N; i++) {
     const xa = i / N * w, xb = (i + 1) / N * w;
     const bar = Math.floor((xa + 0.01) / block) % 2;
-    ctx.fillStyle = bar ? '#f4f1e8' : '#c8102e';
+    ctx.fillStyle = bar ? '#f2c811' : '#141416';   // black and yellow bars
     ctx.beginPath();
     ctx.moveTo(x0 + xa, y0 + wave(xa)); ctx.lineTo(x0 + xb + 0.25, y0 + wave(xb)); ctx.lineTo(x0 + xb + 0.25, y0 + h + wave(xb)); ctx.lineTo(x0 + xa, y0 + h + wave(xa));
     ctx.closePath(); ctx.fill();
@@ -148,7 +149,7 @@ function drawScarf(ctx, x0, y0, w, h, t, alpha = 1) {
     const ex = side < 0 ? 0 : w;
     for (let k = 0.5; k < h; k += 1.6) {
       const len = h * 0.3 + ((k * 7) % 3) + Math.sin(t * 5 + k) * 1.2;
-      ctx.strokeStyle = Math.floor(k / 1.6) % 2 ? '#f4f1e8' : '#c8102e';
+      ctx.strokeStyle = Math.floor(k / 1.6) % 2 ? '#f2c811' : '#141416';
       ctx.beginPath(); ctx.moveTo(x0 + ex, y0 + wave(ex) + k); ctx.lineTo(x0 + ex + side * len, y0 + wave(ex) + k + Math.sin(t * 4 + k) * 0.8); ctx.stroke();
     }
   }
@@ -284,7 +285,7 @@ export function drawCrest(ctx, x, y, s = 1) {
   };
   ctx.save();
   ctx.shadowColor = 'rgba(0,0,0,0.6)'; ctx.shadowBlur = 6 * S * s / 2; ctx.shadowOffsetY = 1.5 * S;
-  shield(); ctx.fillStyle = '#120c14'; ctx.fill();
+  shield(); ctx.fillStyle = '#121214'; ctx.fill();
   ctx.shadowColor = 'transparent';
   ctx.save(); shield(); ctx.clip();
   const rg = ctx.createLinearGradient(0, y, 0, y + h);
@@ -295,18 +296,18 @@ export function drawCrest(ctx, x, y, s = 1) {
   sh.addColorStop(0, 'rgba(255,255,255,0.25)'); sh.addColorStop(0.5, 'rgba(255,255,255,0)'); sh.addColorStop(1, 'rgba(0,0,0,0.25)');
   ctx.fillStyle = sh; ctx.fillRect(x, y, w, h);
   ctx.restore();
-  ctx.strokeStyle = '#120c14'; ctx.lineWidth = 0.8 * s; shield(); ctx.stroke();
+  ctx.strokeStyle = '#121214'; ctx.lineWidth = 0.8 * s; shield(); ctx.stroke();
   ctx.strokeStyle = 'rgba(255,220,150,0.8)'; ctx.lineWidth = 0.3 * s;
   ctx.save(); ctx.translate(cx, y + h * 0.53); ctx.scale(0.86, 0.86); ctx.translate(-cx, -(y + h * 0.53)); shield(); ctx.stroke(); ctx.restore();
   // anchor
-  ctx.strokeStyle = '#120c14'; ctx.lineWidth = 1.15 * s; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#121214'; ctx.lineWidth = 1.15 * s; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   ctx.beginPath(); ctx.arc(cx, y + h * 0.19, 1.2 * s, 0, Math.PI * 2); ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(cx, y + h * 0.26); ctx.lineTo(cx, y + h * 0.84);
   ctx.moveTo(cx - 3.6 * s, y + h * 0.36); ctx.lineTo(cx + 3.6 * s, y + h * 0.36);
   ctx.moveTo(cx - 5 * s, y + h * 0.6); ctx.quadraticCurveTo(cx - 4.6 * s, y + h * 0.86, cx, y + h * 0.84); ctx.quadraticCurveTo(cx + 4.6 * s, y + h * 0.86, cx + 5 * s, y + h * 0.6);
   ctx.stroke();
-  ctx.fillStyle = '#120c14';
+  ctx.fillStyle = '#121214';
   for (const d of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + d * 5.9 * s, y + h * 0.56); ctx.lineTo(cx + d * 3.9 * s, y + h * 0.63); ctx.lineTo(cx + d * 5.6 * s, y + h * 0.68); ctx.closePath(); ctx.fill(); }
   ctx.restore();
   return { w, h };

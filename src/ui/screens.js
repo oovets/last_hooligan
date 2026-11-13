@@ -52,12 +52,12 @@ class LevelIntroScene {
   draw(ctx) {
     const L = this.L, t = this.t;
     ctx.fillStyle = '#05030a'; ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-    stripes(ctx, t, '#c8102e', '#f4f1e8', 0.12, 30);
+    stripes(ctx, t, '#141416', '#f2c811', 0.12, 30);
     vignette(ctx, 0.7);
     // map preview on the right, card on the left
     {
       const k = Math.min(1, t * 2);
-      frame(ctx, 380, 40, 240, 150, { fill: 'rgba(6,4,12,0.92)', title: 'THE PATCH' });
+      frame(ctx, 380, 40, 240, 150, { fill: 'rgba(8,8,10,0.92)', title: 'THE PATCH' });
       ctx.globalAlpha = k;
       drawLevelPreview(ctx, L, 388, 52, 224, 128);
       ctx.globalAlpha = 1;
@@ -74,7 +74,7 @@ class LevelIntroScene {
     let ns = 4; while (ns > 2 && measureText(L.name, ns) > 330) ns--;
     drawChrome(ctx, L.name, 30 + slide, 140, ns, 'steel');
     ctx.fillStyle = C.red; ctx.fillRect(30, 150 + 7 * ns, Math.min(330, measureText(L.name, ns)), 3);
-    if (L.subtitle && t > 0.4) drawText(ctx, L.subtitle, 30, 160 + 7 * ns, { color: '#ff8aa0', outline: '#000' });
+    if (L.subtitle && t > 0.4) drawText(ctx, L.subtitle, 30, 160 + 7 * ns, { color: '#e8d48a', outline: '#000' });
     // collectibles status
     const d = save.data;
     if (t > 0.6) {
@@ -174,14 +174,14 @@ class LevelCompleteScene {
   draw(ctx) {
     const t = this.t;
     backdrop.draw(ctx, { dim: 0.72 });
-    stripes(ctx, t, '#c8102e', '#f4f1e8', 0.06, 20);
+    stripes(ctx, t, '#141416', '#f2c811', 0.06, 20);
     drawText(ctx, `${this.i >= LEVELS.length ? 'AWAY DAY' : 'LEVEL ' + (ALL_LEVELS[this.i].num || this.i + 1)} - ${ALL_LEVELS[this.i].name}`, VIEW_W / 2, 12, { color: '#ffffff', align: 'center', outline: '#000' });
     const k = Math.min(1, t * 4);
     const s = 5 + Math.round((1 - k) * 4);
     drawChrome(ctx, 'SORTED!', VIEW_W / 2, 26, s, 'blood', 'center');
     // tally panel
     const px = 70, py = 76, pw = 330, ph = 170;
-    frame(ctx, px, py, pw, ph, { title: 'THE TALLY', fill: 'rgba(12,8,22,0.92)' });
+    frame(ctx, px, py, pw, ph, { title: 'THE TALLY', fill: 'rgba(12,12,14,0.92)' });
     this.rows.forEach((r, k2) => {
       if (t < 0.6 + k2 * 0.45) return;
       const y = py + 12 + k2 * 18;
@@ -193,7 +193,7 @@ class LevelCompleteScene {
     const endT = 0.6 + this.rows.length * 0.45 + 0.6;
     // right column: collectibles + rank
     const rx = 420, ry = 76;
-    frame(ctx, rx, ry, 150, 170, { title: 'RATING', fill: 'rgba(12,8,22,0.92)', titleBg: '#1f4fb4' });
+    frame(ctx, rx, ry, 150, 170, { title: 'RATING', fill: 'rgba(12,12,14,0.92)', titleBg: '#141416', titleColor: '#f2c811' });   // black tab, yellow letters
     const nS = this.world.record.scarves.size;
     for (let q = 0; q < (this.world.totalScarves || 5); q++) scarfIcon(ctx, rx + 14 + q * 13, ry + 14, this.world.record.scarves.has(q));
     badgeIcon(ctx, rx + 84 - 0 + 2, ry + 13, !!this.world.record.badge);
@@ -326,12 +326,12 @@ class EndingScene {
       if (this.pageT > 1.2 && blink(t, 2) && Math.floor(this.pageT * 35) >= total) drawText(ctx, 'PRESS START', VIEW_W / 2, VIEW_H - 16, { color: C.gold, align: 'center', outline: '#000' });
     } else if (this.phase === 'credits') {
       backdrop.draw(ctx, { lads: true, dim: 0.35 });
-      ctx.fillStyle = 'rgba(4,2,10,0.5)'; ctx.fillRect(VIEW_W / 2 - 180, 0, 360, VIEW_H);
+      ctx.fillStyle = 'rgba(6,6,8,0.5)'; ctx.fillRect(VIEW_W / 2 - 180, 0, 360, VIEW_H);
       drawCreditsRoll(ctx, this.scroll);
     } else {
       backdrop.draw(ctx, { lads: true, dim: 0.2 });
       drawLogo(ctx, VIEW_W / 2, 30, t, {});
-      ctx.fillStyle = 'rgba(4,2,10,0.7)'; ctx.fillRect(0, 158, VIEW_W, 108);
+      ctx.fillStyle = 'rgba(6,6,8,0.7)'; ctx.fillRect(0, 158, VIEW_W, 108);
       drawChrome(ctx, 'THE END', VIEW_W / 2, 166, 5, 'steel', 'center');
       drawText(ctx, 'FINAL SCORE ' + fmtScore(game.score), VIEW_W / 2, 210, { color: C.gold, align: 'center', scale: 2, outline: '#000' });
       drawText(ctx, 'CENTENARY SCARF UNLOCKED IN THE WARDROBE', VIEW_W / 2, 234, { color: '#7aff9a', align: 'center', outline: '#000' });

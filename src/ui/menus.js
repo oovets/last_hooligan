@@ -76,10 +76,10 @@ export class LevelSelectScene {
       const x = x0 + col * (cw + gap), y = 44 + row * (ch + 10);
       const sel = i === this.sel, locked = this.locked(i), tour = isTour(index);
       const lift = sel ? -2 : 0;
-      frame(ctx, x, y + lift, cw, ch, { fill: locked ? 'rgba(10,6,16,0.94)' : sel ? 'rgba(40,10,20,0.95)' : 'rgba(14,9,22,0.92)', accent: sel ? C.gold : locked ? '#3a2e44' : C.red, edge: sel ? '#c8a030' : undefined });
+      frame(ctx, x, y + lift, cw, ch, { fill: locked ? 'rgba(10,10,12,0.94)' : sel ? 'rgba(52,44,6,0.95)' : 'rgba(12,12,14,0.92)', accent: sel ? C.gold : locked ? '#3a3a40' : C.red, edge: sel ? '#c8a030' : undefined });
       // number tab
-      ctx.fillStyle = locked ? '#3a2e44' : C.red; rrect(ctx, x + 4, y + 4 + lift, 18, 13, 3); ctx.fill();
-      drawText(ctx, tour ? 'T' + (index - LEVELS.length + 1) : String(L.num || index + 1), x + 13, y + 7 + lift, { color: '#fff', align: 'center' });
+      ctx.fillStyle = locked ? '#3a3a40' : C.red; rrect(ctx, x + 4, y + 4 + lift, 18, 13, 3); ctx.fill();
+      drawText(ctx, tour ? 'T' + (index - LEVELS.length + 1) : String(L.num || index + 1), x + 13, y + 7 + lift, { color: locked ? '#fff' : C.black, align: 'center' });
       drawText(ctx, L.name.length > 19 ? L.name.slice(0, 18) + '.' : L.name, x + 27, y + 7 + lift, { color: locked ? '#5a4a6a' : sel ? '#fff' : '#e0d8e8' });
       // map thumbnail
       ctx.fillStyle = '#06040c'; rrect(ctx, x + 4, y + 21 + lift, cw - 8, 54, 3); ctx.fill();
@@ -97,13 +97,13 @@ export class LevelSelectScene {
     });
     // detail strip
     const E = SELECTABLE[this.sel], L = E.L, locked = this.locked(this.sel), T = tourFor(L);
-    frame(ctx, 16, 294, VIEW_W - 32, 40, { fill: 'rgba(14,9,22,0.94)' });
+    frame(ctx, 16, 294, VIEW_W - 32, 40, { fill: 'rgba(12,12,14,0.94)' });
     if (locked) {
       drawText(ctx, 'FINISH LEVEL ' + E.index + ' TO UNLOCK THIS ONE.', VIEW_W / 2, 302, { color: '#ff7a7a', align: 'center' });
       drawText(ctx, 'NO SKIPPING THE QUEUE. THIS IS NORDHAMN.', VIEW_W / 2, 315, { color: C.dim, align: 'center' });
     } else {
       drawText(ctx, T ? `AWAY DAY: ${L.name} (${T.club})` : `LEVEL ${L.num || E.index + 1}: ${L.name}`, 26, 301, { color: C.gold });
-      if (L.subtitle) drawText(ctx, L.subtitle, VIEW_W - 26, 301, { color: '#ff8aa0', align: 'right' });
+      if (L.subtitle) drawText(ctx, L.subtitle, VIEW_W - 26, 301, { color: '#e8d48a', align: 'right' });
       const line = T ? T.blurb : (L.intro || []).slice(0, 2).join(' ');
       wrapText(line, VIEW_W - 60).slice(0, 2).forEach((l, i) => drawText(ctx, l, 26, 313 + i * 10, { color: '#c0b8d0' }));
     }
@@ -165,9 +165,9 @@ export class HowToPlayScene {
     // page tabs
     this.pages.forEach((p, i) => {
       const w = 150, x = VIEW_W / 2 - (this.pages.length * w) / 2 + i * w;
-      ctx.save(); if (i === this.page) { ctx.shadowColor = 'rgba(232,24,56,0.7)'; ctx.shadowBlur = 8 * devScale(ctx); }
-      ctx.fillStyle = i === this.page ? C.red : 'rgba(30,20,44,0.9)'; rrect(ctx, x + 2, 41, w - 4, 14, 4); ctx.fill(); ctx.restore();
-      drawText(ctx, `${i + 1}. ${p}`, x + w / 2, 44.5, { color: i === this.page ? '#fff' : C.dim, align: 'center' });
+      ctx.save(); if (i === this.page) { ctx.shadowColor = 'rgba(242,200,17,0.7)'; ctx.shadowBlur = 8 * devScale(ctx); }
+      ctx.fillStyle = i === this.page ? C.red : 'rgba(34,34,38,0.9)'; rrect(ctx, x + 2, 41, w - 4, 14, 4); ctx.fill(); ctx.restore();
+      drawText(ctx, `${i + 1}. ${p}`, x + w / 2, 44.5, { color: i === this.page ? C.black : C.dim, align: 'center' });
     });
     frame(ctx, 24, 60, VIEW_W - 48, 266);
     if (this.page === 0) {
@@ -286,7 +286,7 @@ export class CreditsScene {
   }
   draw(ctx) {
     backdrop.draw(ctx, { lads: true, dim: 0.35 });
-    ctx.fillStyle = 'rgba(4,2,10,0.5)'; ctx.fillRect(VIEW_W / 2 - 180, 0, 360, VIEW_H);
+    ctx.fillStyle = 'rgba(6,6,8,0.5)'; ctx.fillRect(VIEW_W / 2 - 180, 0, 360, VIEW_H);
     drawCreditsRoll(ctx, this.scroll || 0);
     drawCrest(ctx, 14, 12, 2);
     hintBar(ctx, [['confirm', 'FAST'], ['back', 'BACK']], VIEW_H - 14);
@@ -333,7 +333,7 @@ export class NameEntryScene {
       for (let i = 0; i < 3; i++) {
         const x = VIEW_W / 2 - 75 + i * 50, y = 124;
         const sel = i === this.pos;
-        frame(ctx, x, y, 44, 56, { fill: sel ? 'rgba(80,10,24,0.95)' : 'rgba(14,9,22,0.92)', accent: sel ? C.gold : C.red, rivets: false });
+        frame(ctx, x, y, 44, 56, { fill: sel ? 'rgba(74,62,6,0.95)' : 'rgba(12,12,14,0.92)', accent: sel ? C.gold : C.red, rivets: false });
         drawText(ctx, ALPHA[this.chars[i]] === ' ' ? '_' : ALPHA[this.chars[i]], x + 22, y + 14, { color: sel && blink(this.t, 4) ? C.gold : '#ffffff', scale: 4, align: 'center', outline: '#000' });
         if (sel) { drawText(ctx, '↑', x + 22, y - 12, { color: C.gold, align: 'center' }); drawText(ctx, '↓', x + 22, y + 60, { color: C.gold, align: 'center' }); }
       }

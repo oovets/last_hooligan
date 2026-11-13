@@ -76,7 +76,7 @@ export class FirmSetupScene {
     CLUBS.forEach((c, i) => {
       const col = i % 4, row = Math.floor(i / 4), sel = i === this.clubSel;
       const x = x0 + col * (cw + gap), y = 46 + row * (ch + 10) + (sel ? -2 : 0);
-      frame(ctx, x, y, cw, ch, { fill: sel ? 'rgba(40,10,20,0.95)' : 'rgba(14,9,22,0.92)', accent: sel ? C.gold : c.a, edge: sel ? '#c8a030' : undefined });
+      frame(ctx, x, y, cw, ch, { fill: sel ? 'rgba(52,44,6,0.95)' : 'rgba(12,12,14,0.92)', accent: sel ? C.gold : c.a, edge: sel ? '#c8a030' : undefined });
       // the crest, and the colours as a scarf of bars beside it
       drawClubCrest(ctx, c, x + 6, y + 8, 40, 46, (g, bx, by, bw, bh) => drawCrest(g, bx + 5, by + 6, 2));
       const bars = c.c ? [c.a, c.b, c.c, c.a, c.b, c.c] : [c.a, c.b, c.a, c.b, c.a, c.b];
@@ -105,7 +105,7 @@ export class FirmSetupScene {
     const stage = r3d.menu, actors = [];
     shown.forEach((c, j) => {
       const i = first + j, x = x0 + j * (cw + gap), sel = i === this.ladSel, k = this.picks.indexOf(c.id);
-      frame(ctx, x, y0 + (sel ? -2 : 0), cw, chh, { fill: k >= 0 ? 'rgba(40,10,20,0.95)' : 'rgba(14,9,22,0.92)', accent: sel ? C.gold : k >= 0 ? club.a : '#3a2e44', edge: sel ? '#c8a030' : undefined });
+      frame(ctx, x, y0 + (sel ? -2 : 0), cw, chh, { fill: k >= 0 ? 'rgba(52,44,6,0.95)' : 'rgba(12,12,14,0.92)', accent: sel ? C.gold : k >= 0 ? club.a : '#3a3a40', edge: sel ? '#c8a030' : undefined });
       const look = c.look;
       if (look) actors.push({ look, x: x + cw / 2, feet: y0 + 168, h: 150 * (look.height || 1) * 0.92, anim: 'idle', phase: i * 0.6, yaw: sel ? 0.3 + Math.sin(this.t * 2) * 0.25 : 0.4 });
     });
@@ -129,7 +129,7 @@ export class FirmSetupScene {
     }
     // LET'S GO
     const gx = x0 + vis * (cw + gap), gsel = this.ladSel === n;
-    frame(ctx, gx, y0 + 80, 62, 56, { fill: gsel ? 'rgba(80,10,24,0.95)' : 'rgba(14,9,22,0.92)', accent: gsel ? C.gold : C.red });
+    frame(ctx, gx, y0 + 80, 62, 56, { fill: gsel ? 'rgba(74,62,6,0.95)' : 'rgba(12,12,14,0.92)', accent: gsel ? C.gold : C.red });
     drawText(ctx, "LET'S", gx + 31, y0 + 96, { color: gsel ? C.gold : '#fff', align: 'center' });
     drawText(ctx, 'GO >', gx + 31, y0 + 110, { color: gsel ? C.gold : '#fff', align: 'center' });
     drawText(ctx, `${this.picks.length}/${MAX_LADS}`, gx + 31, y0 + 146, { color: '#8a7a9a', align: 'center' });

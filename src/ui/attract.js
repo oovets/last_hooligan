@@ -143,16 +143,16 @@ class GalleryScene {
       if (k <= 0) return;
       const yy = y + Math.round((1 - k) * 40);
       ctx.globalAlpha = k;
-      frame(ctx, x, yy, 140, 200, { fill: 'rgba(12,8,22,0.9)', accent: e.boss ? '#ffd23a' : ca });
+      frame(ctx, x, yy, 140, 200, { fill: 'rgba(12,12,14,0.9)', accent: e.boss ? '#ffd23a' : ca });
       ctx.fillStyle = ca; ctx.globalAlpha = k * 0.22; ctx.fillRect(x + 4, yy + 4, 132, 130); ctx.globalAlpha = k;
       ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.ellipse(x + 70, yy + 124, 40, 8, 0, 0, Math.PI * 2); ctx.fill();
       const anim = Math.floor(pt + i) % 3 === 0 ? 'taunt' : 'guard';
       ladFigure(ctx, e.look, x + 70, yy + 124, 2.4, pt + i * 0.3, { key: 'rogue' + i, anim, flip: true, yaw: -0.45, face: anim === 'taunt' ? 'shout' : 'angry' });
-      if (e.boss) { ctx.fillStyle = '#ffd23a'; ctx.fillRect(x + 6, yy + 6, 46, 11); drawText(ctx, 'TOP BOY', x + 29, yy + 8, { color: '#120c14', align: 'center' }); }
-      drawText(ctx, e.name, x + 70, yy + 140, { color: e.boss ? '#ffd23a' : '#ffb0b0', align: 'center', outline: '#000' });
+      if (e.boss) { ctx.fillStyle = '#ffd23a'; ctx.fillRect(x + 6, yy + 6, 46, 11); drawText(ctx, 'TOP BOY', x + 29, yy + 8, { color: '#121214', align: 'center' }); }
+      drawText(ctx, e.name, x + 70, yy + 140, { color: e.boss ? '#ffd23a' : '#f2c811', align: 'center', outline: '#000' });
       const thr = Math.min(5, Math.max(1, Math.round(e.hp / (e.boss ? 130 : 22))));
       drawText(ctx, 'THREAT', x + 12, yy + 154, { color: C.dim });
-      for (let s = 0; s < 5; s++) { ctx.fillStyle = s < thr ? '#ff3a3a' : '#3a2e44'; ctx.fillRect(x + 56 + s * 14, yy + 154, 10, 6); }
+      for (let s = 0; s < 5; s++) { ctx.fillStyle = s < thr ? '#ff3a3a' : '#3a3a40'; ctx.fillRect(x + 56 + s * 14, yy + 154, 10, 6); }
       const q = '"' + e.quote.toUpperCase() + '"';
       const lines = [];   // word-wrap at ~22 characters, up to three lines
       for (const w of q.split(' ')) { const L = lines[lines.length - 1]; if (L !== undefined && (L + ' ' + w).length <= 22) lines[lines.length - 1] = L + ' ' + w; else lines.push(w); }
@@ -187,7 +187,7 @@ export function drawHallOfFame(ctx, t, highlight = -1, y0 = 64) {
     const off = Math.round((1 - k) * (i % 2 ? 300 : -300));
     const hl = i === highlight;
     const col = hl ? (blink(t, 6) ? '#ffffff' : C.gold) : i < 3 ? cols[i] : cols[3];
-    if (hl) { ctx.fillStyle = 'rgba(200,16,46,0.5)'; ctx.fillRect(120 + off, y - 4, 400, 15); }
+    if (hl) { ctx.fillStyle = 'rgba(242,200,17,0.5)'; ctx.fillRect(120 + off, y - 4, 400, 15); }
     const rank = ['1ST', '2ND', '3RD'][i] || (i + 1) + 'TH';
     drawText(ctx, rank, 130 + off, y, { color: col, scale: 1, outline: '#000' });
     drawText(ctx, e.name, 210 + off, y - 3, { color: col, scale: 2, outline: '#000' });
@@ -298,7 +298,7 @@ class DemoScene {
     // arcade demo chrome
     ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, 0, VIEW_W, 22); ctx.fillRect(0, VIEW_H - 24, VIEW_W, 24);
     drawText(ctx, 'DEMO PLAY', 10, 8, { color: blink(this.t, 1.5) ? '#ff4a5a' : '#ffffff', outline: '#000' });
-    drawText(ctx, 'HI ' + fmtScore(save.topScore()), VIEW_W - 10, 8, { color: '#ff8aa0', align: 'right', outline: '#000' });
+    drawText(ctx, 'HI ' + fmtScore(save.topScore()), VIEW_W - 10, 8, { color: '#e8d48a', align: 'right', outline: '#000' });
     drawText(ctx, fmtScore(game.score), VIEW_W / 2, 6, { color: C.gold, align: 'center', scale: 2, outline: '#000' });
     if (blink(this.t)) drawText(ctx, 'PRESS START TO PLAY', VIEW_W / 2, VIEW_H - 16, { color: C.gold, align: 'center', outline: '#000', scale: 1 });
     drawText(ctx, 'THE LAST HOOLIGAN', VIEW_W - 10, VIEW_H - 16, { color: '#ff4a5a', align: 'right', outline: '#000' });
