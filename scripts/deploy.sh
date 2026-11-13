@@ -17,7 +17,7 @@ git archive --format=tar HEAD index.html src assets | tar -x -C "$STAGE"
 node scripts/release.mjs "$STAGE"
 echo "$REV" > "$STAGE/REVISION"
 echo "deploying $REV to $HOST:$DEST"
-tar -c -C "$STAGE" . | ssh "$HOST" "set -e
+COPYFILE_DISABLE=1 tar --no-xattrs -c -C "$STAGE" . | ssh "$HOST" "set -e
   sudo mkdir -p '$DEST.new' && sudo rm -rf '$DEST.new'/* && sudo tar -x -C '$DEST.new'
   sudo chown -R root:root '$DEST.new' && sudo chmod -R a+rX '$DEST.new'
   if [ -d '$DEST' ]; then sudo rm -rf '$DEST.old' && sudo mv '$DEST' '$DEST.old'; fi
