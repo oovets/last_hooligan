@@ -24,7 +24,6 @@ import { frame, MenuList, hintBar, scanlines, blink, fmtScore, fmtTime, scarfIco
 import { r3d } from '../render3d/index.js';
 import { makeRng } from '../engine/rng.js';
 
-const TAG = 'WHAT ELSE ARE YOU GONNA DO ON A SATURDAY?';
 // how far the line-up, the mob and the lines under them sit below the old layout: more of Råsunda's North Stand and
 // its flares shows above their heads
 const DROP = 26;
@@ -59,14 +58,13 @@ class TitleScene {
     const sh = this.shake > 0 ? Math.round((Math.random() * 2 - 1) * this.shake * 14) : 0;
     ctx.save(); ctx.translate(sh, sh ? Math.round((Math.random() * 2 - 1) * this.shake * 8) : 0);
     // the photo of Råsunda's North Stand (flares, smoke, floodlights), the masked mob and the lads in front of it, the
-    // title slammed on, the line in a black box
+    // title slammed on, PRESS START blinking under them
     backdrop.draw(ctx, {});
     const ch = Math.min(1, Math.max(0, this.intro / 1.1));
     drawFirm(ctx, this.t, ch);
     drawPosterTitle(ctx, VIEW_W / 2, 36, this.t, { intro: this.intro });
     ctx.restore();
     const ti = this.intro - LOGO_INTRO_LEN;
-    if (ti > -0.4) drawTagline(ctx, VIEW_W / 2, 284 + DROP, TAG);
     if (ti > 0.6) {
       const on = Math.floor(this.t * 2.2) % 2 === 0;
       if (on) drawTagline(ctx, VIEW_W / 2, 310 + DROP, 'PRESS START', { size: 15 });
