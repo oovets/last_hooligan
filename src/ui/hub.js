@@ -13,7 +13,7 @@ import { input } from '../engine/input.js';
 import { toScreen } from '../engine/iso.js';
 import { drawText, wrapText } from '../engine/font.js';
 import { app } from '../app.js';
-import { save } from '../save.js';
+import { save, UNLOCK_ALL } from '../save.js';
 import { audio } from '../audio/audio.js';
 import { World } from '../game/world.js';
 import { Fighter } from '../game/fighter.js';
@@ -409,7 +409,7 @@ class MapPanel extends BasePanel {
   }
   status(t) {
     if (t.level.stub) return { ok: false, tag: 'SOON', why: 'THIS GROUND ISN\'T ON THE FIXTURE LIST YET.' };
-    if (this.F.rep < t.rep) return { ok: false, tag: `${t.rep} REP`, why: `YOUR FIRM NEEDS ${t.rep} REPUTATION TO BE TAKEN SERIOUSLY HERE (YOU HAVE ${this.F.rep}).` };
+    if (this.F.rep < t.rep && !UNLOCK_ALL) return { ok: false, tag: `${t.rep} REP`, why: `YOUR FIRM NEEDS ${t.rep} REPUTATION TO BE TAKEN SERIOUSLY HERE (YOU HAVE ${this.F.rep}).` };
     const wins = (this.F.tourWins && this.F.tourWins[t.id]) || 0;
     return { ok: true, tag: wins ? `DONE x${wins}` : 'GO', why: '' };
   }

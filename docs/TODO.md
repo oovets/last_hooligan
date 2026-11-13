@@ -36,6 +36,19 @@ Allt ligger på `main`, de gamla fasgrenarna är mergade.
 - [ ] `.claude/launch.json` har en extra serverkonfiguration (`hooligan-3d`, port 8643) från utvecklingen. Behåll
       eller ta bort.
 
+- [ ] `UNLOCK_ALL` i `src/save.js` är på: alla banor (även tour-gränsen för rykte) och allt i wardrobe är upplåst
+      för provspelning. Stäng av före en release.
+
+## Wardrobe
+
+- [x] Märkeskläder: Stone Island (overshirt, crinkle reps, smock, röd jacka, mössa), C.P. Company, Aquascutum
+      (club check, mac, halsduk), Burberry, Lacoste, Fred Perry, Sergio Tacchini, Fila, Ellesse, adidas (Firebird
+      och tio par skor med ränder), Lyle & Scott, Pringle, Henri Lloyd, Barbour, Paul & Shark, Levi's, Armani,
+      Lois, Farah, Diadora, Reebok, New Balance, Clarks, Kangol.
+- [x] KITS: hela stilar i ett tryck (Perry boy, scally, Tacchini, Stone Island, 1996, Aquascutum-gentleman, old school).
+- [ ] Märkesdetaljer som motorn inte ritar än: krokodilen, lagerkransen, örnen, C.P.-glasögonen i huvan,
+      Pringle-rutor (i dag samma rutmönster som Aquascutum).
+
 ## Spelkänsla och rörelse
 
 - [x] Fightstance och fightwalk i 3D är procedurella: boxarstuds i garden, skuffsteg framåt/bakåt och sidsteg relativt

@@ -75,7 +75,7 @@ function randomLook(female, big) {
     shirt: pick(['#f4f1e8', '#c8102e', '#e8d8a8']),
     pants: { style: 'jeans', color: pick(['#2a3346', '#34507a', '#1e1e26', '#6a6050']) },
     shoes: { color: pick(['#f2f2ee', '#1a1a1a', '#c8102e']), sole: '#b8a070' },
-    scarf: { a: HOME.a, b: HOME.b },
+    scarf: null,
     build: big ? 1.4 + rnd() * 0.15 : 0.95 + rnd() * 0.2, height: 0.97 + rnd() * 0.08,
   };
 }

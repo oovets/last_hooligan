@@ -143,7 +143,7 @@ class MainMenuScene {
     this.menu = new MenuList([
       { label: 'NEW GAME', fn: () => startNewRun(0), hint: 'KICK OFF FROM LEVEL 1: THE STREETS' },
       { label: 'CONTINUE', disabled: () => !hasRun(), fn: () => { game.reset(); game.restore(d.run); app.go((d.settings || {}).firm !== false && app.scenes.hub ? app.scenes.hub() : app.scenes.levelIntro(d.run.levelIndex)); }, hint: () => (d.run ? `RESUME AT LEVEL ${d.run.levelIndex + 1}: ${(ALL_LEVELS[d.run.levelIndex] || {}).name || ''}` : 'NOTHING TO CONTINUE YET') },
-      { label: 'LEVEL SELECT', fn: () => app.go(new LevelSelectScene()), hint: `${d.unlocked || 1} OF ${LEVELS.length} LEVELS UNLOCKED`, badge: () => `${d.unlocked || 1}/${LEVELS.length}` },
+      { label: 'LEVEL SELECT', fn: () => app.go(new LevelSelectScene()), hint: `${Math.min(d.unlocked || 1, LEVELS.length)} OF ${LEVELS.length} LEVELS UNLOCKED`, badge: () => `${Math.min(d.unlocked || 1, LEVELS.length)}/${LEVELS.length}` },
       { label: 'WARDROBE', fn: () => app.go(new WardrobeScene()), hint: 'SPEND YOUR BANKED CASH ON CLOBBER', badge: () => '£' + (d.cash || 0) },
       { label: 'OPTIONS', fn: () => app.go(new OptionsScene()), hint: 'SOUND, SHAKE, DIFFICULTY, CONTROLS' },
       { label: 'HOW TO PLAY', fn: () => app.go(new HowToPlayScene()), hint: 'CONTROLS, COMBOS AND THE TERRACE CODE' },

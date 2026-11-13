@@ -3,6 +3,9 @@
 // so older saves pick up anything added later.
 const KEY = 'theLastHooligan.save.v1';
 
+// Owner's switch: every level (story + tour), every wardrobe item. false = earn them as designed.
+export const UNLOCK_ALL = true;
+
 // Arcade "hall of fame" seed table (fictional terrace legends).
 export const DEFAULT_HISCORES = [
   { name: 'TEL', score: 60000, level: 8 },
@@ -19,7 +22,7 @@ export const DEFAULT_HISCORES = [
 
 export function defaultSave() {
   return {
-    version: 5,                  // 2: 3D renderer became the default; 3: Terrace Tina replaced by Kenny Showtime; 4: Big Al joins; 5: Big Al max TOUGH
+    version: 6,                  // 2: 3D renderer became the default; 3: Terrace Tina replaced by Kenny Showtime; 4: Big Al joins; 5: Big Al max TOUGH; 6: no scarves on the lads
     unlocked: 1,                 // number of levels unlocked (1..8)
     character: 'hooligan',       // last selected playable character (content/characters.js)
     best: {},                    // levelId -> best score
@@ -29,7 +32,7 @@ export function defaultSave() {
     badges: {},                  // levelId -> true
     secrets: {},                 // levelId -> [secret ids]
     owned: [],                   // wardrobe item ids bought/unlocked (defaults are implicit)
-    outfit: { hair: 'crop', hairColor: 'brown', jacket: 'harrington_green', pants: 'jeans_blue', shoes: 'white', scarf: 'home', extra: 'none', facial: 'stubble', gloves: 'none' },
+    outfit: { hair: 'crop', hairColor: 'brown', jacket: 'harrington_green', pants: 'jeans_blue', shoes: 'white', scarf: 'none', extra: 'none', facial: 'stubble', gloves: 'none' },
     settings: {
       music: 0.6, sfx: 0.8, shake: true, difficulty: 'normal',
       controls: 'screen',        // 'screen' (up = up the screen) | 'iso' (up = along the iso axis); read by player.js
@@ -85,6 +88,13 @@ export const save = {
         for (const l of (this.data.firm && this.data.firm.lads) || []) if (l.char === 'bigal' && l.stats) l.stats.tough = 10;
         this.data.version = 5;
       }
+      if (this.data.version < 6) {                // the lads lost their scarves: your outfit and every lad in the firm
+        if (this.data.outfit && this.data.outfit.scarf === 'home') this.data.outfit.scarf = 'none';
+        const F = this.data.firm;
+        for (const l of [...((F && F.lads) || []), ...((F && F.pool) || [])]) if (l && l.look) l.look.scarf = null;
+        this.data.version = 6;
+      }
+      if (UNLOCK_ALL) this.data.unlocked = Math.max(this.data.unlocked || 1, 99);   // clamped to the level count where shown
     } catch (e) { console.warn('save load failed', e); }
     if (!Array.isArray(this.data.hiscores) || !this.data.hiscores.length) this.data.hiscores = DEFAULT_HISCORES.map(h => ({ ...h }));
     return this.data;
