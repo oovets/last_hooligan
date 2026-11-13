@@ -15,8 +15,9 @@ is 90s football-casual culture in the fictional city of Nordhamn.
 * 6 playable characters: The Last Hooligan, Big Mo, Little Stig, Terrace Tina, Fat Vic and The Old Boy (unlockable).
 * **Two renderers:**
   * **3D (Three.js, default):** wall blocks, real lights and shadows, ambient occlusion, bloom and colour grading.
-    The characters are skinned Blender models on a 22-bone rig, animated by a layered animator: hand-keyed strike
-    clips with fist IK, a procedural walk and run that doesn't slide, counter-twist and head tracking. Props are
+    The characters are skinned Blender models on a 22-bone rig, animated by a layered animator: hand-keyed clips
+    with fist IK for strikes, hit reactions, knockdowns, grabs, chokeholds and air attacks; a procedural fighting
+    stance, side-steps, walk and run that blend by speed and don't slide; counter-twist and head tracking. Props are
     still flat billboards of the 2D art.
   * **2D (classic):** pre-rendered Blender sprites, procedural pixel art as fallback.
 * Fully synthesized WebAudio soundtrack, crowd ambience and original terrace chants.
@@ -36,6 +37,8 @@ python3 scripts/serve.py
 ```
 
 Then open http://localhost:8642. Add `?play=N` to jump straight into level N (0-based).
+`--public` serves on all interfaces (LAN / router port-forward, with caching and gzip) and `--root DIR` serves
+another checkout or worktree, e.g. `python3 scripts/serve.py 8642 --public --root ../other-worktree`.
 
 **3D renderer (default):** it needs an internet connection: Three.js is loaded from jsDelivr via an import map.
 For the classic pixel-art renderer pick OPTIONS → GRAPHICS → 2D, or add `?renderer=2d`. Add `?post=0` to turn off post-processing on slow machines.
@@ -70,9 +73,12 @@ During development the game is **muted** by `src/devflags.js` (`DEV.mute = true`
 * `node scripts/test_firmloop.mjs`: headless test of the pub → trip → level → pub loop and its consequences.
 * `node scripts/env_coverage.mjs [levelId] [--missing]`: shows which walls, floors and props have Blender sprites.
 * `tools/sprites.html?model=m_jacket`: character sprite viewer.
+* `tools/anim3d.html`: 3D animation film strips. In the console:
+  `filmstrip(['hurtFront', 'atk:spinKick', 'move:guard:left'], { frames: 7, facing: 0, look: 'vic' })`, then
+  `shot('name')` saves the image to `build/shots/` (needs `scripts/serve.py`).
 * Docs: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/LEVELS.md`](docs/LEVELS.md), [`docs/ART_PIPELINE.md`](docs/ART_PIPELINE.md),
   [`docs/DESIGN-V2.md`](docs/DESIGN-V2.md) (3D + firm plan), [`docs/TODO.md`](docs/TODO.md) (what's left).
-* Code map for the new parts: `src/render3d/` (renderer, `characters2.js` animator, `clips.js` strike clips),
+* Code map for the new parts: `src/render3d/` (renderer, `characters2.js` animator, `clips.js` strike and state clips),
   `src/game/firm.js` (lads in the fight), `src/game/firmdata.js` (the persistent firm and its rules),
   `src/ui/firmhud.js` (orders, command mode), `src/ui/hub.js` + `src/content/hub.js` (THE ANCHOR).
 

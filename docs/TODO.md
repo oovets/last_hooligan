@@ -5,30 +5,45 @@ Senast uppdaterad 2026-11-13.
 
 ## Läget just nu
 
-| Del | Status | Gren |
-|---|---|---|
-| Fas A: 3D-renderer (Three.js) | klar | `phase-a-3d` |
-| Fas B: 3D-karaktärer v1 (riggade delar) | klar, ersätts av v2 | `phase-b-3d-chars` |
-| Fas C: firman i striden (order, nerv, kommandoläge) | klar | `phase-c-firm` |
-| Fas D: firman mellan matcherna (THE ANCHOR, rykte, heat) | klar | `phase-d-firm-hub` |
-| Overhaul: skinnade v2-karaktärer, animator, AO, bloom | påbörjad | `phase-d-firm-hub` |
-| Overhaul: handkeyade slagklipp med näv-IK | klar | `main` |
-| Overhaul: klipp för tillstånd, luft-, grepp- och specialattacker | klar | `main` |
-| Fas E: THE TERRACES | pausad (motorstöd för trappsteg finns) | – |
-| Fas F: Football Tour-kartan och arenorna | ej påbörjad | – |
+Allt ligger på `main`, de gamla fasgrenarna är mergade.
 
-Alla grenar är mergade till `main`.
+| Del | Status |
+|---|---|
+| Fas A: 3D-renderer (Three.js), nu standardläget | klar |
+| Fas B: 3D-karaktärer v1 (riggade delar) | klar, ersatt av v2 |
+| Fas C: firman i striden (order, nerv, kommandoläge) | klar |
+| Fas D: firman mellan matcherna (THE ANCHOR, rykte, heat) | klar |
+| Overhaul: skinnade v2-karaktärer, animator, AO, bloom | klar i grunden, polering kvar |
+| Overhaul: handkeyade klipp (slag, tillstånd, luft, grepp, Tina och Vic) | klar |
+| Overhaul: procedurell rörelse (fightstance, steg, acceleration) | klar, ej provspelad |
+| Fullskaliga fordon, nya menyer i full upplösning | klar |
+| Fas E: THE TERRACES | pausad (motorstöd för trappsteg finns) |
+| Fas F: Football Tour-kartan och arenorna | ej påbörjad |
 
 ## Först: provspela och städa
 
-- [ ] **Provspela på riktigt.** Ingen människa har spelat fas A–D eller overhaulen live, allt är verifierat med tester
-      och renderade bilder. Störst risk: hur det känns att styra firman mitt i en strid (kommandoläget).
-- [ ] Merga grenarna till `main` när provspelningen är godkänd.
-- [ ] Bestäm om 3D ska bli standardläget, i dag är 2D standard och 3D "beta".
+- [ ] **Provspela på riktigt.** Ingen har spelat fas A–D, klippen eller den nya rörelsen live, allt är verifierat med
+      tester och renderade bilder. Störst risk: hur det känns att styra firman mitt i en strid (kommandoläget).
+      Provspelning utifrån: `python3 scripts/serve.py 8642 --public --root <checkout>`.
+- [x] Merga grenarna till `main`.
+- [x] 3D är standardläget (äldre sparfiler flyttas över en gång, `?renderer=2d` ger det klassiska läget).
 - [ ] 2D-läget: sprite-bygget stannade halvvägs (bland annat `m_jacket` saknas och `assets/sprites/index.json` skrevs
       aldrig), så 2D ritar procedurfigurer. Bygg om spritarna eller pensionera 2D.
 - [ ] Bundla Three.js lokalt (i dag laddas det från jsDelivr), kräver ett OK för nedladdningen.
 - [ ] `.claude/launch.json` har en extra serverkonfiguration (port 8643) från utvecklingen. Behåll eller ta bort.
+
+## Spelkänsla och rörelse
+
+- [x] Fightstance och fightwalk i 3D är procedurella: boxarstuds i garden, skuffsteg framåt/bakåt och sidsteg relativt
+      blickriktningen, blendning efter fart och lutning vid acceleration (förut växlade två poser var 0,2 s).
+- [x] Mjuk acceleration för gång och spring (cirka 0,08 s till full fart, 0,06 s till stopp; `MOVE_ACCEL` och
+      `MOVE_DECEL` i `src/game/fighter.js`).
+- [ ] Provspela och finjustera: acceleration, gång- och springfart, studsens tempo, hur fort figurerna vänder.
+- [ ] Vändning: i dag byter spelaren riktning direkt (bara 3D-modellen roterar mjukt). Prova en kort vändsteg-animation
+      eller att slag riktas efter stickan i stället för blickriktningen.
+- [ ] Träffkänsla: kamerashake och hitstop finns, prova knockback-kurvor, impact-frames och att fiender staplar sig.
+- [ ] Fiendernas rörelser: AI:n går rakt mot målet, lägg till cirklande, avstånd i garden och att flera fiender
+      inte klumpar ihop sig.
 
 ## Grafik och rörelse (overhaulen)
 
@@ -40,15 +55,16 @@ Alla grenar är mergade till `main`.
       vic_tighten, vic_chokeslam och vic_lunge. Taunt, victory och dizzy.
 - [ ] Klipp för bossarnas och banornas specialattacker (`awayend_*`, `city_*`, `derby_*`, `industrial_*`,
       `laststand_*`, `pub_*`, `underground_*`, `cheer`), i dag faller de tillbaka på pose-biblioteket.
-- [ ] Idle-variationer (vikt som skiftar, se sig om, spotta).
+- [ ] Idle-variationer utöver viktskiftet (se sig om, spotta, sträcka på sig).
 - [ ] Provspela klippen live och finjustera tajming och räckvidd. `tools/anim3d.html` visar klipp som filmremsor:
-      `filmstrip(['hurtFront', 'atk:spinKick'], { frames: 7, facing: 0, look: 'vic' })`.
+      `filmstrip(['hurtFront', 'atk:spinKick', 'move:guard:left'], { frames: 7, facing: 0, look: 'vic' })`.
 - [ ] Bättre händer (knytnäve, fingrar) och ansikten med uttryck (skrik, ont, KO).
 - [ ] Riktiga 3D-vapen i handen, i dag visas föremålets ikon som en sprite.
 - [ ] Prestanda: slå ihop meshar per figur (färre draw calls inför stora firmastrider), samt halv upplösning eller
       ett kvalitetsval för GTAO på stora skärmar (`?post=0` är enda reglaget i dag).
 - [ ] En grafikinställning i menyn (låg/mellan/hög).
-- [ ] Miljö: byt billboard-props mot 3D-modeller i prioritetsordning (lampor, bilar, bänkar, kiosker,
+- [ ] Miljö: byt billboard-props mot 3D-modeller i prioritetsordning (lampor, bilar (fullskaliga sedan 6af9448 men
+      fortfarande billboards), bänkar, kiosker,
       läktardetaljer). Golvdekaler och `drawGround` i 3D, bilarnas strålkastarljus och custom actors (tåg, folkmassor)
       som ritas utan djup.
 - [ ] Kamerazoom i dueller och bossfighter (zoom finns, men 2D-överlägget stämmer bara vid zoom 1).
