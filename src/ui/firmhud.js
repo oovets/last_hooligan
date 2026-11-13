@@ -170,6 +170,12 @@ export function drawAimMarkers(ctx, world) {
     ctx.beginPath(); ctx.moveTo(x - 3.5, y); ctx.lineTo(x + 3.5, y); ctx.lineTo(x, y + 4.5); ctx.closePath(); ctx.fill();
   }
   drawFoeStatus(ctx, world);
+  // 3D items: the pick-up prompt (the 2D item boards draw their own)
+  if (world.items3d) for (const it of world.items) {
+    if (it.removed || !it.def || it.def.auto || Math.hypot(P.x - it.x, P.y - it.y) >= 1.0) continue;
+    const s = toScreen(it.x, it.y, it.z || 0);
+    drawText(ctx, 'E', s.x, s.y - 24 + Math.round(Math.sin(t * 6)), { color: '#ffe14a', align: 'center', outline: '#000' });
+  }
   ctx.restore();
 }
 

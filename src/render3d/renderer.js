@@ -50,6 +50,8 @@ import { hexToRgb } from '../engine/color.js';
 import { setQuant } from '../game/poses.js';
 import { CHAR, Character3D, modelFor, loadCharacterModels } from './characters.js';
 import { CHAR2, Character2, modelFor2, loadCharacters2, loadAllHeroes, HERO_FIRST } from './characters2.js';
+import { itemMesh } from './itemicons.js';
+import { ITEMS } from '../game/items.js';
 
 export { loadCharacterModels, loadCharacters2, loadAllHeroes, HERO_FIRST };
 
@@ -475,9 +477,11 @@ export class Renderer3D {
       this.placeBoard(b, f.x, f.y, g, f.x + f.y + (f.isDown ? -0.15 : 0) + 0.001 * f.z, 0);
     }
     world.overheadQueue = keepQ;
-    // items, projectiles
+    // items, projectiles: real 3D items (render3d/itemicons.js) where there's a build, else a board with the 2D icon
+    world.items3d = true;                 // (the pick-up prompt is drawn by the overlay then: ui/firmhud.js)
     for (const list of [world.items, world.projectiles]) for (const it of list) {
       if (it.removed || !near(it.x, it.y)) continue;
+      if (this.syncItem3D(it, world, F)) continue;
       let b = boards.get(it);
       if (!b) { b = this.makeBoard(64, 72, 32, 56); boards.set(it, b); }
       b.seen = F;
@@ -496,8 +500,40 @@ export class Renderer3D {
     // drop boards whose entity is gone or was not seen this frame
     for (const [e, b] of boards) if (b.seen !== F) { this.disposeBoard(b); boards.delete(e); }
     for (const [f, c] of this.chars) if (c.seen !== F) { this.disposeChar(c); this.chars.delete(f); }
+    for (const [it, o] of this.items3) if (o.seen !== F) { this.scene.remove(o.obj, o.blob); this.items3.delete(it); }
     this.stats.boards = boards.size;
     this.stats.chars = this.chars.size;
+  }
+
+  // an item on the floor (slow turn, a little bob, blinks out when it's about to vanish) or in flight (tumbling)
+  syncItem3D(it, world, F) {
+    const def = it.def || ITEMS[it.type];
+    if (!def) return false;
+    this.items3 ||= new Map();
+    let o = this.items3.get(it);
+    if (!o) {
+      const obj = itemMesh(def, 'ground');
+      if (!obj) return false;
+      this.itemBlobGeo ||= new THREE.CircleGeometry(0.22, 20).rotateX(-Math.PI / 2);
+      this.itemBlobMat ||= new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.32, depthWrite: false });
+      o = { obj, blob: new THREE.Mesh(this.itemBlobGeo, this.itemBlobMat) };
+      this.items3.set(it, o); this.scene.add(o.obj, o.blob);
+    }
+    o.seen = F;
+    const g = world.groundHeight(it.x, it.y, it.z || 0), t = it.t || world.time;
+    if (it.kind === 'projectile') {
+      o.obj.position.set(it.x, (it.z || 0) * ZS, it.y);
+      o.obj.rotation.set(it.spin || 0, 0, (it.spin || 0) * 0.6);
+      o.obj.visible = true;
+    } else {
+      const air = Math.max(0, (it.z || 0) - g);
+      o.obj.position.set(it.x, (g + air) * ZS + (air ? 0 : 0.03 + Math.sin(t * 3) * 0.025), it.y);
+      o.obj.rotation.set(0, t * 0.9, 0);
+      o.obj.visible = !(it.life > 0 && it.life < 2 && Math.floor(it.life * 10) % 2);
+    }
+    o.blob.position.set(it.x, g * ZS + 0.012, it.y);
+    o.blob.visible = o.obj.visible;
+    return true;
   }
 
   // ------------------------------------------------------------------ 3D characters

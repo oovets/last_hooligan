@@ -208,3 +208,57 @@ export function itemIcon(def) {
   cache.set(def.id, out);
   return out;
 }
+
+// ---------------------------------------------------------------- the same items in the 3D world
+// itemMesh(def, mode) -> a fresh THREE.Object3D (clone of a cached template; geometry/materials are shared, don't
+// dispose them) in world units (1 = a tile), or null. mode 'ground': lying/standing on the floor, base at y 0;
+// 'held': upright, gripped at the bottom end (y 0 = the hand). Sizes are a bit generous so things read in the game.
+const SIZE = {
+  bottle: 0.34, can: 0.2, cup: 0.18, mug: 0.17, pint: 0.22, bag: 0.2, carton: 0.28, bowl: 0.3, pie: 0.24, kebab: 0.28,
+  apple: 0.16, melon: 0.24, umbrella: 0.9, spanner: 0.4, cross: 0.5, chair: 0.95, stool: 0.85, seat: 0.55, ball: 0.3,
+  disc: 0.6, buoy: 0.6, card: 0.24, brick: 0.26, crate: 0.6, barrel: 0.8, cone: 0.65, flag: 1.2, scarf: 0.5, shield: 1.0,
+  megaphone: 0.45, flare: 0.4, rattle: 0.4, phone: 0.3, handbag: 0.38, heel: 0.28, hammer: 0.65, dart: 0.22, gumshield: 0.16,
+  boot: 0.32, key: 0.2, note: 0.22, coin: 0.13, badge: 0.13, fanzine: 0.32, shirt: 0.45,
+};
+// how a held item sits in the hand bone (render3d/characters2.js Character2.setWeapon)
+export const HELD = { rx: Math.PI * 0.75, ry: 0, rz: 0 };   // (the hand bone: y down the fingers, z forward) -> up and forward out of the fist
+const LONG = new Set(['stick', 'umbrella', 'flare', 'spanner', 'flag', 'dart', 'rattle', 'hammer', 'key', 'cross']);
+const templates = new Map();
+export function itemMesh(def, mode = 'ground') {
+  if (!def) return null;
+  const key = def.id + '|' + mode;
+  if (!templates.has(key)) templates.set(key, makeTemplate(def, mode));
+  const t = templates.get(key);
+  return t ? t.clone() : null;
+}
+function makeTemplate(def, mode) {
+  const spec = ITEM3D[def.id];
+  if (!spec || !B[spec[0]]) return null;
+  try {
+    const kind = spec[0], p = spec[1] || {};
+    const inner = B[kind](p);
+    inner.rotation.set(0, 0, 0);                          // the icon's framing tilt off: canonical, long things along y
+    inner.updateMatrixWorld(true);
+    const size = new THREE.Box3().setFromObject(inner).getSize(new THREE.Vector3());
+    const want = kind === 'stick' ? (p.len || 2.2) * 0.46 : (SIZE[kind] || 0.3);
+    const s = want / Math.max(size.x, size.y, size.z, 1e-3);
+    inner.scale.setScalar(s);
+    const outer = new THREE.Group(); outer.add(inner);
+    if (mode === 'held') {
+      // the grip (low on a long thing, the middle of anything else) at the hand, then turned out of the fist
+      inner.updateMatrixWorld(true);
+      const bb = new THREE.Box3().setFromObject(inner), c = bb.getCenter(new THREE.Vector3());
+      const grip = bb.min.y + (bb.max.y - bb.min.y) * (LONG.has(kind) ? 0.15 : 0.5);
+      inner.position.set(-c.x, -grip, -c.z);
+      outer.rotation.set(HELD.rx, HELD.ry, HELD.rz);
+    } else {
+      if (LONG.has(kind)) inner.rotation.z = Math.PI / 2;                           // long things lie on the floor
+      inner.updateMatrixWorld(true);
+      const bb = new THREE.Box3().setFromObject(inner), c = bb.getCenter(new THREE.Vector3());
+      inner.position.set(-c.x, -bb.min.y + 0.005, -c.z);
+    }
+    outer.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = false; } });
+    outer.userData.item = def.id;
+    return outer;
+  } catch (e) { console.warn('[3d items]', def.id, e); return null; }
+}

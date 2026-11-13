@@ -23,6 +23,7 @@ import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { specForLook } from '../game/sprites.js';
 import { fillPose } from '../game/poses.js';
 import { CLIPS, evalClip, attackU, stateClipFor, GUARD_RIG } from './clips.js';
+import { itemMesh } from './itemicons.js';
 
 export const CHAR2 = { templates: {}, meta: {}, ready: false, heroes: {}, heroLoading: {} };
 export const CHAR2_SCALE = 1.27;          // the game's chunky character scale (matches the sprites)
@@ -675,7 +676,18 @@ export class Character2 {
     if (id === this.weaponId) return;
     this.weaponId = id;
     if (this.weaponSprite) { this.handR.remove(this.weaponSprite); this.weaponSprite.material.map.dispose(); this.weaponSprite.material.dispose(); this.weaponSprite = null; }
-    if (!def || !def.icon || !this.handR) return;
+    if (this.weaponObj) { this.handR.remove(this.weaponObj); this.weaponObj = null; }      // (shared template parts: nothing to dispose)
+    if (!def || !this.handR) return;
+    // the real 3D item in the fist (render3d/itemicons.js), sized in world units whatever the model's own scale
+    const obj = itemMesh(def, 'held');
+    if (obj) {
+      this.group.updateMatrixWorld(true);
+      const ws = this.handR.getWorldScale(new THREE.Vector3()), k = 1 / (((ws.x + ws.y + ws.z) / 3) || 1);
+      obj.scale.multiplyScalar(k);
+      this.handR.add(obj); this.weaponObj = obj;
+      return;
+    }
+    if (!def.icon) return;
     const c = document.createElement('canvas'); c.width = 64; c.height = 64;
     const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.scale(2, 2);
     try { def.icon(g, 16, 26, 0); } catch (e) { /* icon needs more context */ }
